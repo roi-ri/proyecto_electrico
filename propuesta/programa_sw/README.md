@@ -124,3 +124,8 @@ Se propone la arquitectura híbrida C++ + Python como solución principal, debid
 
 
 Se da una descripción de la arquitectura lógica por capas: [`ALC`](Arquitectura_Logica_Capas.md)
+
+---
+## Utilización de wxWidgets para crear la GUI
+
+- https://www.youtube.com/playlist?list=PLFk1_lkqT8MbVOcwEppCPfjGOGhLvcf9G
