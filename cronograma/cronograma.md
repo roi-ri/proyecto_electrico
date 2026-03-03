@@ -4,7 +4,7 @@ En este apartado se estipulan las actividades planteadas para cada semana de ava
 
 
 | Semana |Ciclador  | Protocolo Comu | Software |
-|--------|----------|--------------|----------|
+|:--------:|----------|--------------|----------|
 |    1   | | | |
 |    2   | | | |
 |    3   | | | |
