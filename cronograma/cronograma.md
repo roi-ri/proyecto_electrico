@@ -21,4 +21,4 @@ En este apartado se estipulan las actividades planteadas para cada semana de ava
 |   14   | | | |
 |   15   | | | |
 |   16   | | | |
-|   17   | Presentación Final|
+|   17   | Presentación Final| Presentación Final | Presentación Final | 
