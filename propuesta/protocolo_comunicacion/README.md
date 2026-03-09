@@ -102,7 +102,7 @@ A diferencia de SPI, I2C permite conectar múltiples dispositivos en el mismo bu
 
 Las velocidades del I2C son variadas, ya que hay de 100kbps, 400 kbps, 1 Mbps hasta 3,4 Mbps y además este protocolo incluye mecanismos como ACK/NACK para confirmar recepción de datos y control de colisiones en sistemas multimaestro. El protocolo I2C no es compatible con usb, por lo que se necesita un adaptador I2C-USB.
 
-### Propuesta inicial
+## Propuesta inicial
 Como propuesta inicial para el sistema de comunicación entre la computadora y el controlador se plantea la utilización del protocolo UART, debido a su simplicidad de implementación, amplia compatibilidad con microcontroladores y facilidad de integración con computadoras mediante interfaces USB.
 La selección de este protocolo se fundamenta en que el sistema contempla la comunicación con un único dispositivo controlador, por lo que no es necesario implementar un bus que permita múltiples dispositivos conectados simultáneamente, como ocurre con protocolos como I2C o SPI. En este contexto, UART resulta adecuado al permitir una comunicación serial directa entre el microcontrolador y la computadora utilizando únicamente líneas de transmisión y recepción de datos, además de que UART es full-duplex, por lo que no habrá problemas de interrupción en el recibimiento o envío de datos si se desea hacer un cambio mientras la computadora recibe datos.
 Adicionalmente, el uso de UART facilita el desarrollo y depuración del sistema, ya que permite visualizar y enviar datos de forma directa mediante herramientas de monitoreo serial disponibles en diferentes entornos de desarrollo o aplicaciones de comunicación serial en la computadora.
