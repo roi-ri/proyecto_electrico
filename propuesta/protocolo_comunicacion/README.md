@@ -114,5 +114,51 @@ De esta manera, el protocolo UART permitirá que el sistema:
 - Envíe información de retorno hacia la computadora, como estados del sistema, confirmación de comandos o datos adquiridos por los sensores.
 
 
+### Sistema de control para filtrado y manejo de los datos.
+
+La propuesta del sistema de control está orientado en los valores que se desean observar en la interfaz gráfica y que son de interés para el usuario, por lo que los datos son:
+
+- Corriente de carga.
+- Corriente de descarga.
+- Tensión actual de la batería.
+- Estado de la batería.
+
+Además, debido al tipo de sensor utilizado para la medición de los valores, no se considera necesaria una etapa adicional de filtrado, ya que el tipo de sensor ofrece mediciones confiables y adecuadas para el sistema.
+
+El sistema tendrá como función principal captar las señales de corriente y tensión, procesarlas en el controlador y organizarlas para su transmisión o visualización. Además según la operación se va a clasificar como corriente de carga o descarga según sea la opción que deseó el usuario.
+
+- **Corriente de carga**: La corriente captada cuando se está en el proceso de carga de la batería.
+- **Corriente de descarga**: La corriente obtenido cuando se está en el proceso de descarga de la batería.
+- **Tensión de la batería**: Se mide la tensión de la batería en ambas situaciones si se está cargando o descargando.
+- **Estado de la batería**: Si se encuentra en carga o descarga.
+
+
+De esta manera el sistema entregará los datos en el siguiente formato:
+
+| Corriente (de carga o de descarga) , Tensión de la batería , Estado de la batería|
+|----------------------------------------------------------|
+
+La corriente debido al diseño del circuito solo se va a estar leyendo de una parte del circuito, ya que la otra parte del circuito se va a encontrar en un abierto, es por esto que se envía solamente una corriente y si se encuentra cargando o descargando, ya que esta información es importante para saber en que estado se encuentra la batería, incluso en el ciclado saber si se encuentra en etapa de carga o de descarga. Para enviar el dato del estado de la batería, se utiliza el siguiente código:
+
+- Carga: 1
+- Descarga: 0
+
+
+### Entradas y salidas
+
+Las entradas que se van a tener en el ESP32 son 4, la entrada USB, en donde se van a recibir las solicitudes del usuario, las cuales las entrega a través de la interfaz, además de 3 entradas analógicas, provenientes de los 3 sensores, 2 de corriente y el sensor de tensión.
+
+- Sensor de corriente 1: Entrada analógica
+- Sensor de corriente 2: Entrada analógica
+- Sensor de tensión: Entrada analógica
+
+Mientras que para las salidas, se necesitan 3, las cuales 1 salida es el USB, en donde se van a enviar los datos a la computadora, y 2 salidas analógicas las cuales serán las señales de control enviadas a la PCB para que cargue o descargue la batería.
+
+- Señal de control 1: Salida analógica
+- Señal de control 2: Salida analógica
+
+Estas salidas no necesitan de ningún convertidor, ya que la placa de desarrollo trae implementado algunas salidas que ya incorporan dentro este convertidor.
+
+
 
 
