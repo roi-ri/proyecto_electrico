@@ -22,7 +22,6 @@ ste repositorio contiene los archivos correspondientes a un ciclador de módulos
 | Sensores de Corriente | 2 | x | Para medir las corrientes de carga y descarga. |
 | Delfino | 1 | C2000 | Controlador. |
 | Medidor de Tensión | 1 | x | Incorporado en el C2000, para medir la tensión de la batería. |
-| Convertidor Digital Analógico | 1 | x | Controlar si descarga o carga. |
 
 </div>
 
