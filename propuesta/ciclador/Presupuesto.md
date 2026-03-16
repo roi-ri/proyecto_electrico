@@ -1,11 +1,11 @@
-## 📦 Presupuesto de Componentes
+## Presupuesto de Componentes
 
 | Componente | Precio (USD) | Compra | Datasheet / Datos |
 |------------|-------------:|--------|-------------------|
 | Adaptador universal 15V | 7.99 | [Link](https://a.co/d/00d8c3lE) | AC110V a DC15V Cargador de Potencia 15V 100mA~1000mA |
 | Convertidor DC-DC | 7.99 | [Link](https://a.co/d/0eajLysW) | [LM2596 Datasheet](https://www.ti.com/lit/ds/symlink/lm2596.pdf) |
 | Pot Digital | 7.99 | [Link](https://a.co/d/0ahFjIvz) | [TPL0501 Datasheet](https://www.alldatasheet.com/datasheet-pdf/view/437592/TI1/TPL0501.html) |
-| Sensor de Tensión | 8.99 | [Link](https://a.co/d/02QvSbbL) | Rango DC0-25V, resolución 0.00489V |
+| Sensor de Tensión | 8.99 | [Link](https://a.co/d/02QvSbbL) |  Rango de entrada de voltaje: DC0-25V Rango de detección de voltaje: DC0.02445V-25V Resolución analógica de voltaje: 0.00489V Conector de entrada DC: Cátodo terminal conectado a VCC, polo negativo GND  Interfaz de salida: + 5V o 3.3V - GND S para pines Arduino AD  El paquete incluye: 20 x sensores de voltaje |
 | Sensor de Corriente | 8.99 | [Link](https://a.co/d/067S5Mth) | [ACS712ELC-20A Datasheet](https://www.alldatasheet.com/datasheet-pdf/view/168328/ALLEGRO/ACS712ELCTR-20A-T.html) |
 | Inductores 10µH | 6.99 | [Link](https://a.co/d/02b1DQ4p) | - |
 | Varistor | 1.48 | [Link](https://a.co/d/0gObfaJM) | [14D271K Datasheet](https://www.ruilon.com.cn/Uploads/pdf/14d%20series_a2.pdf) |
