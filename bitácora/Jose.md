@@ -4,18 +4,18 @@ Jose Manuel Solis
 C27645 
 
 
-|  Fecha | Horas |  Descripción  |  Evidencia  |  Comentario  |
-|:--------:|-------|--------------------------------|---------|--------|
-| - | - | Se investiga sobre el comportamiento de las baterias | Agregar resumen | Se identifica la perturbación. |
+| Fecha | Horas | Descripción | Evidencia | Comentario |
+|:------:|:------:|-------------|------------|-------------|
+| - | - | Se investiga sobre el comportamiento de las baterías | Agregar resumen | Se identifica la perturbación. |
 
-| - | - | Diseño del circuito | Se hace el diseño del circuito que se encarga<br>de cargar, descargar y ciclar la bateria.<br>Se calcula la acción de control para verificar si el circuito funciona. | Agragar imagen del dibujo. | Falta definir los componentes a utilizar. |
+| - | - | Diseño del circuito que se encarga de cargar, descargar y ciclar la batería. Se calcula la acción de control para verificar si el circuito funciona. | Agregar imagen del dibujo. | Falta definir los componentes a utilizar. |
 
-| - | - |  Se hace el diseño de un lazo de control<br>pre-alimentado realimentado, basado en que la perturbación del sistema<br>es la corriente de la bateria que se puede medir. | Adjuntar imagen del lazo | Se diseña el lazo, pero falta aclar las variables y las señales. |
+| - | - | Diseño de un lazo de control prealimentado–realimentado, basado en que la perturbación del sistema es la corriente de la batería que se puede medir. | Adjuntar imagen del lazo | Se diseña el lazo, pero falta aclarar las variables y las señales. |
 
-| - | - | Se buscan los compoentes que se van a utilizar. | Agregar lista | Se define el micro como ESP32.<br>Se buscan convertidores de y un potenciometro difital para controlar la tensión<br>que se le da a la bateria. |
+| - | - | Búsqueda de los componentes a utilizar. Se define el microcontrolador como ESP32 y se buscan convertidores y un potenciómetro digital para controlar la tensión aplicada a la batería. | Agregar lista | Definido el ESP32; pendientes convertidores y potenciómetro digital. |
 
-| 10-3-2025 | 3 Horas |Se buscaron sensores de corriente y tensión| Pediente adjuntar  | Queda pendietne definir los sensores<br>ya que los LEM son muy caros.|
+| 10-03-2025 | 3 horas | Búsqueda de sensores de corriente y tensión. | Pendiente adjuntar | Queda pendiente definir los sensores, ya que los LEM son muy costosos. |
 
-| 13-10-2025 | 5 Horas | Se dibuja el esquematico inicial de la pcb en kicad <br>y se forma la primera propuesta de PCB | Agregar imagen del esquematico y de la pcb | Es la propuesta inicial, falta agregar la alimentación <br> del ESP32, los OPAMs y los sensores a la placa. |  
+| 13-10-2025 | 5 horas | Se dibuja el esquemático inicial de la PCB en KiCad y se genera la primera propuesta. | Agregar imagen del esquemático y de la PCB | Propuesta inicial; falta agregar alimentación del ESP32, OPAMPs y sensores. | 
 
 
