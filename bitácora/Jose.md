@@ -4,13 +4,22 @@ Jose Manuel Solis
 C27645 
 
 
-| Fecha       | Horas   | Descripción | Evidencia | Comentario |
-|:-----------:|:-------:|-------------|-----------|------------|
-| - | - | Se investiga sobre el comportamiento de las baterías. | Agregar resumen | Se identifica la perturbación. |
-| - | - | Diseño del circuito que se encarga de cargar, descargar y ciclar la batería. Se calcula la acción de control para verificar si el circuito funciona. | Agregar imagen del dibujo | Falta definir los componentes a utilizar. |
-| - | - | Diseño de un lazo de control prealimentado–realimentado, basado en que la perturbación del sistema es la corriente de la batería que se puede medir. | Adjuntar imagen del lazo | Se diseña el lazo, pero falta aclarar las variables y las señales. |
-| - | - | Búsqueda de los componentes a utilizar. Se define el microcontrolador como ESP32 y se buscan convertidores y un potenciómetro digital para controlar la tensión aplicada a la batería. | Agregar lista | Definido el ESP32; pendientes convertidores y potenciómetro digital. |
-| 10-03-2025 | 3 horas | Búsqueda de sensores de corriente y tensión. | Pendiente adjuntar | Queda pendiente definir los sensores, ya que los LEM son muy costosos. |
-| 13-10-2025 | 5 horas | Se dibuja el esquemático inicial de la PCB en KiCad y se genera la primera propuesta. | Agregar imagen del esquemático y de la PCB | Propuesta inicial; falta agregar alimentación del ESP32, OPAMPs y sensores. |
+| Fecha       | Horas   | Objetivos | Descripción | Resultados | Comentario |
+|:-----------:|:-------:|-----------|-------------|------------|------------|
+| - | - | Exponer las ideas del grupo <br> Dibujar un modelo de lo que se quiere.| Se diseña un borrador del protoripo final que se quiere implementar. | Se dibuja un esquematico con las partes del prototipo. | Queda pendiente definir si utilizar un ESP-32 o un C2000.|
+
+| - | - | Diseñar un circuito y un lazo de control que se encargue de ciclar la bateria. <br> Simular el circuito y verficiar que puede cargar y descargar la bateria con la topología utilizada. | Se diseño el circuito del ciclador y se simuló en PSpice. | La simulación del circuito cumplio con cargar y descargar la bateria cuando se le da la señal al amplificador operacional por medio del sistema de control. | Falta hacer los calculos de la señal de control para verificar que el circuito si cumple con las ecuaciones de carga y descarga.|
+
+| - | - | Calcular la acción de control de la malla de carga y descarga. | Se hicierón los calculos correspondientes para identificar la acción de control de cada malla. | La acción de control dio como se esperaba, el circuito de carga positivo y el de descarga negativo. | Se aseguró que el circuito funciona, por lo que lo proximo es buscar los componentes y diseñar la PCB.|
+
+| - | - | Hacer una lista de los componentes a utilizar, en donde se tenga la hoja de datos, el link de compra y el precio. <br>Definir el microcontrolador que se va utilizar. | Se buscarón y compararón los componentes. Se buscarón las caracterisiticas de los microcontroladores. | Se generón un archivo de exel con los compoentes que se van a utilizar, hoas de datos y precio. Ademas se escogio el microcontrolador ESP-32 por sus caracterisiticas de comunicación. | Al utilizar diferentes baterias se requieren diferentes tensiones controladas por medio de la computadora, por eso se requiere un convertidor DC-DC variables que se va a hacer comprando un convertidor DC-DC normal y colocandole un trimmer digital en el trimmer que ya viene.  |
+
+| - | 3 Horas | Definir los sesnores de corriente y tensión. | Búsqueda de sensores de corriente y tensión. | Se encontraron sensores de arduino como lo que se tenian y sensores LEM muy caros. | Queda pendiente definir los sensores, para eso se va hablar con el profesor. |
+
+| - | 5 horas | Diseñar la PCB en KiCad para presentarsela al profesor. | Se dibuja el esquemático inicial de la PCB en KiCad y se genera la primera propuesta para el profesor. | Se obtuvo una PBC de 10cm x 10cm en la que se puede poner el ESP32.| Queda pendiente presentarsela al profesor. |
+
+| 23/3/2025 | 2 Horas |Presentar la propuesta de la PCB al profesor y despejar dudas del circuito y sistema de control. | Se tuvo una reunión en el laboratorio con el profesor, se aclararón las dudas del grupo del sistema de control en la sección prealimentada y del circuito en la fuente de tensión. | Se llego a la conclusión de que se ocupa diseñar la caja que va a contener la electronica para terminar la PCB y se requiere diseñar los puertos para medir la tensión de la bateria por 4 cables. | Queda pendiente diseñar la caja del prototipo e implementar 4 wire para medir la tensión.|
+
+
 
 
