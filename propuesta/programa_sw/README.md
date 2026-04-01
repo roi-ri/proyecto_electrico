@@ -1,6 +1,6 @@
 # Propuesta para el Software y visualización/control de datos
 
-('Propuesta Final del Sistema')[\Propuesta_Arquitectura_Estructura.md]
+[Propuesta Final del Sistema](Propuesta_Arquitectura_Estructura.md)
 
 ## Objetivo del sistema
 
