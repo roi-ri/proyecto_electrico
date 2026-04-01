@@ -1,5 +1,7 @@
 # Propuesta para el Software y visualización/control de datos
 
+('Propuesta Final del Sistema')[\Propuesta_Arquitectura_Estructura.md]
+
 ## Objetivo del sistema
 
 Desarrollar una aplicación de software orientada a la adquisición, visualización y análisis de datos provenientes de un sistema de gestión de baterías (BMS) mediante un protocolo de comunicación definido, que permita:
