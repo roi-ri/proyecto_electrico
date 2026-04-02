@@ -9,7 +9,6 @@ está conectado cada sensor.
 
 #include "receive.h"
 #include "esp_adc/adc_oneshot.h"
-#include "esp_err.h"
 
 // función para inicializar los pines que reciben ADC1
 void inicializar_entradas(adc_oneshot_unit_handle_t *handle){
@@ -24,7 +23,7 @@ void inicializar_entradas(adc_oneshot_unit_handle_t *handle){
 // función para configurar la entrada 
 void configurar_entrada(adc_oneshot_unit_handle_t handle, adc_channel_t channel){
     adc_oneshot_chan_cfg_t config = {
-        .bitwidth = ADC_BITWIDTH_DEFAULT,
+        .bitwidth = ADC_BITWIDTH_12,
         .atten = ADC_ATTEN_DB_12,
     };
 
