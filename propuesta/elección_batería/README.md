@@ -4,6 +4,6 @@ Además, se incluyen enlaces a secciones específicas donde se detalla la inform
 
 | Tipo de batería | Descripción general | Características principales             | Más información                      |
 | --------------- | ------------------- | --------------------------------------- | ------------------------------------ |
-| Batería 1       | Breve descripción   | Ej: alta densidad energética, bajo peso | [Ver detalles](./bateria_1/README.md) |
-| Batería 2       | Breve descripción   | Ej: mayor seguridad, menor costo        | [Ver detalles](./bateria_2/README.md) |
-| Batería 3       | Breve descripción   | Ej: larga vida útil, menor densidad     | [Ver detalles](./bateria_3/README.md) |
+| Batería 1       | Breve descripción   | Ej: alta densidad energética, bajo peso | [Ver detalles](./batería_1/README.md) |
+| Batería 2       | Breve descripción   | Ej: mayor seguridad, menor costo        | [Ver detalles](./batería_2/README.md) |
+| Batería 3       | Breve descripción   | Ej: larga vida útil, menor densidad     | [Ver detalles](./batería_3/README.md) |
