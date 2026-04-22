@@ -1,11 +1,11 @@
 #include "ui/panels/ConnectionPanel.h"
 #include <wx/sizer.h>
+#include <wx/msgdlg.h>
 
 namespace batview::ui::panels {
 
 ConnectionPanel::ConnectionPanel(wxWindow* parent)
     : wxPanel(parent) {
-
     statusText_ = new wxStaticText(this, wxID_ANY, "Desconectado");
     connectButton_ = new wxButton(this, wxID_ANY, "Conectar");
 
