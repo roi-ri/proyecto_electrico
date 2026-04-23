@@ -2,6 +2,7 @@
 
 #ifdef BATVIEW_ENABLE_WX
 
+#include <wx/button.h>
 #include <wx/panel.h>
 #include <wx/timer.h>
 
