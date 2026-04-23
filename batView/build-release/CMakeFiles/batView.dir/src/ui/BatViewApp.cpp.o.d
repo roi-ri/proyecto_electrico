@@ -902,6 +902,44 @@ CMakeFiles/batView.dir/src/ui/BatViewApp.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/unix/app.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/signal.h \
   /opt/homebrew/include/wx-3.3/wx/osx/app.h \
+  /opt/homebrew/include/wx-3.3/wx/msgdlg.h \
+  /opt/homebrew/include/wx-3.3/wx/dialog.h \
+  /opt/homebrew/include/wx-3.3/wx/toplevel.h \
+  /opt/homebrew/include/wx-3.3/wx/nonownedwnd.h \
+  /opt/homebrew/include/wx-3.3/wx/window.h \
+  /opt/homebrew/include/wx-3.3/wx/font.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/font.h \
+  /opt/homebrew/include/wx-3.3/wx/region.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/region.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/carbon/region.h \
+  /opt/homebrew/include/wx-3.3/wx/validate.h \
+  /opt/homebrew/include/wx-3.3/wx/windowid.h \
+  /opt/homebrew/include/wx-3.3/wx/accel.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/accel.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/window.h \
+  /opt/homebrew/include/wx-3.3/wx/brush.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/brush.h \
+  /opt/homebrew/include/wx-3.3/wx/dc.h \
+  /opt/homebrew/include/wx-3.3/wx/pen.h \
+  /opt/homebrew/include/wx-3.3/wx/peninfobase.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/pen.h \
+  /opt/homebrew/include/wx-3.3/wx/affinematrix2d.h \
+  /opt/homebrew/include/wx-3.3/wx/affinematrix2dbase.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/nonownedwnd.h \
+  /opt/homebrew/include/wx-3.3/wx/graphics.h \
+  /opt/homebrew/include/wx-3.3/wx/iconbndl.h \
+  /opt/homebrew/include/wx-3.3/wx/icon.h \
+  /opt/homebrew/include/wx-3.3/wx/iconloc.h \
+  /opt/homebrew/include/wx-3.3/wx/generic/icon.h \
+  /opt/homebrew/include/wx-3.3/wx/weakref.h \
+  /opt/homebrew/include/wx-3.3/wx/meta/int2type.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/toplevel.h \
+  /opt/homebrew/include/wx-3.3/wx/containr.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/dialog.h \
+  /opt/homebrew/include/wx-3.3/wx/panel.h \
+  /opt/homebrew/include/wx-3.3/wx/stockitem.h \
+  /opt/homebrew/include/wx-3.3/wx/generic/msgdlgg.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/msgdlg.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/core/protocol/TextProtocolCodec.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/core/protocol/IProtocolCodec.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/core/protocol/ProtocolTypes.h \
@@ -945,25 +983,6 @@ CMakeFiles/batView.dir/src/ui/BatViewApp.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/animate.h \
   /opt/homebrew/include/wx-3.3/wx/animdecod.h \
   /opt/homebrew/include/wx-3.3/wx/control.h \
-  /opt/homebrew/include/wx-3.3/wx/window.h \
-  /opt/homebrew/include/wx-3.3/wx/font.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/font.h \
-  /opt/homebrew/include/wx-3.3/wx/region.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/region.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/carbon/region.h \
-  /opt/homebrew/include/wx-3.3/wx/validate.h \
-  /opt/homebrew/include/wx-3.3/wx/windowid.h \
-  /opt/homebrew/include/wx-3.3/wx/accel.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/accel.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/window.h \
-  /opt/homebrew/include/wx-3.3/wx/brush.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/brush.h \
-  /opt/homebrew/include/wx-3.3/wx/dc.h \
-  /opt/homebrew/include/wx-3.3/wx/pen.h \
-  /opt/homebrew/include/wx-3.3/wx/peninfobase.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/pen.h \
-  /opt/homebrew/include/wx-3.3/wx/affinematrix2d.h \
-  /opt/homebrew/include/wx-3.3/wx/affinematrix2dbase.h \
   /opt/homebrew/include/wx-3.3/wx/osx/control.h \
   /opt/homebrew/include/wx-3.3/wx/timer.h \
   /opt/homebrew/include/wx-3.3/wx/stopwatch.h \
@@ -972,17 +991,6 @@ CMakeFiles/batView.dir/src/ui/BatViewApp.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/gauge.h \
   /opt/homebrew/include/wx-3.3/wx/osx/gauge.h \
   /opt/homebrew/include/wx-3.3/wx/frame.h \
-  /opt/homebrew/include/wx-3.3/wx/toplevel.h \
-  /opt/homebrew/include/wx-3.3/wx/nonownedwnd.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/nonownedwnd.h \
-  /opt/homebrew/include/wx-3.3/wx/graphics.h \
-  /opt/homebrew/include/wx-3.3/wx/iconbndl.h \
-  /opt/homebrew/include/wx-3.3/wx/icon.h \
-  /opt/homebrew/include/wx-3.3/wx/iconloc.h \
-  /opt/homebrew/include/wx-3.3/wx/generic/icon.h \
-  /opt/homebrew/include/wx-3.3/wx/weakref.h \
-  /opt/homebrew/include/wx-3.3/wx/meta/int2type.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/toplevel.h \
   /opt/homebrew/include/wx-3.3/wx/statusbr.h \
   /opt/homebrew/include/wx-3.3/wx/generic/statusbr.h \
   /opt/homebrew/include/wx-3.3/wx/osx/statusbr.h \
@@ -1007,7 +1015,6 @@ CMakeFiles/batView.dir/src/ui/BatViewApp.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/generic/imaglist.h \
   /opt/homebrew/include/wx-3.3/wx/notebook.h \
   /opt/homebrew/include/wx-3.3/wx/osx/notebook.h \
-  /opt/homebrew/include/wx-3.3/wx/containr.h \
   /opt/homebrew/include/wx-3.3/wx/splitter.h \
   /opt/homebrew/include/wx-3.3/wx/generic/splitter.h \
   /opt/homebrew/include/wx-3.3/wx/overlay.h \
@@ -1021,11 +1028,8 @@ CMakeFiles/batView.dir/src/ui/BatViewApp.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/stattext.h \
   /opt/homebrew/include/wx-3.3/wx/osx/stattext.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/panels/ConnectionPanel.h \
-  /opt/homebrew/include/wx-3.3/wx/panel.h \
   /opt/homebrew/include/wx-3.3/wx/combobox.h \
   /opt/homebrew/include/wx-3.3/wx/osx/combobox.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/panels/PlotPanel.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/viewmodels/MainViewModel.h \
-  /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/dialogs/ExportDialog.h \
-  /opt/homebrew/include/wx-3.3/wx/dialog.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/dialog.h
+  /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/dialogs/ExportDialog.h

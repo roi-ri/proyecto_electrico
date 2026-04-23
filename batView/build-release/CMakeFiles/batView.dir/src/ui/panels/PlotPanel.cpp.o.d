@@ -1,9 +1,7 @@
 CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/panels/PlotPanel.cpp \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/ui/panels/PlotPanel.h \
-  /opt/homebrew/include/wx-3.3/wx/panel.h \
-  /opt/homebrew/include/wx-3.3/wx/window.h \
-  /opt/homebrew/include/wx-3.3/wx/event.h \
+  /opt/homebrew/include/wx-3.3/wx/button.h \
   /opt/homebrew/include/wx-3.3/wx/defs.h \
   /opt/homebrew/include/wx-3.3/wx/platform.h \
   /opt/homebrew/include/wx-3.3/wx/compiler.h \
@@ -165,7 +163,9 @@ CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/runetype.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__mbstate_t.h \
   /opt/homebrew/include/wx-3.3/wx/features.h \
-  /opt/homebrew/include/wx-3.3/wx/object.h \
+  /opt/homebrew/include/wx-3.3/wx/anybutton.h \
+  /opt/homebrew/include/wx-3.3/wx/bmpbndl.h \
+  /opt/homebrew/include/wx-3.3/wx/bitmap.h \
   /opt/homebrew/include/wx-3.3/wx/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/string.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/string.h \
@@ -810,21 +810,35 @@ CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/default_searcher.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/not_fn.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/__functional/perfect_forward.h \
+  /opt/homebrew/include/wx-3.3/wx/gdicmn.h \
+  /opt/homebrew/include/wx-3.3/wx/list.h \
+  /opt/homebrew/include/wx-3.3/wx/object.h \
   /opt/homebrew/include/wx-3.3/wx/xti.h \
   /opt/homebrew/include/wx-3.3/wx/rtti.h \
   /opt/homebrew/include/wx-3.3/wx/flags.h \
   /opt/homebrew/include/wx-3.3/wx/xti2.h \
-  /opt/homebrew/include/wx-3.3/wx/clntdata.h \
-  /opt/homebrew/include/wx-3.3/wx/math.h \
-  /opt/homebrew/include/wx-3.3/wx/gdicmn.h \
-  /opt/homebrew/include/wx-3.3/wx/list.h \
   /opt/homebrew/include/wx-3.3/wx/vector.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1/list \
-  /opt/homebrew/include/wx-3.3/wx/geometry.h \
-  /opt/homebrew/include/wx-3.3/wx/utils.h \
-  /opt/homebrew/include/wx-3.3/wx/filefn.h \
+  /opt/homebrew/include/wx-3.3/wx/math.h \
+  /opt/homebrew/include/wx-3.3/wx/colour.h \
+  /opt/homebrew/include/wx-3.3/wx/gdiobj.h \
+  /opt/homebrew/include/wx-3.3/wx/variant.h \
   /opt/homebrew/include/wx-3.3/wx/arrstr.h \
   /opt/homebrew/include/wx-3.3/wx/dynarray.h \
+  /opt/homebrew/include/wx-3.3/wx/longlong.h \
+  /opt/homebrew/include/wx-3.3/wx/datetime.h \
+  /opt/homebrew/include/wx-3.3/wx/anystr.h \
+  /opt/homebrew/include/wx-3.3/wx/any.h \
+  /opt/homebrew/include/wx-3.3/wx/meta/if.h \
+  /opt/homebrew/include/wx-3.3/wx/typeinfo.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/colour.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/core/colour.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/core/cfref.h \
+  /opt/homebrew/include/wx-3.3/wx/image.h \
+  /opt/homebrew/include/wx-3.3/wx/hashmap.h \
+  /opt/homebrew/include/wx-3.3/wx/wxcrt.h \
+  /opt/homebrew/include/wx-3.3/wx/stream.h \
+  /opt/homebrew/include/wx-3.3/wx/filefn.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/stat.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_s_ifmt.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_filesec_t.h \
@@ -841,34 +855,9 @@ CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/fcntl.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_o_sync.h \
   /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/sys/_types/_o_dsync.h \
-  /opt/homebrew/include/wx-3.3/wx/versioninfo.h \
-  /opt/homebrew/include/wx-3.3/wx/meta/implicitconversion.h \
-  /opt/homebrew/include/wx-3.3/wx/meta/if.h \
-  /opt/homebrew/include/wx-3.3/wx/busycursor.h \
-  /opt/homebrew/include/wx-3.3/wx/mousestate.h \
-  /opt/homebrew/include/wx-3.3/wx/kbdstate.h \
-  /opt/homebrew/include/wx-3.3/wx/longlong.h \
-  /opt/homebrew/include/wx-3.3/wx/platinfo.h \
-  /opt/homebrew/include/wx-3.3/wx/wxcrt.h \
-  /opt/homebrew/include/wx-3.3/wx/itemid.h \
-  /opt/homebrew/include/wx-3.3/wx/cursor.h \
-  /opt/homebrew/include/wx-3.3/wx/gdiobj.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/cursor.h \
-  /opt/homebrew/include/wx-3.3/wx/bitmap.h \
-  /opt/homebrew/include/wx-3.3/wx/colour.h \
-  /opt/homebrew/include/wx-3.3/wx/variant.h \
-  /opt/homebrew/include/wx-3.3/wx/datetime.h \
-  /opt/homebrew/include/wx-3.3/wx/anystr.h \
-  /opt/homebrew/include/wx-3.3/wx/any.h \
-  /opt/homebrew/include/wx-3.3/wx/typeinfo.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/colour.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/core/colour.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/core/cfref.h \
-  /opt/homebrew/include/wx-3.3/wx/image.h \
-  /opt/homebrew/include/wx-3.3/wx/hashmap.h \
-  /opt/homebrew/include/wx-3.3/wx/stream.h \
   /opt/homebrew/include/wx-3.3/wx/imagbmp.h \
   /opt/homebrew/include/wx-3.3/wx/imagpng.h \
+  /opt/homebrew/include/wx-3.3/wx/versioninfo.h \
   /opt/homebrew/include/wx-3.3/wx/imaggif.h \
   /opt/homebrew/include/wx-3.3/wx/imagpcx.h \
   /opt/homebrew/include/wx-3.3/wx/imagjpeg.h \
@@ -881,6 +870,20 @@ CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/osx/bitmap.h \
   /opt/homebrew/include/wx-3.3/wx/palette.h \
   /opt/homebrew/include/wx-3.3/wx/osx/palette.h \
+  /opt/homebrew/include/wx-3.3/wx/control.h \
+  /opt/homebrew/include/wx-3.3/wx/window.h \
+  /opt/homebrew/include/wx-3.3/wx/event.h \
+  /opt/homebrew/include/wx-3.3/wx/clntdata.h \
+  /opt/homebrew/include/wx-3.3/wx/geometry.h \
+  /opt/homebrew/include/wx-3.3/wx/utils.h \
+  /opt/homebrew/include/wx-3.3/wx/meta/implicitconversion.h \
+  /opt/homebrew/include/wx-3.3/wx/busycursor.h \
+  /opt/homebrew/include/wx-3.3/wx/mousestate.h \
+  /opt/homebrew/include/wx-3.3/wx/kbdstate.h \
+  /opt/homebrew/include/wx-3.3/wx/platinfo.h \
+  /opt/homebrew/include/wx-3.3/wx/itemid.h \
+  /opt/homebrew/include/wx-3.3/wx/cursor.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/cursor.h \
   /opt/homebrew/include/wx-3.3/wx/thread.h \
   /opt/homebrew/include/wx-3.3/wx/tracker.h \
   /opt/homebrew/include/wx-3.3/wx/recguard.h \
@@ -910,6 +913,10 @@ CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /opt/homebrew/include/wx-3.3/wx/osx/pen.h \
   /opt/homebrew/include/wx-3.3/wx/affinematrix2d.h \
   /opt/homebrew/include/wx-3.3/wx/affinematrix2dbase.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/control.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/anybutton.h \
+  /opt/homebrew/include/wx-3.3/wx/osx/button.h \
+  /opt/homebrew/include/wx-3.3/wx/panel.h \
   /opt/homebrew/include/wx-3.3/wx/containr.h \
   /opt/homebrew/include/wx-3.3/wx/timer.h \
   /opt/homebrew/include/wx-3.3/wx/stopwatch.h \
@@ -948,13 +955,6 @@ CMakeFiles/batView.dir/src/ui/panels/PlotPanel.cpp.o: \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/core/services/ProtocolSessionService.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/core/protocol/IProtocolCodec.h \
   /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/src/core/protocol/ProtocolTypes.h \
-  /opt/homebrew/include/wx-3.3/wx/button.h \
-  /opt/homebrew/include/wx-3.3/wx/anybutton.h \
-  /opt/homebrew/include/wx-3.3/wx/bmpbndl.h \
-  /opt/homebrew/include/wx-3.3/wx/control.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/control.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/anybutton.h \
-  /opt/homebrew/include/wx-3.3/wx/osx/button.h \
   /opt/homebrew/include/wx-3.3/wx/choice.h \
   /opt/homebrew/include/wx-3.3/wx/ctrlsub.h \
   /opt/homebrew/include/wx-3.3/wx/osx/choice.h \
