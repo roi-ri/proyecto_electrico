@@ -109,6 +109,37 @@ cmake --build build-release --config Release
 ./build-release/batView
 ```
 
+##### Notas para Ubuntu
+
+Si clonas o copias el repo desde otro sistema operativo, no reutilices el mismo `build-release` entre máquinas (por ejemplo macOS -> Ubuntu), porque CMake guarda rutas absolutas en cache.
+
+Instala dependencias (Ubuntu 24.04):
+
+```bash
+sudo apt update
+sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev
+```
+
+Si `find_package(wxWidgets)` falla, también puedes instalar:
+
+```bash
+sudo apt install -y wx3.2-headers wx-common
+```
+
+Reconfigura desde cero en Ubuntu:
+
+```bash
+rm -rf build-release
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+cmake --build build-release -j"$(nproc)"
+./build-release/batView
+```
+
+Errores comunes:
+
+- `CMakeCache.txt directory is different`: elimina `build-release` y vuelve a configurar.
+- `Could NOT find wxWidgets`: instala los paquetes de desarrollo de wxWidgets (`libwxgtk3.2-dev`).
+
 #### Windows
 
 ```powershell
