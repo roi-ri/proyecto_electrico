@@ -1,9 +1,0 @@
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/batView.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/package.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/package_source.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/edit_cache.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/rebuild_cache.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/list_install_components.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/install.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/install/local.dir
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build/CMakeFiles/install/strip.dir

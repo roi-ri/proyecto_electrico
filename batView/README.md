@@ -96,7 +96,7 @@ La aplicación no fabrica esos valores. Lo único que hace en la gráfica es con
 #### macOS
 
 ```bash
-cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
 open build-release/batView.app
 ```
@@ -104,7 +104,7 @@ open build-release/batView.app
 #### Linux
 
 ```bash
-cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
 ./build-release/batView
 ```
@@ -143,16 +143,38 @@ Errores comunes:
 #### Windows
 
 ```powershell
-cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
 .\build-release\Release\batView.exe
 ```
 
 ### Empaquetado
 
+Comando recomendado para generar un paquete local portable:
+
 ```bash
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release -DBATVIEW_PACKAGE_FORMAT=PORTABLE
 cmake --build build-release --config Release --target package
 ```
+
+Esto genera artefactos dentro de `dist/` usando un formato portable y estable por plataforma:
+
+- macOS: `.zip`
+- Windows: `.zip`
+- Linux: `.tar.gz`
+
+Si necesitas un instalador nativo en vez del paquete portable, reconfigura con:
+
+```bash
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release -DBATVIEW_PACKAGE_FORMAT=NATIVE
+cmake --build build-release --config Release --target package
+```
+
+Notas:
+
+- En macOS, el formato nativo usa `DragNDrop` (`.dmg`) y puede fallar en algunos entornos locales.
+- En Linux, el formato nativo intenta generar un `.deb`.
+- En Windows, el formato nativo intenta generar un instalador `NSIS`.
 
 ### Suite de tests
 
