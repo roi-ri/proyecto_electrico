@@ -1,6 +1,0 @@
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/dist/_CPack_Packages/Darwin/ZIP/batView-1.0.0-Darwin-arm64/./batView.app/Contents/MacOS/batView
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/dist/_CPack_Packages/Darwin/ZIP/batView-1.0.0-Darwin-arm64/./batView.app/Contents/Resources/batView.gif
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/dist/_CPack_Packages/Darwin/ZIP/batView-1.0.0-Darwin-arm64/./batView.app/Contents/Resources/BatView.png
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/dist/_CPack_Packages/Darwin/ZIP/batView-1.0.0-Darwin-arm64/./batView.app/Contents/Info.plist
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/dist/_CPack_Packages/Darwin/ZIP/batView-1.0.0-Darwin-arm64/./README.md
-/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/dist/_CPack_Packages/Darwin/ZIP/batView-1.0.0-Darwin-arm64/./DOWNLOAD_AND_INSTALL.md
