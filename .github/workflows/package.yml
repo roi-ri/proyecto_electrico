@@ -7,6 +7,9 @@ on:
       - main
       - batView
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   package-macos:
     runs-on: macos-latest
@@ -64,14 +67,15 @@ jobs:
         run: cpack --config build-release/CPackConfig.cmake
 
       - name: Build AppImage
+        working-directory: batView
         run: |
           sudo apt install -y libfuse2 patchelf
           mkdir -p AppDir/usr/bin
           mkdir -p AppDir/usr/share/applications
           mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
 
-          cp batView/build-release/batView AppDir/usr/bin/batView
-          cp batView/assets/BatView.png AppDir/usr/share/icons/hicolor/256x256/apps/batview.png
+          cp build-release/batView AppDir/usr/bin/batView
+          cp assets/BatView.png AppDir/usr/share/icons/hicolor/256x256/apps/batview.png
 
           cat > AppDir/usr/share/applications/batview.desktop <<'EOF'
           [Desktop Entry]
@@ -137,6 +141,7 @@ jobs:
         run: cpack --config build-release/CPackConfig.cmake
 
       - name: Build portable ZIP with runtime DLLs
+        working-directory: batView
         run: |
           mkdir -p portable/assets
           cp build-release/batView.exe portable/
