@@ -99,7 +99,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash
+        shell: powershell
 
     steps:
       - name: Checkout
@@ -128,24 +128,24 @@ jobs:
 
       - name: Build portable ZIP with runtime DLLs
         run: |
-          cd batView
-          mkdir -p portable/assets
-          cp build-release/batView.exe portable/
-          cp assets/BatView.png portable/assets/
-          cp assets/batView.gif portable/assets/
+          Set-Location batView
+          New-Item -ItemType Directory -Force -Path portable/assets | Out-Null
+          Copy-Item build-release/batView.exe portable/
+          Copy-Item assets/BatView.png portable/assets/
+          Copy-Item assets/batView.gif portable/assets/
 
-          for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
-            cp "/ucrt64/bin/${dll}" portable/ || true
-          done
+          foreach ($dll in @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll')) {
+            Copy-Item "/ucrt64/bin/$dll" portable/ -ErrorAction SilentlyContinue
+          }
 
-          cp /ucrt64/bin/libwx*.dll portable/ || true
-          cp /ucrt64/bin/zlib1.dll portable/ || true
-          cp /ucrt64/bin/libpng16-16.dll portable/ || true
-          cp /ucrt64/bin/libjpeg-8.dll portable/ || true
-          cp /ucrt64/bin/libtiff-6.dll portable/ || true
+          Copy-Item /ucrt64/bin/libwx*.dll portable/ -ErrorAction SilentlyContinue
+          Copy-Item /ucrt64/bin/zlib1.dll portable/ -ErrorAction SilentlyContinue
+          Copy-Item /ucrt64/bin/libpng16-16.dll portable/ -ErrorAction SilentlyContinue
+          Copy-Item /ucrt64/bin/libjpeg-8.dll portable/ -ErrorAction SilentlyContinue
+          Copy-Item /ucrt64/bin/libtiff-6.dll portable/ -ErrorAction SilentlyContinue
 
-          mkdir -p dist
-          tar -a -c -f dist/batView-windows-portable.zip -C portable .
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path portable/* -DestinationPath dist/batView-windows-portable.zip -Force
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
