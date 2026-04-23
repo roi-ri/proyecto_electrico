@@ -1,0 +1,3 @@
+[submodule "batView/external/googletest"]
+	path = batView/external/googletest
+	url = https://github.com/google/googletest.git

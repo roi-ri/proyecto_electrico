@@ -1,0 +1,60 @@
+Start testing: Apr 23 14:29 CST
+----------------------------------------------------------
+1/1 Testing: BatViewTests
+1/1 Test: BatViewTests
+Command: "/Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build-tests/run_tests"
+Directory: /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/build-tests
+"BatViewTests" start time: Apr 23 14:29 CST
+Output:
+----------------------------------------------------------
+Running main() from /Users/rodrigo/Documents/UCR/Proyecto_Electrico/proyecto_electrico/batView/external/googletest/googletest/src/gtest_main.cc
+[==========] Running 12 tests from 4 test suites.
+[----------] Global test environment set-up.
+[----------] 4 tests from ConnectionServiceTest
+[ RUN      ] ConnectionServiceTest.ConnectSuccess
+[       OK ] ConnectionServiceTest.ConnectSuccess (0 ms)
+[ RUN      ] ConnectionServiceTest.RetriesHandshakeAfterReadyStatus
+[       OK ] ConnectionServiceTest.RetriesHandshakeAfterReadyStatus (0 ms)
+[ RUN      ] ConnectionServiceTest.ConnectFailure
+[       OK ] ConnectionServiceTest.ConnectFailure (0 ms)
+[ RUN      ] ConnectionServiceTest.HandshakeTimeout
+[       OK ] ConnectionServiceTest.HandshakeTimeout (6000 ms)
+[----------] 4 tests from ConnectionServiceTest (6000 ms total)
+
+[----------] 2 tests from AcquisitionServiceTest
+[ RUN      ] AcquisitionServiceTest.CapturesTelemetryFrames
+[       OK ] AcquisitionServiceTest.CapturesTelemetryFrames (55 ms)
+[ RUN      ] AcquisitionServiceTest.StopsCleanly
+[       OK ] AcquisitionServiceTest.StopsCleanly (11 ms)
+[----------] 2 tests from AcquisitionServiceTest (66 ms total)
+
+[----------] 3 tests from ExportServiceTest
+[ RUN      ] ExportServiceTest.ExportToCsvSuccess
+[       OK ] ExportServiceTest.ExportToCsvSuccess (0 ms)
+[ RUN      ] ExportServiceTest.ExportServiceDelegatesToCsv
+[       OK ] ExportServiceTest.ExportServiceDelegatesToCsv (0 ms)
+[ RUN      ] ExportServiceTest.ExportToMatWritesSessionFile
+[       OK ] ExportServiceTest.ExportToMatWritesSessionFile (0 ms)
+[----------] 3 tests from ExportServiceTest (0 ms total)
+
+[----------] 3 tests from PlotServiceTest
+[ RUN      ] PlotServiceTest.ExportPlotCsvUsesSelectedAxes
+[       OK ] PlotServiceTest.ExportPlotCsvUsesSelectedAxes (0 ms)
+[ RUN      ] PlotServiceTest.ExportPlotMatWritesData
+[       OK ] PlotServiceTest.ExportPlotMatWritesData (0 ms)
+[ RUN      ] PlotServiceTest.AxisLabelsRemainStable
+[       OK ] PlotServiceTest.AxisLabelsRemainStable (0 ms)
+[----------] 3 tests from PlotServiceTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 12 tests from 4 test suites ran. (6068 ms total)
+[  PASSED  ] 12 tests.
+<end of output>
+Test time =   6.08 sec
+----------------------------------------------------------
+Test Passed.
+"BatViewTests" end time: Apr 23 14:29 CST
+"BatViewTests" time elapsed: 00:00:06
+----------------------------------------------------------
+
+End testing: Apr 23 14:29 CST
