@@ -23,9 +23,19 @@ jobs:
           brew update
           brew install wxwidgets
 
+      - name: Verify wxWidgets
+        run: |
+          WX_PREFIX="$(brew --prefix wxwidgets)"
+          "${WX_PREFIX}/bin/wx-config" --version
+
       - name: Configure
         working-directory: batView
-        run: cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        run: |
+          WX_PREFIX="$(brew --prefix wxwidgets)"
+          cmake -S . -B build-release \
+            -DBATVIEW_ENABLE_WX=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DwxWidgets_CONFIG_EXECUTABLE="${WX_PREFIX}/bin/wx-config"
 
       - name: Build
         working-directory: batView
@@ -54,9 +64,16 @@ jobs:
           sudo apt update
           sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev
 
+      - name: Verify wxWidgets
+        run: wx-config --version
+
       - name: Configure
         working-directory: batView
-        run: cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -S . -B build-release \
+            -DBATVIEW_ENABLE_WX=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DwxWidgets_CONFIG_EXECUTABLE=/usr/bin/wx-config
 
       - name: Build
         working-directory: batView
@@ -125,12 +142,19 @@ jobs:
             mingw-w64-ucrt-x86_64-toolchain
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-ninja
-            mingw-w64-ucrt-x86_64-wxwidgets
+            mingw-w64-ucrt-x86_64-wxwidgets3.2-msw
             mingw-w64-ucrt-x86_64-nsis
+
+      - name: Verify wxWidgets
+        run: wx-config --version
 
       - name: Configure
         working-directory: batView
-        run: cmake -S . -B build-release -G Ninja -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        run: |
+          cmake -S . -B build-release -G Ninja \
+            -DBATVIEW_ENABLE_WX=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DwxWidgets_CONFIG_EXECUTABLE=/ucrt64/bin/wx-config
 
       - name: Build
         working-directory: batView
