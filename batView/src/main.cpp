@@ -4,6 +4,7 @@
 
 #else
 
+#include <filesystem>
 #include <memory>
 
 #include "app/AppController.h"
@@ -45,7 +46,8 @@ int main() {
     controller.StartCycle(true, 0);
     controller.StopCycle();
     std::string exportError;
-    (void)viewModel.ExportData("data/session_stub.csv", "CSV", exportError);
+    const auto demoExportPath = (std::filesystem::temp_directory_path() / "batView_session_stub.csv").string();
+    (void)viewModel.ExportData(demoExportPath, "CSV", exportError);
 
     logger.Info("batView base architecture initialized.");
     return 0;

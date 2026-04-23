@@ -174,9 +174,6 @@ endif()
 if(BATVIEW_ENABLE_WX)
     target_compile_definitions(batView PRIVATE
         BATVIEW_ENABLE_WX=1
-        BATVIEW_ASSET_DIR="${CMAKE_CURRENT_BINARY_DIR}/assets"
-        BATVIEW_SOURCE_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        BATVIEW_INSTALL_ASSET_SUBDIR="assets"
     )
     target_link_libraries(batView PRIVATE ${wxWidgets_LIBRARIES})
     if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)

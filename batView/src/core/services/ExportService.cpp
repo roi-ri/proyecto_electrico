@@ -1,6 +1,7 @@
 #include "core/services/ExportService.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <vector>
@@ -116,6 +117,12 @@ bool ExportService::ExportToCsv(const std::string& filePath,
 bool ExportService::ExportToMat(const std::string& filePath,
                                 const std::vector<core::models::Measurement>& data,
                                 std::string& outError) const {
+    std::error_code error;
+    const std::filesystem::path path(filePath);
+    if (path.has_parent_path()) {
+        std::filesystem::create_directories(path.parent_path(), error);
+    }
+
     std::ofstream file(filePath, std::ios::binary);
     if (!file.is_open()) {
         outError = "No se pudo abrir el archivo MAT: " + filePath;

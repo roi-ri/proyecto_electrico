@@ -1,6 +1,7 @@
 #include "core/services/PlotService.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <utility>
@@ -115,6 +116,12 @@ bool PlotService::ExportPlotCsv(const std::string& filePath,
                                 PlotAxis yAxis,
                                 std::string& outError) const {
     const auto [xValues, yValues] = ExtractSeries(data, xAxis, yAxis);
+    std::error_code error;
+    const std::filesystem::path path(filePath);
+    if (path.has_parent_path()) {
+        std::filesystem::create_directories(path.parent_path(), error);
+    }
+
     std::ofstream file(filePath);
     if (!file.is_open()) {
         outError = "No se pudo abrir el archivo CSV: " + filePath;
@@ -140,6 +147,12 @@ bool PlotService::ExportPlotMat(const std::string& filePath,
                                 PlotAxis yAxis,
                                 std::string& outError) const {
     const auto [xValues, yValues] = ExtractSeries(data, xAxis, yAxis);
+    std::error_code error;
+    const std::filesystem::path path(filePath);
+    if (path.has_parent_path()) {
+        std::filesystem::create_directories(path.parent_path(), error);
+    }
+
     std::ofstream file(filePath, std::ios::binary);
     if (!file.is_open()) {
         outError = "No se pudo abrir el archivo MAT: " + filePath;

@@ -2,8 +2,11 @@
 
 #ifdef BATVIEW_ENABLE_WX
 
+#include <filesystem>
+
 #include <wx/stattext.h>
 #include <wx/sizer.h>
+#include <wx/stdpaths.h>
 
 namespace batview::ui::dialogs {
 
@@ -11,7 +14,15 @@ ExportDialog::ExportDialog(wxWindow* parent)
     : wxDialog(parent, wxID_ANY, "Exportar datos", wxDefaultPosition, wxSize(420, 180)) {
     auto* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-    filePathCtrl_ = new wxTextCtrl(this, wxID_ANY, "data/session.csv");
+    std::error_code error;
+    std::filesystem::path defaultPath(wxStandardPaths::Get().GetDocumentsDir().ToStdString());
+    if (defaultPath.empty()) {
+        defaultPath = std::filesystem::current_path(error);
+    }
+    defaultPath /= "batView";
+    defaultPath /= "session.csv";
+
+    filePathCtrl_ = new wxTextCtrl(this, wxID_ANY, defaultPath.string());
     formatChoice_ = new wxChoice(this, wxID_ANY);
     formatChoice_->Append("CSV");
     formatChoice_->Append("MAT");

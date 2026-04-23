@@ -69,9 +69,6 @@ bool TrySetFrameIcon(wxFrame& frame, const std::filesystem::path& iconPath, wxBi
 std::vector<std::filesystem::path> GetAssetDirectories() {
     std::vector<std::filesystem::path> directories;
 
-    directories.emplace_back(BATVIEW_ASSET_DIR);
-    directories.emplace_back(BATVIEW_SOURCE_ASSET_DIR);
-
     const wxStandardPaths& standardPaths = wxStandardPaths::Get();
     directories.emplace_back(standardPaths.GetResourcesDir().ToStdString());
 
@@ -79,7 +76,14 @@ std::vector<std::filesystem::path> GetAssetDirectories() {
     if (!executablePath.empty()) {
         const std::filesystem::path executableDir = executablePath.parent_path();
         directories.push_back(executableDir);
-        directories.push_back(executableDir / BATVIEW_INSTALL_ASSET_SUBDIR);
+        directories.push_back(executableDir / "assets");
+    }
+
+    std::error_code error;
+    const auto cwd = std::filesystem::current_path(error);
+    if (!error) {
+        directories.push_back(cwd);
+        directories.push_back(cwd / "assets");
     }
 
     std::sort(directories.begin(), directories.end());
