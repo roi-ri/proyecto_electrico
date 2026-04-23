@@ -19,13 +19,16 @@ jobs:
           brew install wxwidgets
 
       - name: Configure
-        run: cd batView && cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        working-directory: batView
+        run: cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cd batView && cmake --build build-release --config Release
+        working-directory: batView
+        run: cmake --build build-release --config Release
 
       - name: Package
-        run: cd batView && cpack --config build-release/CPackConfig.cmake
+        working-directory: batView
+        run: cpack --config build-release/CPackConfig.cmake
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
@@ -47,24 +50,26 @@ jobs:
           sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev
 
       - name: Configure
-        run: cd batView && cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        working-directory: batView
+        run: cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cd batView && cmake --build build-release --config Release
+        working-directory: batView
+        run: cmake --build build-release --config Release
 
       - name: Package
-        run: cd batView && cpack --config build-release/CPackConfig.cmake
+        working-directory: batView
+        run: cpack --config build-release/CPackConfig.cmake
 
       - name: Build AppImage
         run: |
-          cd batView
           sudo apt install -y libfuse2 patchelf
           mkdir -p AppDir/usr/bin
           mkdir -p AppDir/usr/share/applications
           mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
 
-          cp build-release/batView AppDir/usr/bin/batView
-          cp assets/BatView.png AppDir/usr/share/icons/hicolor/256x256/apps/batview.png
+          cp batView/build-release/batView AppDir/usr/bin/batView
+          cp batView/assets/BatView.png AppDir/usr/share/icons/hicolor/256x256/apps/batview.png
 
           cat > AppDir/usr/share/applications/batview.desktop <<'EOF'
           [Desktop Entry]
@@ -99,7 +104,7 @@ jobs:
 
     defaults:
       run:
-        shell: powershell
+        shell: msys2 {0}
 
     steps:
       - name: Checkout
@@ -118,34 +123,36 @@ jobs:
             mingw-w64-ucrt-x86_64-nsis
 
       - name: Configure
-        run: cd batView && cmake -S . -B build-release -G Ninja -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        working-directory: batView
+        run: cmake -S . -B build-release -G Ninja -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cd batView && cmake --build build-release
+        working-directory: batView
+        run: cmake --build build-release
 
       - name: Package
-        run: cd batView && cpack --config build-release/CPackConfig.cmake
+        working-directory: batView
+        run: cpack --config build-release/CPackConfig.cmake
 
       - name: Build portable ZIP with runtime DLLs
         run: |
-          Set-Location batView
-          New-Item -ItemType Directory -Force -Path portable/assets | Out-Null
-          Copy-Item build-release/batView.exe portable/
-          Copy-Item assets/BatView.png portable/assets/
-          Copy-Item assets/batView.gif portable/assets/
+          mkdir -p portable/assets
+          cp build-release/batView.exe portable/
+          cp assets/BatView.png portable/assets/
+          cp assets/batView.gif portable/assets/
 
-          foreach ($dll in @('libgcc_s_seh-1.dll', 'libstdc++-6.dll', 'libwinpthread-1.dll')) {
-            Copy-Item "/ucrt64/bin/$dll" portable/ -ErrorAction SilentlyContinue
-          }
+          for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
+            cp "/ucrt64/bin/${dll}" portable/ || true
+          done
 
-          Copy-Item /ucrt64/bin/libwx*.dll portable/ -ErrorAction SilentlyContinue
-          Copy-Item /ucrt64/bin/zlib1.dll portable/ -ErrorAction SilentlyContinue
-          Copy-Item /ucrt64/bin/libpng16-16.dll portable/ -ErrorAction SilentlyContinue
-          Copy-Item /ucrt64/bin/libjpeg-8.dll portable/ -ErrorAction SilentlyContinue
-          Copy-Item /ucrt64/bin/libtiff-6.dll portable/ -ErrorAction SilentlyContinue
+          cp /ucrt64/bin/libwx*.dll portable/ || true
+          cp /ucrt64/bin/zlib1.dll portable/ || true
+          cp /ucrt64/bin/libpng16-16.dll portable/ || true
+          cp /ucrt64/bin/libjpeg-8.dll portable/ || true
+          cp /ucrt64/bin/libtiff-6.dll portable/ || true
 
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          Compress-Archive -Path portable/* -DestinationPath dist/batView-windows-portable.zip -Force
+          mkdir -p dist
+          tar -a -c -f dist/batView-windows-portable.zip -C portable .
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
