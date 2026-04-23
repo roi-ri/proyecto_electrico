@@ -176,6 +176,9 @@ ctest --test-dir build-tests --output-on-failure
 - [docs/PROJECT_DOCUMENTATION.md](./docs/PROJECT_DOCUMENTATION.md)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
 - [docs/DOWNLOAD_AND_INSTALL.md](./docs/DOWNLOAD_AND_INSTALL.md)
+- [docs/DOWNLOAD_WINDOWS.md](./docs/DOWNLOAD_WINDOWS.md)
+- [docs/DOWNLOAD_MACOS.md](./docs/DOWNLOAD_MACOS.md)
+- [docs/DOWNLOAD_LINUX.md](./docs/DOWNLOAD_LINUX.md)
 
 ## Estado del proyecto
 
