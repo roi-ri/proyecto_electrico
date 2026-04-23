@@ -160,12 +160,66 @@ Cuando el backend serial reporta un error del sistema, la app conserva el detall
 
 ## Build y ejecución
 
+### Flujo recomendado
+
+La forma recomendada de construir la app completa es usar el flujo automático de un solo comando.
+
+#### macOS / Linux
+
+```bash
+./build_app.sh
+```
+
+#### Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_app.ps1
+```
+
+Ese flujo:
+
+- detecta el sistema operativo;
+- prepara Python embebido para exportación `XLSX` y render `PNG`;
+- instala `Pillow` y `openpyxl` dentro del proyecto;
+- construye la app;
+- genera el paquete final en `dist/`.
+
+Nota:
+
+- en la primera ejecución normalmente se necesita internet para descargar `Pillow` y `openpyxl`;
+- esas dependencias quedan guardadas en `python/runtime/`.
+
+### Dependencias base por instalar
+
+El flujo automático no reemplaza las herramientas del sistema. Estas sí deben existir previamente:
+
+#### macOS
+
+```bash
+xcode-select --install
+brew install cmake wxwidgets python
+```
+
+#### Ubuntu / Debian
+
+```bash
+sudo apt update
+sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-pip
+```
+
+#### Windows
+
+- Visual Studio 2022 con `Desktop development with C++`
+- CMake
+- Python 3
+- wxWidgets compatible con el compilador instalado
+
 ### App principal
 
 ### macOS
 
 ```bash
-cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
 open build-release/batView.app
 ```
@@ -173,7 +227,7 @@ open build-release/batView.app
 ### Linux
 
 ```bash
-cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
 ./build-release/batView
 ```
@@ -181,7 +235,7 @@ cmake --build build-release --config Release
 ### Windows
 
 ```powershell
-cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
 .\build-release\Release\batView.exe
 ```
@@ -189,6 +243,7 @@ cmake --build build-release --config Release
 ### Empaquetado para distribución
 
 ```bash
+cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release -DBATVIEW_PACKAGE_FORMAT=PORTABLE
 cmake --build build-release --config Release --target package
 ```
 

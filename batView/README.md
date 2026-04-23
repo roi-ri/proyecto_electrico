@@ -91,7 +91,156 @@ La aplicación no fabrica esos valores. Lo único que hace en la gráfica es con
 
 ## Build y ejecución multiplataforma
 
+### Uso recomendado: un solo comando
+
+Si lo que quieres es compilar la aplicación completa, dejarla lista para usarse como app normal y generar el paquete del sistema actual, usa este flujo.
+
+El script hace automáticamente lo siguiente:
+
+- detecta el sistema operativo;
+- prepara un runtime local de Python embebido;
+- instala las dependencias de Python necesarias para `XLSX` y `PNG`;
+- configura y compila `batView`;
+- genera el paquete apropiado para el sistema actual;
+- abre la app al final, a menos que uses `--no-run`.
+
+#### Comando en macOS y Linux
+
+```bash
+./build_app.sh
+```
+
+#### Comando en Windows
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_app.ps1
+```
+
+#### Si no quieres abrir la app al terminar
+
+```bash
+./build_app.sh --no-run
+```
+
+### Qué necesitas instalar antes
+
+El script automatiza la mayor parte del proceso, pero aun así necesitas tener algunas herramientas base instaladas en tu sistema.
+
+#### macOS
+
+Necesitas:
+
+- `Xcode Command Line Tools`
+- `CMake`
+- `wxWidgets`
+- `Python 3`
+
+Comandos sugeridos:
+
+```bash
+xcode-select --install
+brew install cmake wxwidgets python
+```
+
+#### Ubuntu / Debian
+
+Necesitas:
+
+- `cmake`
+- compilador `g++`
+- `make`
+- `pkg-config`
+- `libwxgtk3.2-dev`
+- `libgtk-3-dev`
+- `python3`
+- `python3-pip`
+
+Comandos sugeridos:
+
+```bash
+sudo apt update
+sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-pip
+```
+
+Si `wxWidgets` no aparece correctamente:
+
+```bash
+sudo apt install -y wx3.2-headers wx-common
+```
+
+#### Windows
+
+Necesitas:
+
+- Visual Studio 2022 con `Desktop development with C++`
+- `CMake`
+- `Python 3`
+- `wxWidgets` compatible con tu toolchain
+
+Notas:
+
+- En Windows el script también detecta el OS y ejecuta el flujo completo, pero la disponibilidad del instalador nativo depende de las herramientas instaladas en la máquina.
+- Si no hay generador nativo disponible, el flujo cae a un paquete portable.
+
+### Qué no tienes que instalar manualmente
+
+El script instala automáticamente dentro del proyecto estas dependencias de Python:
+
+- `Pillow`
+- `openpyxl`
+
+Esas dependencias no se instalan globalmente en tu sistema. Se guardan en:
+
+- `python/runtime/`
+
+### ¿Se necesita internet?
+
+Sí, en la primera ejecución del comando único normalmente se necesita internet para descargar:
+
+- `Pillow`
+- `openpyxl`
+
+Después de que esas dependencias ya quedaron en `python/runtime/`, el flujo es mucho más directo y reutiliza lo ya preparado dentro del proyecto.
+
+### Qué genera al final
+
+Después de correr el comando:
+
+- la app compilada queda en `build-release/`;
+- el paquete final queda en `dist/`;
+- el runtime embebido usado por la app queda en `python/runtime/`.
+
+Formatos esperados:
+
+- macOS: `.app` y `.zip`
+- Linux: binario ejecutable y `.tar.gz` o `.deb` según herramientas disponibles
+- Windows: `.exe` y paquete portable o instalador según herramientas disponibles
+
+### Proceso recomendado paso a paso
+
+1. Entra a la carpeta `batView`.
+2. Instala las herramientas base de tu sistema una sola vez.
+3. Ejecuta el comando único.
+4. Espera a que termine la compilación.
+5. Abre la app generada o toma el paquete desde `dist/`.
+
+Ejemplo en macOS/Linux:
+
+```bash
+cd batView
+./build_app.sh
+```
+
+Ejemplo en Windows:
+
+```powershell
+cd batView
+powershell -ExecutionPolicy Bypass -File .\build_app.ps1
+```
+
 ### App wxWidgets
+
+Esta sección es la ruta manual avanzada. Solo úsala si quieres compilar paso a paso sin el script automático.
 
 #### macOS
 
@@ -148,7 +297,7 @@ cmake --build build-release --config Release
 .\build-release\Release\batView.exe
 ```
 
-### Empaquetado
+### Empaquetado manual
 
 Comando recomendado para generar un paquete local portable:
 

@@ -16,22 +16,45 @@ set(BATVIEW_PACKAGE_FORMAT "AUTO" CACHE STRING "Package format: AUTO, PORTABLE, 
 set_property(CACHE BATVIEW_PACKAGE_FORMAT PROPERTY STRINGS AUTO PORTABLE NATIVE ZIP TGZ DEB NSIS DragNDrop)
 
 if(BATVIEW_ENABLE_EMBEDDED_PYTHON AND BATVIEW_EMBEDDED_PYTHON_ROOT)
-    find_path(BATVIEW_EMBEDDED_PYTHON_INCLUDE
-        NAMES Python.h
-        HINTS
-            "${BATVIEW_EMBEDDED_PYTHON_ROOT}/include"
-            "${BATVIEW_EMBEDDED_PYTHON_ROOT}/include/python3.12"
-            "${BATVIEW_EMBEDDED_PYTHON_ROOT}/include/python3.11"
-        NO_DEFAULT_PATH
+    set(BATVIEW_EMBEDDED_PYTHON_INCLUDE_CANDIDATES
+        "${BATVIEW_EMBEDDED_PYTHON_ROOT}/include"
     )
+    file(GLOB BATVIEW_EMBEDDED_PYTHON_INCLUDE_GLOB
+        "${BATVIEW_EMBEDDED_PYTHON_ROOT}/include/python3.*"
+    )
+    list(APPEND BATVIEW_EMBEDDED_PYTHON_INCLUDE_CANDIDATES ${BATVIEW_EMBEDDED_PYTHON_INCLUDE_GLOB})
 
-    find_library(BATVIEW_EMBEDDED_PYTHON_LIBRARY
-        NAMES python312 python311 python3.12 python3.11
-        HINTS
-            "${BATVIEW_EMBEDDED_PYTHON_ROOT}/libs"
-            "${BATVIEW_EMBEDDED_PYTHON_ROOT}/lib"
-        NO_DEFAULT_PATH
+    set(BATVIEW_EMBEDDED_PYTHON_INCLUDE "")
+    foreach(BATVIEW_INCLUDE_DIR IN LISTS BATVIEW_EMBEDDED_PYTHON_INCLUDE_CANDIDATES)
+        if(EXISTS "${BATVIEW_INCLUDE_DIR}/Python.h")
+            set(BATVIEW_EMBEDDED_PYTHON_INCLUDE "${BATVIEW_INCLUDE_DIR}")
+            break()
+        endif()
+    endforeach()
+
+    set(BATVIEW_EMBEDDED_PYTHON_LIBRARY "")
+    set(BATVIEW_EMBEDDED_PYTHON_LIBRARY_CANDIDATES)
+
+    if(APPLE AND EXISTS "${BATVIEW_EMBEDDED_PYTHON_ROOT}/Python")
+        list(APPEND BATVIEW_EMBEDDED_PYTHON_LIBRARY_CANDIDATES
+            "${BATVIEW_EMBEDDED_PYTHON_ROOT}/Python"
+        )
+    endif()
+
+    file(GLOB BATVIEW_EMBEDDED_PYTHON_LIBRARY_GLOB
+        "${BATVIEW_EMBEDDED_PYTHON_ROOT}/lib/libpython3*.dylib"
+        "${BATVIEW_EMBEDDED_PYTHON_ROOT}/lib/libpython3*.so"
+        "${BATVIEW_EMBEDDED_PYTHON_ROOT}/lib/libpython*.a"
+        "${BATVIEW_EMBEDDED_PYTHON_ROOT}/libs/python*.lib"
     )
+    list(APPEND BATVIEW_EMBEDDED_PYTHON_LIBRARY_CANDIDATES ${BATVIEW_EMBEDDED_PYTHON_LIBRARY_GLOB})
+
+    foreach(BATVIEW_LIBRARY_PATH IN LISTS BATVIEW_EMBEDDED_PYTHON_LIBRARY_CANDIDATES)
+        if(EXISTS "${BATVIEW_LIBRARY_PATH}")
+            set(BATVIEW_EMBEDDED_PYTHON_LIBRARY "${BATVIEW_LIBRARY_PATH}")
+            break()
+        endif()
+    endforeach()
 
     if(WIN32)
         set(BATVIEW_EMBEDDED_PYTHON_LIB "${BATVIEW_EMBEDDED_PYTHON_ROOT}/Lib")
@@ -48,8 +71,6 @@ if(BATVIEW_ENABLE_EMBEDDED_PYTHON AND BATVIEW_EMBEDDED_PYTHON_ROOT)
         endif()
     endif()
 else()
-    unset(BATVIEW_EMBEDDED_PYTHON_INCLUDE CACHE)
-    unset(BATVIEW_EMBEDDED_PYTHON_LIBRARY CACHE)
     set(BATVIEW_EMBEDDED_PYTHON_INCLUDE "")
     set(BATVIEW_EMBEDDED_PYTHON_LIBRARY "")
     set(BATVIEW_EMBEDDED_PYTHON_LIB "")
@@ -214,11 +235,28 @@ if(BATVIEW_ENABLE_WX)
             add_dependencies(batView batView_icon)
         endif()
     endif()
+
+    if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
+        if(APPLE)
+            add_custom_command(TARGET batView POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_DIR:batView>/Contents/Resources/python"
+                COMMAND ${CMAKE_COMMAND} -E copy_directory "${BATVIEW_EMBEDDED_PYTHON_ROOT}" "$<TARGET_BUNDLE_DIR:batView>/Contents/Resources/python"
+            )
+        else()
+            add_custom_command(TARGET batView POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:batView>/python"
+                COMMAND ${CMAKE_COMMAND} -E copy_directory "${BATVIEW_EMBEDDED_PYTHON_ROOT}" "$<TARGET_FILE_DIR:batView>/python"
+            )
+        endif()
+    endif()
 endif()
 
 if(BATVIEW_ENABLE_WX)
     if(APPLE)
         install(TARGETS batView BUNDLE DESTINATION .)
+        if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
+            install(DIRECTORY "${BATVIEW_EMBEDDED_PYTHON_ROOT}/" DESTINATION "batView.app/Contents/Resources/python")
+        endif()
     else()
         install(TARGETS batView RUNTIME DESTINATION .)
         install(
@@ -229,6 +267,9 @@ if(BATVIEW_ENABLE_WX)
         )
         if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico")
             install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico" DESTINATION assets)
+        endif()
+        if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
+            install(DIRECTORY "${BATVIEW_EMBEDDED_PYTHON_ROOT}/" DESTINATION python)
         endif()
     endif()
 else()

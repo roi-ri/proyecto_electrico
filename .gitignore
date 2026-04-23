@@ -82,6 +82,7 @@ __pycache__/
 .venv/
 venv/
 env/
+batView/python/runtime/
 
 # Jupyter
 .ipynb_checkpoints/

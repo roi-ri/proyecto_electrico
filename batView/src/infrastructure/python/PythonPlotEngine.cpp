@@ -5,6 +5,14 @@
 #include <string>
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#else
+#include <unistd.h>
+#endif
+
 #ifdef BATVIEW_ENABLE_EMBEDDED_PYTHON
 #include <Python.h>
 #endif
@@ -23,6 +31,50 @@ std::once_flag g_pythonHelperFlag;
 bool g_pythonHelpersLoaded = false;
 std::string g_pythonHelperError;
 
+struct PythonRuntimeLayout {
+    std::string home;
+    std::string stdlib;
+    std::string sitePackages;
+};
+
+std::filesystem::path ExecutablePath() {
+#ifdef _WIN32
+    std::vector<char> buffer(MAX_PATH);
+    DWORD size = 0;
+    while (true) {
+        size = GetModuleFileNameA(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+        if (size == 0) {
+            return {};
+        }
+        if (size < buffer.size()) {
+            return std::filesystem::path(std::string(buffer.data(), size));
+        }
+        buffer.resize(buffer.size() * 2);
+    }
+#elif defined(__APPLE__)
+    uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);
+    std::vector<char> buffer(size);
+    if (_NSGetExecutablePath(buffer.data(), &size) != 0) {
+        return {};
+    }
+    std::error_code error;
+    return std::filesystem::weakly_canonical(std::filesystem::path(buffer.data()), error);
+#else
+    std::vector<char> buffer(1024);
+    while (true) {
+        const ssize_t size = readlink("/proc/self/exe", buffer.data(), buffer.size());
+        if (size < 0) {
+            return {};
+        }
+        if (static_cast<std::size_t>(size) < buffer.size()) {
+            return std::filesystem::path(std::string(buffer.data(), static_cast<std::size_t>(size)));
+        }
+        buffer.resize(buffer.size() * 2);
+    }
+#endif
+}
+
 bool PathExists(const char* path) {
     if (path == nullptr || path[0] == '\0') {
         return false;
@@ -30,6 +82,77 @@ bool PathExists(const char* path) {
 
     std::error_code error;
     return std::filesystem::exists(std::filesystem::path(path), error) && !error;
+}
+
+bool PathExists(const std::filesystem::path& path) {
+    std::error_code error;
+    return !path.empty() && std::filesystem::exists(path, error) && !error;
+}
+
+PythonRuntimeLayout ResolveRuntimeLayoutFromRoot(const std::filesystem::path& root) {
+    PythonRuntimeLayout layout;
+    if (!PathExists(root)) {
+        return layout;
+    }
+
+    layout.home = root.string();
+
+#ifdef _WIN32
+    const auto stdlib = root / "Lib";
+    if (PathExists(stdlib)) {
+        layout.stdlib = stdlib.string();
+        const auto sitePackages = stdlib / "site-packages";
+        if (PathExists(sitePackages)) {
+            layout.sitePackages = sitePackages.string();
+        }
+    }
+#else
+    std::error_code error;
+    for (const auto& entry : std::filesystem::directory_iterator(root / "lib", error)) {
+        if (!entry.is_directory()) {
+            continue;
+        }
+        const auto dirname = entry.path().filename().string();
+        if (dirname.rfind("python3.", 0) == 0) {
+            layout.stdlib = entry.path().string();
+            const auto sitePackages = entry.path() / "site-packages";
+            if (PathExists(sitePackages)) {
+                layout.sitePackages = sitePackages.string();
+            }
+            break;
+        }
+    }
+#endif
+
+    if (layout.stdlib.empty()) {
+        layout.home.clear();
+    }
+    return layout;
+}
+
+PythonRuntimeLayout ResolvePythonRuntimeLayout() {
+    std::vector<std::filesystem::path> candidates;
+    const auto exePath = ExecutablePath();
+    if (!exePath.empty()) {
+        const auto exeDir = exePath.parent_path();
+        candidates.push_back(exeDir / "python");
+#ifdef __APPLE__
+        candidates.push_back(exeDir.parent_path() / "Resources" / "python");
+#endif
+    }
+
+    if (PathExists(BATVIEW_EMBEDDED_PYTHON_HOME)) {
+        candidates.emplace_back(BATVIEW_EMBEDDED_PYTHON_HOME);
+    }
+
+    for (const auto& candidate : candidates) {
+        const auto layout = ResolveRuntimeLayoutFromRoot(candidate);
+        if (!layout.home.empty()) {
+            return layout;
+        }
+    }
+
+    return {};
 }
 
 const char* kPythonHelpers = R"PY(
@@ -211,12 +334,13 @@ bool PythonPlotEngine::EnsureInitialized(std::string& outError) const {
     return false;
 #else
     std::call_once(g_pythonInitFlag, []() {
+        const auto runtimeLayout = ResolvePythonRuntimeLayout();
         PyStatus status = PyStatus_Ok();
         PyConfig config;
         PyConfig_InitPythonConfig(&config);
         config.parse_argv = 0;
 
-        if (!PathExists(BATVIEW_EMBEDDED_PYTHON_HOME)) {
+        if (runtimeLayout.home.empty()) {
             g_pythonInitError =
                 "No se encontro el runtime Python embebido. Verifica BATVIEW_EMBEDDED_PYTHON_HOME en el paquete final.";
             g_pythonReady = false;
@@ -224,7 +348,7 @@ bool PythonPlotEngine::EnsureInitialized(std::string& outError) const {
             return;
         }
 
-        if (!PathExists(BATVIEW_EMBEDDED_PYTHON_LIB)) {
+        if (runtimeLayout.stdlib.empty()) {
             g_pythonInitError =
                 "No se encontro la libreria estandar de Python embebido. El paquete de la app esta incompleto.";
             g_pythonReady = false;
@@ -232,7 +356,7 @@ bool PythonPlotEngine::EnsureInitialized(std::string& outError) const {
             return;
         }
 
-        status = PyConfig_SetBytesString(&config, &config.home, BATVIEW_EMBEDDED_PYTHON_HOME);
+        status = PyConfig_SetBytesString(&config, &config.home, runtimeLayout.home.c_str());
         if (!PyStatus_Exception(status)) {
             status = PyConfig_SetBytesString(&config, &config.program_name, "batView");
         }
@@ -245,12 +369,13 @@ bool PythonPlotEngine::EnsureInitialized(std::string& outError) const {
             g_pythonReady = false;
         } else {
             g_pythonReady = true;
-            PyRun_SimpleString(
+            const std::string pythonPathSetup =
                 "import sys\n"
-                "paths = [r'" BATVIEW_EMBEDDED_PYTHON_LIB "', r'" BATVIEW_EMBEDDED_PYTHON_SITE_PACKAGES "']\n"
+                "paths = [r'" + runtimeLayout.stdlib + "', r'" + runtimeLayout.sitePackages + "']\n"
                 "for path in paths:\n"
                 "    if path and path not in sys.path:\n"
-                "        sys.path.insert(0, path)\n");
+                "        sys.path.insert(0, path)\n";
+            PyRun_SimpleString(pythonPathSetup.c_str());
         }
 
         PyConfig_Clear(&config);
