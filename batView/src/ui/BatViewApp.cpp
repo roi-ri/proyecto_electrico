@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <wx/image.h>
+#include <wx/msgdlg.h>
 
 #include "core/protocol/TextProtocolCodec.h"
 #include "core/protocol/TextMessageParser.h"
@@ -23,6 +24,14 @@ namespace batview::ui {
 
 bool BatViewApp::OnInit() {
     wxInitAllImageHandlers();
+
+#ifndef BATVIEW_ENABLE_EMBEDDED_PYTHON
+    wxMessageBox(
+        "Esta compilacion no incluye Python embebido.\n"
+        "La exportacion XLSX puede no estar disponible en este paquete.",
+        "batView - Dependencias opcionales",
+        wxOK | wxICON_INFORMATION);
+#endif
 
     auto* logger = new batview::infrastructure::logging::ConsoleLogger();
     auto* csvExporter = new batview::infrastructure::csv::CsvExporter();
