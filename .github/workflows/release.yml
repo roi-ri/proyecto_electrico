@@ -8,9 +8,6 @@ on:
 jobs:
   package-macos:
     runs-on: macos-latest
-    defaults:
-      run:
-        working-directory: batView
 
     steps:
       - name: Checkout
@@ -22,13 +19,13 @@ jobs:
           brew install wxwidgets
 
       - name: Configure
-        run: cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        run: cd batView && cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build-release --config Release
+        run: cd batView && cmake --build build-release --config Release
 
       - name: Package
-        run: cpack --config build-release/CPackConfig.cmake
+        run: cd batView && cpack --config build-release/CPackConfig.cmake
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
@@ -39,9 +36,6 @@ jobs:
 
   package-ubuntu:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: batView
 
     steps:
       - name: Checkout
@@ -53,13 +47,13 @@ jobs:
           sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev
 
       - name: Configure
-        run: cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        run: cd batView && cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build-release --config Release
+        run: cd batView && cmake --build build-release --config Release
 
       - name: Package
-        run: cpack --config build-release/CPackConfig.cmake
+        run: cd batView && cpack --config build-release/CPackConfig.cmake
 
       - name: Build AppImage
         run: |
@@ -68,8 +62,8 @@ jobs:
           mkdir -p AppDir/usr/share/applications
           mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
 
-          cp build-release/batView AppDir/usr/bin/batView
-          cp assets/BatView.png AppDir/usr/share/icons/hicolor/256x256/apps/batview.png
+          cp batView/build-release/batView AppDir/usr/bin/batView
+          cp batView/assets/BatView.png AppDir/usr/share/icons/hicolor/256x256/apps/batview.png
 
           cat > AppDir/usr/share/applications/batview.desktop <<'EOF'
           [Desktop Entry]
@@ -105,7 +99,6 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-        working-directory: batView
 
     steps:
       - name: Checkout
@@ -124,20 +117,20 @@ jobs:
             mingw-w64-ucrt-x86_64-nsis
 
       - name: Configure
-        run: cmake -S . -B build-release -G Ninja -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
+        run: cd batView && cmake -S . -B build-release -G Ninja -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build-release
+        run: cd batView && cmake --build build-release
 
       - name: Package
-        run: cpack --config build-release/CPackConfig.cmake
+        run: cd batView && cpack --config build-release/CPackConfig.cmake
 
       - name: Build portable ZIP with runtime DLLs
         run: |
           mkdir -p portable/assets
-          cp build-release/batView.exe portable/
-          cp assets/BatView.png portable/assets/
-          cp assets/batView.gif portable/assets/
+          cp batView/build-release/batView.exe portable/
+          cp batView/assets/BatView.png portable/assets/
+          cp batView/assets/batView.gif portable/assets/
 
           for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
             cp "/ucrt64/bin/${dll}" portable/ || true
