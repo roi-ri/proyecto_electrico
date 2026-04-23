@@ -154,22 +154,6 @@ cmake --build build-release --config Release
 cmake --build build-release --config Release --target package
 ```
 
-### Publicación automática (GitHub Releases)
-
-El repositorio incluye dos workflows de GitHub Actions:
-
-- `.github/workflows/package.yml`: build y empaquetado en macOS, Ubuntu y Windows con artefactos descargables.
-- `.github/workflows/release.yml`: genera y publica una Release con artefactos cuando se empuja un tag de versión.
-
-Para publicar instaladores/paquetes en una Release:
-
-```bash
-git tag v1.0.1
-git push origin v1.0.1
-```
-
-Después del push del tag, GitHub Actions construye en los 3 sistemas operativos y adjunta los paquetes generados a la Release del tag.
-
 ### Suite de tests
 
 ```bash
