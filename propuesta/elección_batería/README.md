@@ -4,6 +4,6 @@ Además, se incluyen enlaces a secciones específicas donde se detalla la inform
 
 | Tipo de batería | Descripción general | Características principales             | Más información                      |
 | --------------- | ------------------- | --------------------------------------- | ------------------------------------ |
-| Batería 1       | Breve descripción   | Ej: alta densidad energética, bajo peso | [Ver detalles](./batería_1/README.md) |
-| Batería 2       | Breve descripción   | Ej: mayor seguridad, menor costo        | [Ver detalles](./batería_2/README.md) |
-| Batería 3       | Breve descripción   | Ej: larga vida útil, menor densidad     | [Ver detalles](./batería_3/README.md) |
+| Batería 1 (18650 2000mAh 3.6V)       | Breve descripción   | Ej: alta densidad energética, bajo peso | [Ver detalles](./batería_1/README.md) |
+| Batería 2 (NiMH 9V 250mAh) | Breve descripción   | Ej: mayor seguridad, menor costo        | [Ver detalles](./batería_2/README.md) |
+| Batería 3 (6-DZM-20 12V 20Ah) | Breve descripción   | Ej: larga vida útil, menor densidad     | [Ver detalles](./batería_3/README.md) |
