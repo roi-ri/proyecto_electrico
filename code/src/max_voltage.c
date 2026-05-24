@@ -1,7 +1,14 @@
 #include "max_voltage.h"
 
-float max_voltage(int gpio_value, int battery)
-{
+float max_voltage(int gpio_value, int battery) {       
+    // Se revisa que el porcentaje sea válido:
+    if(gpio_value < 0) {
+        gpio_value = 0;
+    }
+    if(gpio_value > 100) {
+        gpio_value = 100;
+    }
+    
     // Variable temporalmente sin uso (se utiliza sólo una batería):
     (void)battery;
 
