@@ -5,7 +5,7 @@
       batería. 
 
     Entradas de la función:
-        - maximum_voltage: Este corresponde a la salida leída por la función de max_voltage.
+        - voltage: Este corresponde a la salida leída por la función de max_voltage o min_voltage.
     Funcionamiento: 
         - Al ser una función booleana, será cero en todo momento hasta que se llegue al valor
         máximo de tensión eléctrica, donde cambia a 1 para indicar que se debe de empezar 
@@ -17,6 +17,6 @@
 
 #include <stdbool.h>
 
-bool monitoring (float maximum_voltage);
+bool monitoring (float voltage);
 
 #endif
