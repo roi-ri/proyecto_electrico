@@ -6,6 +6,7 @@
 
     Entradas de la función:
         - voltage: Este corresponde a la salida leída por la función de max_voltage o min_voltage.
+        - channel: Corresponde al canal que se está utilizando según el pin (carga/descarga).
     Funcionamiento: 
         - Al ser una función booleana, será cero en todo momento hasta que se llegue al valor
         máximo de tensión eléctrica, donde cambia a 1 para indicar que se debe de empezar 
@@ -16,7 +17,8 @@
 #define MONITORING_H
 
 #include <stdbool.h>
+#include "esp_adc/adc_oneshot.h"
 
-bool monitoring (float voltage);
+bool monitoring (float voltage, adc_channel_t channel);
 
 #endif
