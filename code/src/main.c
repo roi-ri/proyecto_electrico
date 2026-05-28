@@ -11,6 +11,7 @@
 #include "hal/uart_types.h"
 #include "receive.h"
 #include "main_functions.h"
+#include "battery_controller.h"
 
 void app_main(void)
 {
@@ -59,8 +60,8 @@ void app_main(void)
                     if (bateria_seleccionada) {
 
                         switch (funcionalidad) {
-                            case 1: load_function(UART_NUM_0, datos, data_receiv); aprov = 1;   break;
-                            case 2: unload_function(UART_NUM_0, datos, data_receiv); aprov = 1; break;
+                            case 1: load_function(UART_NUM_0, datos, data_receiv, 25); aprov = 1;   break;
+                            case 2: unload_function(UART_NUM_0, datos, data_receiv, 26); aprov = 1; break;
                             case 3: cicle_function(UART_NUM_0, datos, data_receiv); aprov = 1; break;
                             case 4: stop_function(UART_NUM_0, datos, data_receiv);  aprov = 1; break;
                             default: enviar_datos_pc(UART_NUM_0, "Funcionalidad no válida\n"); break;
