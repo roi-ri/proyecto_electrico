@@ -5,6 +5,7 @@
 #include "freertos/FreeRTOS.h" 
 #include "freertos/event_groups.h"
 #include "hal/uart_types.h"
+#include "battery_controller.h"
  
 /* ── Bits del EventGroup ── */
 #define STOP_BIT  ( 1 << 0 )   /* Señal de parada        */
@@ -22,12 +23,12 @@ int check_stop_requested(uart_port_t uart_num);
 /**
  * @brief Maneja la carga de la batería.
  */
-void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]);
+void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num);
  
 /**
  * @brief Maneja la descarga de la batería.
  */
-void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]);
+void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num);
  
 /**
  * @brief Configura el ciclado de la batería.
