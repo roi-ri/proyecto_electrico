@@ -1,5 +1,6 @@
 #include "main_functions.h"
 #include "comm_with_pc.h"
+#include "battery_controller.h"
  
 #include <stdio.h>
 #include <string.h>
@@ -82,7 +83,7 @@ int check_stop_requested(uart_port_t uart_num)
 /* 
  *  load_function se recibe #LOAD,<0-100>
  */
-void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]) {
+void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num) {
  
     char message[128];
  
@@ -103,17 +104,17 @@ void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]
              */
             xEventGroupClearBits(control_events, STOP_BIT);
             xEventGroupSetBits(control_events, WORK_BIT);
- 
-            while (1) {
 
+            //arreglar esto que vaya dentro del WHILE de las de battery_controller
+            /*
                 if(check_stop_requested(uart_num)) {
                     //apagar todas las salidas
                     return;
-                }
- 
-                //lógica de carga
+                } */ 
+
+                battery_controller(25, carga, 0);
                 vTaskDelay(pdMS_TO_TICKS(100));
-            }
+            
  
             enviar_datos_pc(uart_num, "Carga completada\n");
  
@@ -123,15 +124,15 @@ void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]
  
     } else {
         enviar_datos_pc(uart_num, "#ERROR: Datos LOAD incompletos\n");
+
     }
  
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT);
 }
- 
 /* 
  *  unload_function, se recibe #UNLOAD,<0-100>
  */
-void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]) {
+void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num) {
  
     char message[128];
  
@@ -153,19 +154,19 @@ void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[12
              */
             xEventGroupClearBits(control_events, STOP_BIT);
             xEventGroupSetBits(control_events, WORK_BIT);
- 
-            while (1) {
- 
+            //colocar esto dentro del WHILE del battery_controller
+            /*
                 if(check_stop_requested(uart_num)) {
                     //apagar todas las salidas
                     return;
                 }
+                    */
  
                 //lógica de descarga
-
+                battery_controller(26, descarga, 0);
  
                 vTaskDelay(pdMS_TO_TICKS(100));
-            }
+            
  
             enviar_datos_pc(uart_num, "Descarga completada\n");
  
