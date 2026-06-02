@@ -21,13 +21,6 @@ void app_main(void)
     uint8_t data_receiv[128];
     char *datos[128] = {NULL};
     int aprov = 0;
-    char message[128];
-    adc_oneshot_unit_handle_t handle;
-    //inicializar la entrada 
-    inicializar_entradas(&handle);
-    //configurar la entrada
-    configurar_entrada(handle, ADC_CHANNEL_7);
-    float medida = 0.0f;
     int conectado = 0;
     control_events = xEventGroupCreate();
     configASSERT(control_events != NULL);
