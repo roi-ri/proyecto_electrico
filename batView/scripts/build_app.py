@@ -91,6 +91,30 @@ def copy_file(src: Path, dst: Path) -> None:
     shutil.copy2(src, dst)
 
 
+def copy_optional_tree(src: Path, dst: Path) -> None:
+    if src.exists():
+        copy_tree(src, dst)
+
+
+def copy_windows_python_runtime(info: dict[str, str], runtime_root: Path) -> Path:
+    base_prefix = Path(info["base_prefix"])
+    include_src = Path(info["include_dir"])
+    stdlib_src = Path(info["stdlib_dir"])
+
+    copy_tree(include_src, runtime_root / "include")
+    copy_tree(stdlib_src, runtime_root / "Lib")
+    copy_optional_tree(base_prefix / "libs", runtime_root / "libs")
+    copy_optional_tree(base_prefix / "DLLs", runtime_root / "DLLs")
+
+    python_dlls = list(base_prefix.glob("python*.dll"))
+    executable_dir = Path(info["executable"]).parent
+    python_dlls.extend(executable_dir.glob("python*.dll"))
+    for dll in python_dlls:
+        copy_file(dll, runtime_root / dll.name)
+
+    return runtime_root / "Lib" / "site-packages"
+
+
 def prepare_runtime(python_exe: str) -> tuple[Path, str]:
     info = python_info(python_exe)
     system = platform.system()
@@ -106,21 +130,25 @@ def prepare_runtime(python_exe: str) -> tuple[Path, str]:
         shutil.rmtree(runtime_root)
     runtime_root.mkdir(parents=True, exist_ok=True)
 
-    copy_tree(include_src, runtime_root / "include" / include_src.name)
-    copy_tree(stdlib_src, runtime_root / "lib" / f"python{version}")
+    if system == "Windows":
+        site_packages = copy_windows_python_runtime(info, runtime_root)
+    else:
+        copy_tree(include_src, runtime_root / "include" / include_src.name)
+        copy_tree(stdlib_src, runtime_root / "lib" / f"python{version}")
 
-    libdir = Path(info["libdir"]) if info["libdir"] else None
-    ldlibrary = info["ldlibrary"]
-    framework_python = Path(info["framework_python"]) if info["framework_python"] else None
+        libdir = Path(info["libdir"]) if info["libdir"] else None
+        ldlibrary = info["ldlibrary"]
+        framework_python = Path(info["framework_python"]) if info["framework_python"] else None
 
-    if system == "Darwin" and framework_python and framework_python.exists():
-        copy_file(framework_python, runtime_root / "Python")
-    elif libdir and ldlibrary:
-        lib_src = libdir / ldlibrary
-        if lib_src.exists():
-            copy_file(lib_src, runtime_root / "lib" / ldlibrary)
+        if system == "Darwin" and framework_python and framework_python.exists():
+            copy_file(framework_python, runtime_root / "Python")
+        elif libdir and ldlibrary:
+            lib_src = libdir / ldlibrary
+            if lib_src.exists():
+                copy_file(lib_src, runtime_root / "lib" / ldlibrary)
 
-    site_packages = runtime_root / "lib" / f"python{version}" / "site-packages"
+        site_packages = runtime_root / "lib" / f"python{version}" / "site-packages"
+
     site_packages.mkdir(parents=True, exist_ok=True)
 
     run(
@@ -173,6 +201,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Construye y abre batView como app full en un solo comando.")
     parser.add_argument("--python", dest="python_exe", help="Ejecutable de Python a usar para preparar el runtime full.")
     parser.add_argument("--no-run", action="store_true", help="Construye y empaqueta, pero no abre la app al final.")
+    parser.add_argument("--cmake-toolchain", help="Archivo CMake toolchain opcional, por ejemplo vcpkg.cmake.")
     args = parser.parse_args()
 
     python_exe = find_python_executable(args.python_exe)
@@ -199,6 +228,17 @@ def main() -> None:
         "-DBATVIEW_ENABLE_EMBEDDED_PYTHON=ON",
         f"-DBATVIEW_EMBEDDED_PYTHON_ROOT={runtime_root}",
     ]
+
+    toolchain_file = args.cmake_toolchain or os.environ.get("BATVIEW_CMAKE_TOOLCHAIN_FILE")
+    vcpkg_root = os.environ.get("VCPKG_ROOT")
+    if not toolchain_file and vcpkg_root:
+        candidate = Path(vcpkg_root) / "scripts" / "buildsystems" / "vcpkg.cmake"
+        if candidate.exists():
+            toolchain_file = str(candidate)
+
+    if toolchain_file:
+        configure_cmd.append(f"-DCMAKE_TOOLCHAIN_FILE={toolchain_file}")
+        print(f"CMake toolchain: {toolchain_file}")
 
     run(configure_cmd, cwd=PROJECT_ROOT)
     run(["cmake", "--build", str(BUILD_DIR), "--config", "Release"], cwd=PROJECT_ROOT)
