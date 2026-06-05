@@ -1,43 +1,42 @@
 # Download batView on Windows
 
-Follow these steps in order to download and open the app on Windows.
+Follow these simple steps to download and open batView on Windows.
 
-## Step 1: Download the Windows package
+## 1. Download batView
 
-Download the batView file prepared for Windows.
+Download the Windows file made for batView.
 
 Common formats:
 
 - `batView-windows-portable.zip`
 - `batView-setup.exe`
 
-## Step 2: Open the downloaded file
+## 2. Open the file
 
-Go to your `Downloads` folder and find the file you downloaded.
+Go to your `Downloads` folder and open the file you downloaded.
 
-## Step 3: Install or extract the app
+## 3. Install or unzip it
 
 If you downloaded `batView-setup.exe`:
 
 1. Double-click the installer.
-2. Approve the security prompt if Windows asks.
-3. Follow the installer steps.
-4. Finish the installation.
+2. Click Yes if Windows asks for permission.
+3. Keep clicking Next until the installation finishes.
 
 If you downloaded `batView-windows-portable.zip`:
 
-1. Right-click the `.zip` file.
-2. Select `Extract All...`.
-3. Choose a folder.
-4. Open the extracted folder.
+1. Right-click the zip file.
+2. Choose Extract All.
+3. Pick a folder.
+4. Open the folder that was created.
 
-## Step 4: Open batView
+## 4. Start batView
 
 Launch `batView.exe`.
 
-The Windows app and installer use the batView image for their icon, so the program is easy to recognize after download.
+The app and installer use the batView image, so they are easy to recognize after download.
 
-## Step 5: Keep the required files together
+## 5. Keep the files together
 
 Make sure these stay in the same folder:
 

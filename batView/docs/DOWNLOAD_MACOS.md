@@ -1,39 +1,30 @@
 # Download batView on macOS
 
-Follow these steps in order to download and open the app on macOS.
+Follow these simple steps to download and open batView on macOS.
 
-## Step 1: Download the macOS package
+## 1. Download batView
 
-Download the batView file prepared for macOS.
+Download the macOS `.zip` file.
 
-The package is a `.zip` file that contains `batView.app`.
-The app bundle includes its own icon, so once you extract it you can move the app anywhere you want and still open it later from Finder, Spotlight, or the Dock.
-The zip also includes a small `batView.command` launcher for people who prefer a one-click file instead of opening Terminal.
+The zip contains `batView.app` and a small `batView.command` file.
 
-## Step 2: Open the downloaded file
+## 2. Open the zip file
 
-Go to your `Downloads` folder and find the `.zip` file.
+Open your `Downloads` folder and double-click the zip file.
 
-## Step 3: Extract the app
+## 3. Open the app
 
-Double-click the `.zip` file to extract it.
+After the file opens, you will see `batView.app`.
 
-After extraction, you should see `batView.app`.
+Double-click `batView.app` to start the app.
 
-## Step 4: Move the app
+If you want to keep batView somewhere else, drag `batView.app` to the folder you prefer.
 
-You can leave the app where it is, but it is better to move `batView.app` into `Applications` or any folder you prefer.
-Keep `batView.command` in the same folder as `batView.app` if you want to use the launcher later.
+## 4. Use the simple launcher
 
-## Step 5: Open batView
+If you do not want to look for the app again, double-click `batView.command` the next time you want to open batView.
 
-Double-click `batView.app`.
-
-If you want quick access after closing it, drag `batView.app` to the Dock or create an alias in Finder and place that wherever you want.
-
-If you prefer a simple launcher file, double-click `batView.command` instead. It will open the app for you.
-
-## Step 6: If macOS blocks the app
+## 5. If macOS warns you
 
 If macOS shows a warning the first time:
 

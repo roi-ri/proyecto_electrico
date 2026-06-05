@@ -6,23 +6,25 @@ Use the guide for your operating system:
 - [macOS download guide](./DOWNLOAD_MACOS.md)
 - [Linux download guide](./DOWNLOAD_LINUX.md)
 
-## Before you start
+## Start Here
 
-- Download the package made for your own operating system.
-- When releases are published, the ready-to-download `.zip`, `.tar.gz`, or `.deb` files will be attached to the GitHub Release page for the matching version.
-- Do not reuse `build-release/` from another computer or another OS.
-- If someone shares the app with you, ask them for the packaged files from `dist/`.
-- On Windows and Linux, keep the executable and the `assets/` folder together.
+1. Download the file made for your operating system.
+2. Open the file you downloaded.
+3. Follow the guide for your system.
+
+When releases are published, the ready-to-download files will be attached to the GitHub Release page for that version.
+
+If someone shares batView with you, ask them for the packaged download file, not the source code.
 
 ## If you need to build the app yourself
 
-This download center is for ready-to-use app packages.
+This page is for people who want to download and use batView.
 
-If you want to prepare the computer, build batView, and generate an installer-like package from source, use:
+If you want to build batView yourself, use:
 
 - [BUILD_INSTALLER.md](./BUILD_INSTALLER.md)
 
-Quick commands:
+Quick commands for advanced users:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1

@@ -1,25 +1,21 @@
 # batView
 
-Aplicación de escritorio en C++ para controlar pruebas de baterías sobre un ESP32 vía USB/UART.
+batView es una app de escritorio para controlar pruebas de baterías con un ESP32 por USB.
 
-El proyecto combina wxWidgets para la interfaz, una capa de servicios para la lógica de protocolo y adaptadores de infraestructura para serial, logging y exportación.
+La idea es simple: abrir la app, conectar el ESP32 y empezar a trabajar sin tener que saber Git ni compilar código.
 
 ## Resumen
 
-batView está orientado a ejecutar y supervisar pruebas de baterías desde una interfaz de escritorio, con telemetría recibida en tiempo real desde el ESP32 y exportación de los resultados en formatos útiles para análisis y trazabilidad.
+batView sirve para ver datos del ESP32 en tiempo real, controlar la prueba desde una interfaz gráfica y guardar los resultados para revisarlos después.
 
 ## Características principales
 
-- Conexión serial real a ESP32 en macOS/Linux mediante backend POSIX.
-- Handshake de conexión con reintento automático para boards que reinician al abrir el puerto.
-- Flujo operativo guiado para conectar, seleccionar batería, elegir función, iniciar carga, descarga o ciclado y detener con `#STOP`.
-- Recepción de telemetría `#DATA`.
-- Registro de tráfico ESP32 <-> PC en la UI.
-- Exportación de mediciones a CSV.
-- Exportación de mediciones a MAT y XLSX.
-- Exportación de gráficas a CSV, MAT, XLSX y PNG.
-- Panel de gráficas con renderizado real y resumen del último punto capturado.
-- Sketches de prueba para Arduino IDE y PlatformIO.
+- Conecta con un ESP32 por USB.
+- Reintenta la conexión si el ESP32 reinicia al abrir el puerto.
+- Muestra los datos recibidos en tiempo real.
+- Guarda el registro de lo que pasa entre el ESP32 y la PC.
+- Exporta mediciones y gráficas a CSV, MAT, XLSX y PNG.
+- Incluye ejemplos para Arduino IDE y PlatformIO.
 
 ## Estructura del proyecto
 
@@ -138,13 +134,15 @@ La aplicación no fabrica esos valores. Lo único que hace en la gráfica es con
 
 ### Antes de instalar o compilar
 
-Para esta version, trabaja desde la rama `batView`.
+Si solo quieres usar batView, no necesitas compilar nada. Ve a [docs/DOWNLOAD_AND_INSTALL.md](./docs/DOWNLOAD_AND_INSTALL.md).
+
+Si quieres construir la app desde el código, usa la rama `batView`.
 
 ```bash
 git checkout batView
 ```
 
-Todos los comandos deben ejecutarse dentro de la carpeta del proyecto, donde estan `README.md`, `CMakeLists.txt` y los scripts de instalacion.
+Todos los comandos se ejecutan dentro de la carpeta del proyecto, donde están `README.md`, `CMakeLists.txt` y los scripts de instalación.
 
 ```bash
 cd batView
@@ -152,9 +150,9 @@ cd batView
 
 ### Uso recomendado: un solo comando
 
-Si lo que quieres es compilar la aplicación completa, dejarla lista para usarse como app normal y generar el paquete del sistema actual, usa este flujo.
+Si quieres compilar la aplicación completa y generar el paquete para tu sistema, usa este flujo.
 
-El script hace automáticamente lo siguiente:
+El script hace esto automáticamente:
 
 - detecta el sistema operativo;
 - prepara un runtime local de Python embebido;
@@ -163,13 +161,13 @@ El script hace automáticamente lo siguiente:
 - genera el paquete apropiado para el sistema actual;
 - abre la app al final, a menos que uses `--no-run`.
 
-#### Comando en macOS y Linux
+#### macOS y Linux
 
 ```bash
 ./build_app.sh
 ```
 
-#### Comando en Windows
+#### Windows
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build_app.ps1
@@ -183,7 +181,7 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1
 
 ### Instalación automática de herramientas y empaquetado
 
-Si quieres preparar una computadora desde cero y generar el paquete final como si fuera un instalador de app, usa el script de tu sistema operativo.
+Si quieres preparar una computadora desde cero y generar el paquete final, usa el script de tu sistema operativo.
 
 Windows, desde PowerShell como administrador:
 
@@ -202,11 +200,11 @@ El resultado aparece en `dist/`. La guía paso a paso para personas que no conoc
 
 ### Qué necesitas instalar antes
 
-El script automatiza la mayor parte del proceso, pero aun así necesitas tener algunas herramientas base instaladas en tu sistema.
+El script automatiza casi todo, pero necesitas algunas herramientas base instaladas en tu sistema.
 
 #### macOS
 
-Necesitas:
+Necesitas instalar:
 
 - `Xcode Command Line Tools`
 - `CMake`
@@ -222,7 +220,7 @@ brew install cmake wxwidgets python
 
 #### Ubuntu / Debian
 
-Necesitas:
+Necesitas instalar:
 
 - `cmake`
 - compilador `g++`
@@ -248,7 +246,7 @@ sudo apt install -y wx3.2-headers wx-common
 
 #### Windows
 
-Necesitas:
+Necesitas instalar:
 
 - Visual Studio 2022 con `Desktop development with C++`
 - `CMake`
@@ -262,23 +260,23 @@ Notas:
 
 ### Qué no tienes que instalar manualmente
 
-El script instala automáticamente dentro del proyecto estas dependencias de Python:
+El script instala automáticamente estas dependencias de Python dentro del proyecto:
 
 - `Pillow`
 - `openpyxl`
 
-Esas dependencias no se instalan globalmente en tu sistema. Se guardan en:
+No se instalan globalmente. Se guardan en:
 
 - `python/runtime/`
 
 ### ¿Se necesita internet?
 
-Sí, en la primera ejecución del comando único normalmente se necesita internet para descargar:
+Sí, la primera vez normalmente necesitas internet para descargar:
 
 - `Pillow`
 - `openpyxl`
 
-Después de que esas dependencias ya quedaron en `python/runtime/`, el flujo es mucho más directo y reutiliza lo ya preparado dentro del proyecto.
+Después de la primera vez, el flujo reutiliza lo que ya quedó preparado en `python/runtime/`.
 
 ### Qué genera al final
 
