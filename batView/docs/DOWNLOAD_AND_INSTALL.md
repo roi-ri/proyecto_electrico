@@ -17,7 +17,22 @@ Use the guide for your operating system:
 
 This download center is for ready-to-use app packages.
 
-If you want to compile batView from source instead, see:
+If you want to prepare the computer, build batView, and generate an installer-like package from source, use:
+
+- [BUILD_INSTALLER.md](./BUILD_INSTALLER.md)
+
+Quick commands:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
+
+```bash
+./install_macos.sh
+./install_linux.sh
+```
+
+For architecture and code details, see:
 
 - [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md)
 - [ARCHITECTURE.md](./ARCHITECTURE.md)

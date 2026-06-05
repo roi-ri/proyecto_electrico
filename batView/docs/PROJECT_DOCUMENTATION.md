@@ -191,7 +191,20 @@ Nota:
 
 ### Dependencias base por instalar
 
-El flujo automático no reemplaza las herramientas del sistema. Estas sí deben existir previamente:
+Para preparar una computadora desde cero, usa los scripts de instalación del proyecto:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
+
+```bash
+./install_macos.sh
+./install_linux.sh
+```
+
+La guía de instaladores está en [BUILD_INSTALLER.md](./BUILD_INSTALLER.md).
+
+Si prefieres instalar dependencias manualmente, usa estas referencias:
 
 #### macOS
 

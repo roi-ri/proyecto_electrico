@@ -24,24 +24,69 @@ batView está orientado a ejecutar y supervisar pruebas de baterías desde una i
 ## Estructura del proyecto
 
 ```text
-src/
-  app/
-  core/
-    protocol/
-    services/
-  infrastructure/
-    csv/
-    logging/
-    serial/
-  models/
-  ui/
-    dialogs/
-    frames/
-    panels/
-    viewmodels/
-docs/
-examples/
-tests/
+batView/
+│
+├── README.md                         guia principal del proyecto
+├── CMakeLists.txt                    configuracion de build, empaquetado y tests
+├── build_app.sh                      build full en macOS/Linux
+├── build_app.ps1                     build full en Windows
+├── install_macos.sh                  prepara herramientas y empaqueta en macOS
+├── install_linux.sh                  prepara herramientas y empaqueta en Linux
+├── install_windows.ps1               prepara herramientas y empaqueta en Windows
+│
+├── src/                              codigo fuente de la app
+│   ├── main.cpp                      entrada para modo consola/stub
+│   ├── app/                          composicion de servicios de aplicacion
+│   │   ├── AppController.h
+│   │   └── AppController.cpp
+│   ├── core/                         protocolo y logica de negocio
+│   │   ├── protocol/                 codec, parser y tipos de mensajes seriales
+│   │   └── services/                 conexion, adquisicion, exportacion y sesiones
+│   ├── infrastructure/               adaptadores concretos
+│   │   ├── csv/                      exportacion CSV
+│   │   ├── logging/                  logger de consola
+│   │   ├── python/                   motor embebido para graficas/exportacion
+│   │   └── serial/                   puertos seriales POSIX, Windows y stub
+│   ├── models/                       estructuras de mediciones
+│   └── ui/                           interfaz wxWidgets
+│       ├── BatViewApp.h/.cpp         arranque grafico de la aplicacion
+│       ├── dialogs/                  dialogos como exportacion
+│       ├── frames/                   ventana principal y flujo guiado
+│       ├── panels/                   paneles de conexion y graficas
+│       └── viewmodels/               puente entre UI y servicios
+│
+├── assets/                           iconos e imagenes de la app
+│   ├── BatView.png
+│   └── batView.gif
+│
+├── docs/                             documentacion de uso, arquitectura e instalacion
+│   ├── ARCHITECTURE.md               decisiones de arquitectura
+│   ├── BUILD_INSTALLER.md            scripts por sistema operativo
+│   ├── DOWNLOAD_AND_INSTALL.md       centro de descarga/instalacion
+│   ├── DOWNLOAD_WINDOWS.md           guia de instalacion en Windows
+│   ├── DOWNLOAD_MACOS.md             guia de instalacion en macOS
+│   ├── DOWNLOAD_LINUX.md             guia de instalacion en Linux
+│   └── PROJECT_DOCUMENTATION.md      documentacion tecnica general
+│
+├── examples/                         firmware de prueba para ESP32
+│   ├── arduino/                      sketch para Arduino IDE
+│   └── platformio/                   proyecto PlatformIO
+│
+├── tests/                            pruebas unitarias de servicios
+│   ├── AcquisitionServiceTest.cpp
+│   ├── ConnectionServiceTest.cpp
+│   ├── ExportServiceTest.cpp
+│   └── PlotServiceTest.cpp
+│
+├── scripts/                          utilidades de build
+│   └── build_app.py                  prepara runtime Python, compila y empaqueta
+│
+├── cmake/                            plantillas de empaquetado nativo
+├── python/                           runtime Python embebido generado localmente
+├── build-release/                    salida local de compilacion
+├── dist/                             instaladores/paquetes generados
+├── data/                             datos de sesion o salidas locales
+└── logs/                             registros locales
 ```
 
 ## Arquitectura del código
@@ -121,6 +166,21 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1
 ```bash
 ./build_app.sh --no-run
 ```
+
+### Instalación automática de herramientas y empaquetado
+
+Si quieres preparar una computadora desde cero y generar el paquete final como si fuera un instalador de app, usa los scripts por sistema operativo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
+
+```bash
+./install_macos.sh
+./install_linux.sh
+```
+
+La guía completa está en [docs/BUILD_INSTALLER.md](./docs/BUILD_INSTALLER.md).
 
 ### Qué necesitas instalar antes
 
