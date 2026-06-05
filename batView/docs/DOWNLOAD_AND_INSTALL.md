@@ -9,6 +9,7 @@ Use the guide for your operating system:
 ## Before you start
 
 - Download the package made for your own operating system.
+- When releases are published, the ready-to-download `.zip`, `.tar.gz`, or `.deb` files will be attached to the GitHub Release page for the matching version.
 - Do not reuse `build-release/` from another computer or another OS.
 - If someone shares the app with you, ask them for the packaged files from `dist/`.
 - On Windows and Linux, keep the executable and the `assets/` folder together.
