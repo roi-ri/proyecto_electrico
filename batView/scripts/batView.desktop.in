@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=batView
+Comment=Desktop application for ESP32 battery test control
+Exec=sh -c 'cd "$(dirname "$1")" && exec ./batView' sh %k
+Icon=batView.png
+Terminal=false
+Categories=Utility;Development;
+StartupNotify=true

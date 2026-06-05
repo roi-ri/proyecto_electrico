@@ -2,6 +2,65 @@
 
 These scripts prepare the computer, build batView, package it, and optionally open it.
 
+This guide assumes no previous build experience. Follow it in order.
+
+## Before Running Anything
+
+### 1. Use the Correct Branch
+
+For this version of batView, use the `batView` branch.
+
+If you already have the project folder, open a terminal inside the repository and run:
+
+```bash
+git checkout batView
+```
+
+On Windows PowerShell:
+
+```powershell
+git checkout batView
+```
+
+If Git says the branch does not exist, fetch the branches and try again:
+
+```bash
+git fetch --all
+git checkout batView
+```
+
+### 2. Go to the Project Folder
+
+All commands must be run from the folder that contains these files:
+
+```text
+README.md
+CMakeLists.txt
+install_windows.ps1
+install_macos.sh
+install_linux.sh
+```
+
+If your terminal is one folder above the project, enter the folder first:
+
+```bash
+cd batView
+```
+
+On Windows, a common location looks like:
+
+```powershell
+cd C:\Users\YourName\Downloads\proyecto_electrico\batView
+```
+
+### 3. Pick the Script for Your OS
+
+Run only the script for the computer you are using:
+
+- Windows: `install_windows.ps1`
+- macOS: `install_macos.sh`
+- Linux: `install_linux.sh`
+
 The result is written to:
 
 ```text
@@ -18,7 +77,17 @@ build-release/
 
 ### Windows
 
-Open PowerShell as Administrator from the project folder:
+Open PowerShell as Administrator from the `batView` project folder.
+
+If you are not sure you are in the correct folder, run:
+
+```powershell
+dir
+```
+
+You should see `README.md`, `CMakeLists.txt`, and `install_windows.ps1`.
+
+Then run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
@@ -43,7 +112,17 @@ If Windows was just updated by the script, close PowerShell, open it again, and 
 
 ### macOS
 
-Run from the project folder:
+Open Terminal from the `batView` project folder.
+
+If you are not sure you are in the correct folder, run:
+
+```bash
+ls
+```
+
+You should see `README.md`, `CMakeLists.txt`, and `install_macos.sh`.
+
+Then run:
 
 ```bash
 ./install_macos.sh
@@ -64,7 +143,17 @@ If the Apple command line tools installer opens, finish that installer and rerun
 
 ### Linux
 
-Run from the project folder:
+Open Terminal from the `batView` project folder.
+
+If you are not sure you are in the correct folder, run:
+
+```bash
+ls
+```
+
+You should see `README.md`, `CMakeLists.txt`, and `install_linux.sh`.
+
+Then run:
 
 ```bash
 ./install_linux.sh
@@ -86,6 +175,46 @@ What the script prepares:
 - packaging helpers such as `dpkg-dev`, `fakeroot`, or `zip` when available
 
 The Linux script supports `apt`, `dnf`, and `pacman`.
+
+## How to Know It Worked
+
+The script worked if:
+
+- the terminal prints `batView full listo.`;
+- the app opens automatically, unless you used `--no-run` or `-NoRun`;
+- the `dist/` folder contains a generated package;
+- the `build-release/` folder contains the compiled app.
+
+On Windows, look in:
+
+```text
+dist/
+build-release/
+```
+
+On macOS, the app bundle is usually:
+
+```text
+build-release/batView.app
+```
+
+On Linux, the executable is usually:
+
+```text
+build-release/batView
+```
+
+## If Something Fails
+
+Do these checks first:
+
+- Make sure you are on branch `batView`.
+- Make sure you are inside the `batView` project folder.
+- On Windows, close and reopen PowerShell after installing tools.
+- On macOS, finish the Apple command line tools installer if it appears.
+- On Linux, enter your password if `sudo` asks for it.
+
+Then rerun the same install command.
 
 ## Skip Dependency Installation
 

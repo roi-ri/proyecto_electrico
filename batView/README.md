@@ -136,6 +136,20 @@ La aplicación no fabrica esos valores. Lo único que hace en la gráfica es con
 
 ## Build y ejecución multiplataforma
 
+### Antes de instalar o compilar
+
+Para esta version, trabaja desde la rama `batView`.
+
+```bash
+git checkout batView
+```
+
+Todos los comandos deben ejecutarse dentro de la carpeta del proyecto, donde estan `README.md`, `CMakeLists.txt` y los scripts de instalacion.
+
+```bash
+cd batView
+```
+
 ### Uso recomendado: un solo comando
 
 Si lo que quieres es compilar la aplicación completa, dejarla lista para usarse como app normal y generar el paquete del sistema actual, usa este flujo.
@@ -169,18 +183,22 @@ powershell -ExecutionPolicy Bypass -File .\build_app.ps1
 
 ### Instalación automática de herramientas y empaquetado
 
-Si quieres preparar una computadora desde cero y generar el paquete final como si fuera un instalador de app, usa los scripts por sistema operativo:
+Si quieres preparar una computadora desde cero y generar el paquete final como si fuera un instalador de app, usa el script de tu sistema operativo.
+
+Windows, desde PowerShell como administrador:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
 ```
+
+macOS o Linux, desde Terminal:
 
 ```bash
 ./install_macos.sh
 ./install_linux.sh
 ```
 
-La guía completa está en [docs/BUILD_INSTALLER.md](./docs/BUILD_INSTALLER.md).
+El resultado aparece en `dist/`. La guía paso a paso para personas que no conocen el proyecto está en [docs/BUILD_INSTALLER.md](./docs/BUILD_INSTALLER.md).
 
 ### Qué necesitas instalar antes
 

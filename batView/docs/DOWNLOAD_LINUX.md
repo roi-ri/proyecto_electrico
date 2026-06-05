@@ -21,6 +21,7 @@ If you downloaded an archive:
 
 1. Extract the file.
 2. Open the extracted folder.
+3. If the package includes `batView.desktop`, keep it next to the app folder so you can use it as a launcher.
 
 If you downloaded a `.deb` package on Debian or Ubuntu:
 
@@ -44,6 +45,9 @@ chmod +x batView
 ```
 
 If you installed a `.deb` package, open the app from your applications menu or run it from the installed location.
+
+The Linux package uses the batView image for the app icon, so it matches the same branding as the other platforms.
+The `.deb` package also installs a desktop entry, so batView appears in your applications menu with the same icon.
 
 ## Step 5: Keep the required files together
 

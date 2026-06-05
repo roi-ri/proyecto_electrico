@@ -173,8 +173,15 @@ if(BATVIEW_ENABLE_WX)
         endif()
     endif()
 
-    if(WIN32 AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
-        set(BATVIEW_WINDOWS_ICON ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
+    if(WIN32)
+        if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/assets/BatView.ico)
+            set(BATVIEW_WINDOWS_ICON ${CMAKE_CURRENT_BINARY_DIR}/assets/BatView.ico)
+        elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
+            set(BATVIEW_WINDOWS_ICON ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
+        endif()
+    endif()
+
+    if(WIN32 AND BATVIEW_WINDOWS_ICON)
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/batView.rc.in
                        ${CMAKE_CURRENT_BINARY_DIR}/batView.rc
                        @ONLY)
@@ -234,6 +241,15 @@ if(BATVIEW_ENABLE_WX)
             target_sources(batView PRIVATE ${BATVIEW_ICNS_FILE})
             add_dependencies(batView batView_icon)
         endif()
+
+        set(BATVIEW_LAUNCHER_SCRIPT ${CMAKE_CURRENT_BINARY_DIR}/batView.command)
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/scripts/batView.command.in
+                       ${BATVIEW_LAUNCHER_SCRIPT}
+                       @ONLY)
+        file(CHMOD ${BATVIEW_LAUNCHER_SCRIPT}
+            PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                        GROUP_READ GROUP_EXECUTE
+                        WORLD_READ WORLD_EXECUTE)
     endif()
 
     if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
@@ -254,6 +270,7 @@ endif()
 if(BATVIEW_ENABLE_WX)
     if(APPLE)
         install(TARGETS batView BUNDLE DESTINATION .)
+        install(PROGRAMS ${BATVIEW_LAUNCHER_SCRIPT} DESTINATION .)
         if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
             install(DIRECTORY "${BATVIEW_EMBEDDED_PYTHON_ROOT}/" DESTINATION "batView.app/Contents/Resources/python")
         endif()
@@ -267,6 +284,19 @@ if(BATVIEW_ENABLE_WX)
         )
         if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico")
             install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico" DESTINATION assets)
+        endif()
+        if(UNIX AND NOT APPLE)
+            set(BATVIEW_LINUX_DESKTOP_FILE ${CMAKE_CURRENT_BINARY_DIR}/batView.desktop)
+            configure_file(${CMAKE_CURRENT_SOURCE_DIR}/scripts/batView.desktop.in
+                           ${BATVIEW_LINUX_DESKTOP_FILE}
+                           @ONLY)
+            file(CHMOD ${BATVIEW_LINUX_DESKTOP_FILE}
+                PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                            GROUP_READ GROUP_EXECUTE
+                            WORLD_READ WORLD_EXECUTE)
+
+            install(PROGRAMS ${BATVIEW_LINUX_DESKTOP_FILE} DESTINATION .)
+            install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.png" DESTINATION . RENAME batView.png)
         endif()
         if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
             install(DIRECTORY "${BATVIEW_EMBEDDED_PYTHON_ROOT}/" DESTINATION python)

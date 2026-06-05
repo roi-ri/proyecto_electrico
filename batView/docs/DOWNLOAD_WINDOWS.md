@@ -35,6 +35,8 @@ If you downloaded `batView-windows-portable.zip`:
 
 Launch `batView.exe`.
 
+The Windows app and installer use the batView image for their icon, so the program is easy to recognize after download.
+
 ## Step 5: Keep the required files together
 
 Make sure these stay in the same folder:

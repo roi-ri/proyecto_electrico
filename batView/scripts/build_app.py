@@ -115,7 +115,26 @@ def copy_windows_python_runtime(info: dict[str, str], runtime_root: Path) -> Pat
     return runtime_root / "Lib" / "site-packages"
 
 
-def prepare_runtime(python_exe: str) -> tuple[Path, str]:
+def generate_windows_icon(build_dir: Path, site_packages: Path) -> None:
+    try:
+        sys.path.insert(0, str(site_packages))
+        from PIL import Image
+    except Exception as exc:  # pragma: no cover - packaging fallback
+        raise SystemExit(f"No se pudo cargar Pillow para generar el icono de Windows: {exc}") from exc
+
+    source_icon = PROJECT_ROOT / "assets" / "BatView.png"
+    target_icon = build_dir / "assets" / "BatView.ico"
+    target_icon.parent.mkdir(parents=True, exist_ok=True)
+
+    with Image.open(source_icon) as image:
+        image.save(
+            target_icon,
+            format="ICO",
+            sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
+        )
+
+
+def prepare_runtime(python_exe: str) -> tuple[Path, str, Path]:
     info = python_info(python_exe)
     system = platform.system()
     version = info["version"]
@@ -165,7 +184,7 @@ def prepare_runtime(python_exe: str) -> tuple[Path, str]:
         ]
     )
 
-    return runtime_root, version
+    return runtime_root, version, site_packages
 
 
 def package_format_for_host() -> str:
@@ -205,7 +224,7 @@ def main() -> None:
     args = parser.parse_args()
 
     python_exe = find_python_executable(args.python_exe)
-    runtime_root, version = prepare_runtime(python_exe)
+    runtime_root, version, site_packages = prepare_runtime(python_exe)
     package_format = package_format_for_host()
 
     print(f"Runtime Python preparado en: {runtime_root}")
@@ -215,6 +234,9 @@ def main() -> None:
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR)
     DIST_DIR.mkdir(parents=True, exist_ok=True)
+
+    if platform.system() == "Windows":
+        generate_windows_icon(BUILD_DIR, site_packages)
 
     configure_cmd = [
         "cmake",
@@ -228,6 +250,9 @@ def main() -> None:
         "-DBATVIEW_ENABLE_EMBEDDED_PYTHON=ON",
         f"-DBATVIEW_EMBEDDED_PYTHON_ROOT={runtime_root}",
     ]
+
+    if platform.system() == "Darwin":
+        configure_cmd.append("-DBATVIEW_BUILD_MACOS_ICON=ON")
 
     toolchain_file = args.cmake_toolchain or os.environ.get("BATVIEW_CMAKE_TOOLCHAIN_FILE")
     vcpkg_root = os.environ.get("VCPKG_ROOT")
