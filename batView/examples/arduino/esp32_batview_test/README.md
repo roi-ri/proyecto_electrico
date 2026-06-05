@@ -18,7 +18,7 @@ Files:
 
 - On connect, batView sends `#CONNECTION`.
 - The ESP32 replies with `#ACK,CONNECTION`.
-- After `#DATA,...`, `#LOAD,...`, `#UNLOAD,...`, `#CICLE,...`, and `#STOP`, the ESP32 replies with the expected `#ACK,...`.
+- After `#Battery,...`, `#LOAD,...`, `#UNLOAD,...`, `#CICLE,...`, and `#STOP`, the ESP32 replies with the expected `#ACK,...`.
 - While `LOAD`, `UNLOAD`, or `CICLE` is active, batView should receive periodic `#DATA,...` frames.
 
 ## How To Test Missing ACK
@@ -26,7 +26,7 @@ Files:
 Edit the booleans at the top of the sketch:
 
 - Set `SEND_ACK_CONNECTION = false` to test the explicit connection timeout message.
-- Set `SEND_ACK_DATA = false` to test battery selection without ACK.
+- Set `SEND_ACK_BATTERY = false` to test battery profile selection without ACK.
 - Set `SEND_ACK_LOAD = false` to test missing `#ACK,LOAD`.
 - Set `SEND_ACK_UNLOAD = false` to test missing `#ACK,UNLOAD`.
 - Set `SEND_ACK_CICLE = false` to test missing `#ACK,CICLE`.
@@ -37,7 +37,7 @@ Then upload again and retry from batView.
 
 Set one of these to `true`:
 
-- `SEND_ERROR_ON_DATA`
+- `SEND_ERROR_ON_BATTERY`
 - `SEND_ERROR_ON_LOAD`
 - `SEND_ERROR_ON_UNLOAD`
 - `SEND_ERROR_ON_CICLE`

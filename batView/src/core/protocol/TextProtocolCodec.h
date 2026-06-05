@@ -6,9 +6,7 @@ namespace batview::core::protocol {
 
 class TextProtocolCodec : public IProtocolCodec {
 public:
-    std::string BuildSelectBatteryCommand(bool batterySelected,
-                                          int batteryTypeCode,
-                                          int functionCode) const override;
+    std::string BuildBatteryProfileCommand(const BatteryProfile& profile) const override;
     std::string BuildCycleCommand(bool indefiniteMode, int cycleCount) const override;
     std::string BuildStopCommand() const override;
     std::string BuildLoadCommand(int targetPercent) const override;

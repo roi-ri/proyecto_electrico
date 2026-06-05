@@ -11,7 +11,7 @@ public:
     explicit AppController(ui::viewmodels::MainViewModel& mainViewModel);
 
     void Connect(const std::string& portName);
-    bool SelectBatteryForFunction(int batteryTypeCode, int functionCode);
+    bool SelectBatteryProfile(const batview::core::protocol::BatteryProfile& profile);
     void StartCycle(bool indefiniteMode, int cycleCount);
     void StopCycle();
     bool StartLoad(int targetPercent);

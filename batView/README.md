@@ -57,7 +57,7 @@ tests/
 ### Comandos enviados por la aplicación
 
 - `#CONNECTION`
-- `#DATA,1,<tipoBateria>,<funcion>`
+- `#Battery,<BatteryNameID>,<V@max>,<V@min>,<Amax>`
 - `#CICLE,0,0`
 - `#CICLE,1,<numeroCiclos>`
 - `#LOAD,<0-100>`
@@ -67,7 +67,7 @@ tests/
 ### Respuestas esperadas del ESP32
 
 - `#ACK,CONNECTION` o `#ACK,CONECTION`
-- `#ACK,DATA`
+- `#ACK,Battery`
 - `#ACK,CICLE`
 - `#ACK,LOAD`
 - `#ACK,UNLOAD`

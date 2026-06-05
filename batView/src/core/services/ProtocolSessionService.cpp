@@ -11,16 +11,14 @@ ProtocolSessionService::ProtocolSessionService(ISerialPort& serialPort,
       protocolCodec_(protocolCodec),
       logger_(logger) {}
 
-bool ProtocolSessionService::SendBatterySelection(int batteryTypeCode,
-                                                  int functionCode,
-                                                  bool batterySelected,
-                                                  std::chrono::milliseconds timeout) {
+bool ProtocolSessionService::SendBatteryProfile(const core::protocol::BatteryProfile& profile,
+                                                std::chrono::milliseconds timeout) {
     try {
         return SendCommandAndAwaitAck(
-            protocolCodec_.BuildSelectBatteryCommand(batterySelected, batteryTypeCode, functionCode),
-            "DATA", timeout);
+            protocolCodec_.BuildBatteryProfileCommand(profile),
+            "Battery", timeout);
     } catch (const std::exception& ex) {
-        lastError_ = std::string("Comando invalido de seleccion de bateria: ") + ex.what();
+        lastError_ = std::string("Comando invalido de perfil de bateria: ") + ex.what();
         logger_.Error(lastError_);
         return false;
     }

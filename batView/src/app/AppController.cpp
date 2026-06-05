@@ -9,8 +9,8 @@ void AppController::Connect(const std::string& portName) {
     mainViewModel_.ConnectToDevice(portName);
 }
 
-bool AppController::SelectBatteryForFunction(int batteryTypeCode, int functionCode) {
-    return mainViewModel_.SendBatterySelection(batteryTypeCode, functionCode);
+bool AppController::SelectBatteryProfile(const batview::core::protocol::BatteryProfile& profile) {
+    return mainViewModel_.SendBatteryProfile(profile);
 }
 
 void AppController::StartCycle(bool indefiniteMode, int cycleCount) {

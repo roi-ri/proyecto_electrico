@@ -1,6 +1,7 @@
 #include "ui/frames/MainFrame.h"
 
 #include <algorithm>
+#include <sstream>
 #include <wx/icon.h>
 #include <wx/font.h>
 #include <wx/msgdlg.h>
@@ -64,6 +65,20 @@ bool TrySetFrameIcon(wxFrame& frame, const std::filesystem::path& iconPath, wxBi
 
     frame.SetIcon(icon);
     return true;
+}
+
+wxString FormatProfileLabel(const batview::core::protocol::BatteryProfile& profile) {
+    std::ostringstream label;
+    label << profile.nameId << "  |  Vmax " << profile.voltageAtMax
+          << " V  |  Vmin " << profile.voltageAtMin << " V  |  Amax " << profile.maxCurrent << " A";
+    return wxString::FromUTF8(label.str().c_str());
+}
+
+std::string TrimmedUtf8(const wxString& value) {
+    wxString trimmed = value;
+    trimmed.Trim(true);
+    trimmed.Trim(false);
+    return trimmed.ToStdString();
 }
 
 std::vector<std::filesystem::path> GetAssetDirectories() {
@@ -234,13 +249,49 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
 
     connectionPanel_ = new batview::ui::panels::ConnectionPanel(flowPanel_);
 
-    batteryLabel_ = new wxStaticText(flowPanel_, wxID_ANY, "Bateria");
-    batteryChoice_ = new wxChoice(flowPanel_, wxID_ANY);
-    batteryChoice_->Append("Li-ion");
-    batteryChoice_->Append("LiPo");
-    batteryChoice_->Append("NiMH");
-    batteryChoice_->Append("LiFePO4");
-    batteryChoice_->SetSelection(wxNOT_FOUND);
+    batteryPanel_ = new wxPanel(flowPanel_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
+    PrepareFlatPanel(batteryPanel_);
+    auto* batteryTitle = new wxStaticText(batteryPanel_, wxID_ANY, "Perfiles de bateria");
+    wxFont batteryTitleFont = batteryTitle->GetFont();
+    batteryTitleFont.SetWeight(wxFONTWEIGHT_BOLD);
+    batteryTitle->SetFont(batteryTitleFont);
+
+    batteryProfileChoice_ = new wxChoice(batteryPanel_, wxID_ANY);
+    batteryProfileChoice_->SetSelection(wxNOT_FOUND);
+
+    batteryNameCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
+    batteryNameCtrl_->SetHint("BatteryNameID");
+    batteryVoltageMaxCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
+    batteryVoltageMaxCtrl_->SetHint("V@max");
+    batteryVoltageMinCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
+    batteryVoltageMinCtrl_->SetHint("V@min");
+    batteryMaxCurrentCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
+    batteryMaxCurrentCtrl_->SetHint("Amax");
+    saveBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Agregar / actualizar perfil");
+    chooseBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Elegir bateria");
+
+    auto* batteryGrid = new wxFlexGridSizer(2, 8, 8);
+    batteryGrid->AddGrowableCol(1, 1);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "BatteryNameID"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(batteryNameCtrl_, 1, wxEXPAND);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V@max"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(batteryVoltageMaxCtrl_, 1, wxEXPAND);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V@min"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(batteryVoltageMinCtrl_, 1, wxEXPAND);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Amax"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(batteryMaxCurrentCtrl_, 1, wxEXPAND);
+
+    auto* batteryActions = new wxBoxSizer(wxHORIZONTAL);
+    batteryActions->Add(saveBatteryProfileButton_, 0, wxRIGHT, 8);
+    batteryActions->Add(chooseBatteryProfileButton_, 0);
+
+    auto* batterySizer = new wxBoxSizer(wxVERTICAL);
+    batterySizer->Add(batteryTitle, 0, wxBOTTOM, 6);
+    batterySizer->Add(batteryGrid, 0, wxEXPAND | wxBOTTOM, 8);
+    batterySizer->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Perfil guardado"), 0, wxBOTTOM, 4);
+    batterySizer->Add(batteryProfileChoice_, 0, wxEXPAND | wxBOTTOM, 8);
+    batterySizer->Add(batteryActions, 0);
+    batteryPanel_->SetSizer(batterySizer);
 
     functionPanel_ = new wxPanel(flowPanel_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
     PrepareFlatPanel(functionPanel_);
@@ -307,8 +358,7 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     auto* flowSizer = new wxBoxSizer(wxVERTICAL);
     flowSizer->Add(connectionPanel_, 0, wxEXPAND | wxBOTTOM, 8);
     flowSizer->Add(new wxStaticLine(flowPanel_, wxID_ANY), 0, wxEXPAND | wxBOTTOM, 8);
-    flowSizer->Add(batteryLabel_, 0, wxBOTTOM, 4);
-    flowSizer->Add(batteryChoice_, 0, wxEXPAND | wxBOTTOM, 10);
+    flowSizer->Add(batteryPanel_, 0, wxEXPAND | wxBOTTOM, 10);
     flowSizer->Add(functionPanel_, 0, wxEXPAND | wxBOTTOM, 10);
     flowSizer->Add(optionsPanel_, 0, wxEXPAND | wxBOTTOM, 10);
     flowPanel_->SetSizer(flowSizer);
@@ -340,7 +390,9 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
 void MainFrame::BindEvents() {
     Bind(wxEVT_TIMER, &MainFrame::OnSplashTimer, this);
     connectionPanel_->GetConnectButton()->Bind(wxEVT_BUTTON, &MainFrame::OnConnectButton, this);
-    batteryChoice_->Bind(wxEVT_CHOICE, &MainFrame::OnBatteryChanged, this);
+    batteryProfileChoice_->Bind(wxEVT_CHOICE, &MainFrame::OnBatteryProfileChanged, this);
+    saveBatteryProfileButton_->Bind(wxEVT_BUTTON, &MainFrame::OnSaveBatteryProfile, this);
+    chooseBatteryProfileButton_->Bind(wxEVT_BUTTON, &MainFrame::OnChooseBatteryProfile, this);
     chargeRadio_->Bind(wxEVT_RADIOBUTTON, &MainFrame::OnFunctionChanged, this);
     dischargeRadio_->Bind(wxEVT_RADIOBUTTON, &MainFrame::OnFunctionChanged, this);
     cycleRadio_->Bind(wxEVT_RADIOBUTTON, &MainFrame::OnFunctionChanged, this);
@@ -368,8 +420,7 @@ void MainFrame::UpdateFlowVisibility() {
     const bool showFunction = isConnected_ && batteryChosen_ && wizardStep_ >= 2;
     const bool showOptions = isConnected_ && batteryChosen_ && functionChosen_ && wizardStep_ >= 3;
 
-    batteryLabel_->Show(showBattery);
-    batteryChoice_->Show(showBattery);
+    batteryPanel_->Show(showBattery);
     functionPanel_->Show(showFunction);
     optionsPanel_->Show(showOptions);
     UpdateWizardNavigation();
@@ -399,7 +450,9 @@ void MainFrame::ResetWorkflowState() {
     chargeRadio_->SetValue(false);
     dischargeRadio_->SetValue(false);
     cycleRadio_->SetValue(false);
-    batteryChoice_->SetSelection(wxNOT_FOUND);
+    if (batteryProfileChoice_) {
+        batteryProfileChoice_->SetSelection(wxNOT_FOUND);
+    }
 }
 
 void MainFrame::UpdateFunctionOptions() {
@@ -466,6 +519,70 @@ void MainFrame::UpdateWizardNavigation() {
     }
 
     nextStepButton_->Enable(wizardStep_ < 3 && canAdvance);
+}
+
+void MainFrame::RefreshBatteryProfileChoices() {
+    if (!batteryProfileChoice_) {
+        return;
+    }
+
+    batteryProfileChoice_->Clear();
+    for (const auto& profile : batteryProfiles_) {
+        batteryProfileChoice_->Append(FormatProfileLabel(profile));
+    }
+}
+
+bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& outProfile,
+                                       wxString& outError) const {
+    if (!batteryNameCtrl_ || !batteryVoltageMaxCtrl_ || !batteryVoltageMinCtrl_ || !batteryMaxCurrentCtrl_) {
+        outError = "El formulario de bateria no esta listo.";
+        return false;
+    }
+
+    outProfile.nameId = TrimmedUtf8(batteryNameCtrl_->GetValue());
+    if (outProfile.nameId.empty()) {
+        outError = "Ingrese un BatteryNameID.";
+        return false;
+    }
+    if (outProfile.nameId.find(',') != std::string::npos) {
+        outError = "BatteryNameID no puede contener comas.";
+        return false;
+    }
+
+    if (!batteryVoltageMaxCtrl_->GetValue().ToDouble(&outProfile.voltageAtMax)) {
+        outError = "Ingrese un V@max numerico.";
+        return false;
+    }
+    if (!batteryVoltageMinCtrl_->GetValue().ToDouble(&outProfile.voltageAtMin)) {
+        outError = "Ingrese un V@min numerico.";
+        return false;
+    }
+    if (!batteryMaxCurrentCtrl_->GetValue().ToDouble(&outProfile.maxCurrent)) {
+        outError = "Ingrese un Amax numerico.";
+        return false;
+    }
+    if (outProfile.voltageAtMax <= 0.0 || outProfile.voltageAtMin <= 0.0 || outProfile.maxCurrent <= 0.0) {
+        outError = "V@max, V@min y Amax deben ser mayores que cero.";
+        return false;
+    }
+    if (outProfile.voltageAtMin >= outProfile.voltageAtMax) {
+        outError = "V@min debe ser menor que V@max.";
+        return false;
+    }
+
+    return true;
+}
+
+void MainFrame::LoadBatteryProfileForm(std::size_t index) {
+    if (index >= batteryProfiles_.size()) {
+        return;
+    }
+
+    const auto& profile = batteryProfiles_[index];
+    batteryNameCtrl_->SetValue(wxString::FromUTF8(profile.nameId.c_str()));
+    batteryVoltageMaxCtrl_->SetValue(wxString::Format("%.3f", profile.voltageAtMax));
+    batteryVoltageMinCtrl_->SetValue(wxString::Format("%.3f", profile.voltageAtMin));
+    batteryMaxCurrentCtrl_->SetValue(wxString::Format("%.3f", profile.maxCurrent));
 }
 
 void MainFrame::AppendTraffic(bool outgoing, const std::string& message) {
@@ -552,15 +669,95 @@ void MainFrame::OnConnectButton(wxCommandEvent& event) {
     }).detach();
 }
 
-void MainFrame::OnBatteryChanged(wxCommandEvent& event) {
+void MainFrame::OnBatteryProfileChanged(wxCommandEvent& event) {
     (void)event;
-    batteryChosen_ = batteryChoice_->GetSelection() != wxNOT_FOUND;
-    if (!batteryChosen_) {
-        functionChosen_ = false;
-        operationActive_ = false;
-    } else if (wizardStep_ < 2) {
+    batteryChosen_ = false;
+    functionChosen_ = false;
+    operationActive_ = false;
+
+    const int selection = batteryProfileChoice_ ? batteryProfileChoice_->GetSelection() : wxNOT_FOUND;
+    if (selection != wxNOT_FOUND) {
+        LoadBatteryProfileForm(static_cast<std::size_t>(selection));
+    }
+
+    UpdateFlowVisibility();
+    UpdateFunctionOptions();
+}
+
+void MainFrame::OnSaveBatteryProfile(wxCommandEvent& event) {
+    (void)event;
+    batview::core::protocol::BatteryProfile profile;
+    wxString error;
+    if (!ReadBatteryProfileForm(profile, error)) {
+        wxMessageBox(error, "batView", wxICON_WARNING | wxOK, this);
+        return;
+    }
+
+    auto existing = std::find_if(batteryProfiles_.begin(), batteryProfiles_.end(),
+                                 [&profile](const auto& candidate) {
+                                     return candidate.nameId == profile.nameId;
+                                 });
+    if (existing == batteryProfiles_.end()) {
+        batteryProfiles_.push_back(profile);
+    } else {
+        *existing = profile;
+    }
+
+    RefreshBatteryProfileChoices();
+    const auto selected = std::find_if(batteryProfiles_.begin(), batteryProfiles_.end(),
+                                       [&profile](const auto& candidate) {
+                                           return candidate.nameId == profile.nameId;
+                                       });
+    if (selected != batteryProfiles_.end()) {
+        batteryProfileChoice_->SetSelection(static_cast<int>(std::distance(batteryProfiles_.begin(), selected)));
+    }
+
+    batteryChosen_ = false;
+    functionChosen_ = false;
+    operationActive_ = false;
+    AppendTraffic(true, "Perfil de bateria listo: " + profile.nameId);
+    UpdateFlowVisibility();
+    UpdateFunctionOptions();
+}
+
+void MainFrame::OnChooseBatteryProfile(wxCommandEvent& event) {
+    (void)event;
+    if (!viewModel_) {
+        return;
+    }
+    if (!isConnected_) {
+        wxMessageBox("Conecte el ESP32 antes de elegir una bateria.", "batView", wxICON_WARNING | wxOK, this);
+        return;
+    }
+
+    const int selection = batteryProfileChoice_ ? batteryProfileChoice_->GetSelection() : wxNOT_FOUND;
+    if (selection == wxNOT_FOUND || selection < 0 ||
+        static_cast<std::size_t>(selection) >= batteryProfiles_.size()) {
+        wxMessageBox("Agregue y seleccione un perfil de bateria.", "batView", wxICON_WARNING | wxOK, this);
+        return;
+    }
+
+    batview::core::protocol::BatteryProfile profile;
+    wxString error;
+    if (!ReadBatteryProfileForm(profile, error)) {
+        wxMessageBox(error, "batView", wxICON_WARNING | wxOK, this);
+        return;
+    }
+
+    batteryProfiles_[static_cast<std::size_t>(selection)] = profile;
+    RefreshBatteryProfileChoices();
+    batteryProfileChoice_->SetSelection(selection);
+
+    if (!viewModel_->SendBatteryProfile(profile)) {
+        ShowCommunicationFailure("No se recibio confirmacion del ESP32 para el perfil de bateria.");
+        return;
+    }
+
+    batteryChosen_ = true;
+    if (wizardStep_ < 2) {
         wizardStep_ = 2;
     }
+    AppendTraffic(true, "Bateria elegida: " + profile.nameId);
     UpdateFlowVisibility();
     UpdateFunctionOptions();
 }
@@ -629,13 +826,7 @@ void MainFrame::OnStartOperation(wxCommandEvent& event) {
         return;
     }
 
-    const int batteryTypeCode = GetSelectedBatteryTypeCode();
     const int functionCode = GetSelectedFunctionCode();
-
-    if (!viewModel_->SendBatterySelection(batteryTypeCode, functionCode)) {
-        ShowCommunicationFailure("No se recibio confirmacion del ESP32 para la seleccion de bateria.");
-        return;
-    }
 
     switch (functionCode) {
     case 1:
@@ -704,10 +895,6 @@ void MainFrame::OnExportData(wxCommandEvent& event) {
 
         wxMessageBox("Datos exportados correctamente.", "batView", wxICON_INFORMATION | wxOK, this);
     }
-}
-
-int MainFrame::GetSelectedBatteryTypeCode() const {
-    return batteryChoice_ ? batteryChoice_->GetSelection() + 1 : 1;
 }
 
 int MainFrame::GetSelectedFunctionCode() const {

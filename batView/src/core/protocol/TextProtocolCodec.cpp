@@ -1,5 +1,6 @@
 #include "core/protocol/TextProtocolCodec.h"
 
+#include <iomanip>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -51,20 +52,36 @@ MessageType ToMessageType(const std::string& token) {
 bool IsPositivePercent(int value) {
     return value >= 0 && value <= 100;
 }
+
+std::string FormatDecimal(double value) {
+    std::ostringstream output;
+    output << std::setprecision(6) << std::defaultfloat << value;
+    return output.str();
+}
 } // namespace
 
-std::string TextProtocolCodec::BuildSelectBatteryCommand(bool batterySelected,
-                                                         int batteryTypeCode,
-                                                         int functionCode) const {
-    if (batteryTypeCode < 1 || batteryTypeCode > 4) {
-        throw std::invalid_argument("batteryTypeCode must be in [1,4]");
+std::string TextProtocolCodec::BuildBatteryProfileCommand(const BatteryProfile& profile) const {
+    if (profile.nameId.empty()) {
+        throw std::invalid_argument("battery profile name/id must not be empty");
     }
-    if (functionCode < 1 || functionCode > 4) {
-        throw std::invalid_argument("functionCode must be in [1,4]");
+    if (profile.nameId.find(',') != std::string::npos) {
+        throw std::invalid_argument("battery profile name/id must not contain commas");
+    }
+    if (profile.voltageAtMax <= 0.0) {
+        throw std::invalid_argument("V@max must be > 0");
+    }
+    if (profile.voltageAtMin <= 0.0) {
+        throw std::invalid_argument("V@min must be > 0");
+    }
+    if (profile.voltageAtMin >= profile.voltageAtMax) {
+        throw std::invalid_argument("V@min must be lower than V@max");
+    }
+    if (profile.maxCurrent <= 0.0) {
+        throw std::invalid_argument("Amax must be > 0");
     }
 
-    return "#DATA," + std::to_string(batterySelected ? 1 : 0) + "," +
-           std::to_string(batteryTypeCode) + "," + std::to_string(functionCode);
+    return "#Battery," + profile.nameId + "," + FormatDecimal(profile.voltageAtMax) + "," +
+           FormatDecimal(profile.voltageAtMin) + "," + FormatDecimal(profile.maxCurrent);
 }
 
 std::string TextProtocolCodec::BuildCycleCommand(bool indefiniteMode, int cycleCount) const {

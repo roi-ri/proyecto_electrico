@@ -71,7 +71,7 @@ to the correct PlatformIO board id for your hardware.
 Edit the booleans at the top of `src/main.cpp`:
 
 - `SEND_ACK_CONNECTION = false`
-- `SEND_ACK_DATA = false`
+- `SEND_ACK_BATTERY = false`
 - `SEND_ACK_LOAD = false`
 - `SEND_ACK_UNLOAD = false`
 - `SEND_ACK_CICLE = false`

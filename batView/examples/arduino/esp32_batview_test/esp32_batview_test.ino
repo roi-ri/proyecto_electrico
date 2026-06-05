@@ -16,13 +16,13 @@ static const unsigned long kTelemetryPeriodMs = 1000;
 
 // Toggle these to verify batView error handling.
 static const bool SEND_ACK_CONNECTION = true;
-static const bool SEND_ACK_DATA = true;
+static const bool SEND_ACK_BATTERY = true;
 static const bool SEND_ACK_CICLE = true;
 static const bool SEND_ACK_LOAD = true;
 static const bool SEND_ACK_UNLOAD = true;
 static const bool SEND_ACK_STOP = true;
 
-static const bool SEND_ERROR_ON_DATA = false;
+static const bool SEND_ERROR_ON_BATTERY = false;
 static const bool SEND_ERROR_ON_CICLE = false;
 static const bool SEND_ERROR_ON_LOAD = false;
 static const bool SEND_ERROR_ON_UNLOAD = false;
@@ -79,15 +79,15 @@ void processLine(String line) {
     return;
   }
 
-  if (line.startsWith("#DATA,")) {
-    if (SEND_ERROR_ON_DATA) {
-      Serial.println("#ERROR,11,BATTERY_SELECTION_REJECTED");
+  if (line.startsWith("#Battery,")) {
+    if (SEND_ERROR_ON_BATTERY) {
+      Serial.println("#ERROR,11,BATTERY_PROFILE_REJECTED");
       return;
     }
 
-    if (SEND_ACK_DATA) {
-      Serial.println("#ACK,DATA");
-      Serial.println("#STATUS,READY,BATTERY_SELECTED");
+    if (SEND_ACK_BATTERY) {
+      Serial.println("#ACK,Battery");
+      Serial.println("#STATUS,READY,BATTERY_PROFILE_SELECTED");
     }
     return;
   }

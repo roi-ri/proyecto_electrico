@@ -12,6 +12,8 @@
 #include <wx/stattext.h>
 #include <wx/timer.h>
 
+#include <vector>
+
 #include "ui/panels/ConnectionPanel.h"
 #include "ui/panels/PlotPanel.h"
 #include "ui/viewmodels/MainViewModel.h"
@@ -39,9 +41,15 @@ private:
     void MarkConnectionLost();
     void ShowCommunicationFailure(const std::string& fallbackMessage);
     void AppendTraffic(bool outgoing, const std::string& message);
+    void RefreshBatteryProfileChoices();
+    bool ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& outProfile,
+                                wxString& outError) const;
+    void LoadBatteryProfileForm(std::size_t index);
     void OnSplashTimer(wxTimerEvent& event);
     void OnConnectButton(wxCommandEvent& event);
-    void OnBatteryChanged(wxCommandEvent& event);
+    void OnBatteryProfileChanged(wxCommandEvent& event);
+    void OnSaveBatteryProfile(wxCommandEvent& event);
+    void OnChooseBatteryProfile(wxCommandEvent& event);
     void OnFunctionChanged(wxCommandEvent& event);
     void OnCycleModeChanged(wxCommandEvent& event);
     void OnBackStep(wxCommandEvent& event);
@@ -50,7 +58,6 @@ private:
     void OnStopOperation(wxCommandEvent& event);
     void OnExportData(wxCommandEvent& event);
 
-    int GetSelectedBatteryTypeCode() const;
     int GetSelectedFunctionCode() const;
     bool GetCycleInfiniteMode() const;
     int GetCycleCount() const;
@@ -68,8 +75,14 @@ private:
 
     wxPanel* flowPanel_;
     batview::ui::panels::ConnectionPanel* connectionPanel_;
-    wxStaticText* batteryLabel_;
-    wxChoice* batteryChoice_;
+    wxPanel* batteryPanel_;
+    wxChoice* batteryProfileChoice_;
+    wxTextCtrl* batteryNameCtrl_;
+    wxTextCtrl* batteryVoltageMaxCtrl_;
+    wxTextCtrl* batteryVoltageMinCtrl_;
+    wxTextCtrl* batteryMaxCurrentCtrl_;
+    wxButton* saveBatteryProfileButton_;
+    wxButton* chooseBatteryProfileButton_;
     wxPanel* functionPanel_;
     wxRadioButton* chargeRadio_;
     wxRadioButton* dischargeRadio_;
@@ -101,6 +114,7 @@ private:
     bool operationActive_;
     bool isInfiniteRunning_;
     bool connectionInProgress_;
+    std::vector<batview::core::protocol::BatteryProfile> batteryProfiles_;
 };
 
 } // namespace batview::ui::frames

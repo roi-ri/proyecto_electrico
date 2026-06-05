@@ -69,14 +69,13 @@ void MainViewModel::StopAcquisition() {
     }
 }
 
-bool MainViewModel::SendBatterySelection(int batteryTypeCode, int functionCode) {
+bool MainViewModel::SendBatteryProfile(const batview::core::protocol::BatteryProfile& profile) {
     if (!protocolSessionService_) {
         connected_ = false;
         return false;
     }
 
-    const bool ok = protocolSessionService_->SendBatterySelection(
-        batteryTypeCode, functionCode, true, std::chrono::milliseconds(1500));
+    const bool ok = protocolSessionService_->SendBatteryProfile(profile, std::chrono::milliseconds(1500));
     connected_ = connected_ && ok;
     return ok;
 }

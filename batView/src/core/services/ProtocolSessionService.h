@@ -18,8 +18,8 @@ public:
                            core::protocol::IProtocolCodec& protocolCodec,
                            ILogger& logger);
 
-    bool SendBatterySelection(int batteryTypeCode, int functionCode, bool batterySelected,
-                              std::chrono::milliseconds timeout);
+    bool SendBatteryProfile(const core::protocol::BatteryProfile& profile,
+                            std::chrono::milliseconds timeout);
     bool SendCycleConfiguration(bool indefiniteMode, int cycleCount,
                                 std::chrono::milliseconds timeout);
     bool SendStop(std::chrono::milliseconds timeout);

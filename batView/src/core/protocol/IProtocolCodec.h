@@ -11,9 +11,7 @@ class IProtocolCodec {
 public:
     virtual ~IProtocolCodec() = default;
 
-    virtual std::string BuildSelectBatteryCommand(bool batterySelected,
-                                                  int batteryTypeCode,
-                                                  int functionCode) const = 0;
+    virtual std::string BuildBatteryProfileCommand(const BatteryProfile& profile) const = 0;
     virtual std::string BuildCycleCommand(bool indefiniteMode, int cycleCount) const = 0;
     virtual std::string BuildStopCommand() const = 0;
     virtual std::string BuildLoadCommand(int targetPercent) const = 0;

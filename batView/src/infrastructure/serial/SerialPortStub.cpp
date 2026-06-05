@@ -33,8 +33,8 @@ bool SerialPortStub::WriteLine(const std::string& line) {
         return true;
     }
 
-    if (line.rfind("#DATA,", 0) == 0) {
-        frames_.push("#ACK,DATA");
+    if (line.rfind("#Battery,", 0) == 0) {
+        frames_.push("#ACK,Battery");
         frames_.push("#STATUS,CONNECTED,ESP32_READY");
         return true;
     }

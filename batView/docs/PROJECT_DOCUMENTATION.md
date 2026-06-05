@@ -21,7 +21,7 @@ La aplicación se comunica por puerto serial, valida un protocolo simple basado 
 
 1. Seleccionar puerto serial.
 2. Conectar con el ESP32.
-3. Elegir tipo de batería.
+3. Crear y elegir un perfil de batería.
 4. Elegir función:
    - Carga
    - Descarga
@@ -41,10 +41,10 @@ La aplicación se comunica por puerto serial, valida un protocolo simple basado 
 
 La app reintenta el handshake automáticamente para tolerar ESP32 que reinician al abrir el puerto.
 
-### Selección de batería
+### Perfil de batería
 
-- App: `#DATA,1,<tipoBateria>,<funcion>`
-- ESP32: `#ACK,DATA`
+- App: `#Battery,<BatteryNameID>,<V@max>,<V@min>,<Amax>`
+- ESP32: `#ACK,Battery`
 
 ### Inicio de operación
 

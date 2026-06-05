@@ -33,4 +33,11 @@ struct ErrorPayload {
     std::string description;
 };
 
+struct BatteryProfile {
+    std::string nameId;
+    double voltageAtMax = 0.0;
+    double voltageAtMin = 0.0;
+    double maxCurrent = 0.0;
+};
+
 } // namespace batview::core::protocol

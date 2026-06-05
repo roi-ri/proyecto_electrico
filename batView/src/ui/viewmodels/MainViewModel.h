@@ -29,7 +29,7 @@ public:
     void SetTrafficObserver(TrafficObserver observer);
     void StartAcquisition();
     void StopAcquisition();
-    bool SendBatterySelection(int batteryTypeCode, int functionCode);
+    bool SendBatteryProfile(const batview::core::protocol::BatteryProfile& profile);
     bool SendCycleConfiguration(bool indefiniteMode, int cycleCount);
     bool SendStopCommand();
     bool SendLoadTarget(int targetPercent);

@@ -42,7 +42,7 @@ int main() {
     app::AppController controller(viewModel);
 
     controller.Connect("/dev/tty.usbserial-stub");
-    controller.SelectBatteryForFunction(2, 1);
+    controller.SelectBatteryProfile({"DemoPack", 4.2, 3.0, 2.0});
     controller.StartCycle(true, 0);
     controller.StopCycle();
     std::string exportError;
