@@ -57,7 +57,10 @@ batView/
 │
 ├── docs/                             documentacion de uso, arquitectura e instalacion
 │   ├── ARCHITECTURE.md               decisiones de arquitectura
-│   ├── BUILD_INSTALLER.md            scripts por sistema operativo
+│   ├── BUILD_INSTALLER.md            indice de instalacion y limpieza
+│   ├── INSTALL_MACOS.md              instalacion en macOS
+│   ├── INSTALL_LINUX.md              instalacion en Linux
+│   ├── INSTALL_WINDOWS.md            instalacion en Windows
 │   └── PROJECT_DOCUMENTATION.md      documentacion tecnica general
 │
 ├── examples/                         firmware de prueba para ESP32
@@ -123,7 +126,18 @@ Los datos que la aplicación grafica y exporta provienen del ESP32 a través de 
 La aplicación no fabrica esos valores. Lo único que hace en la gráfica es convertir `timestamp` de milisegundos a segundos para mostrar un eje de tiempo más legible. El dato original almacenado sigue siendo el que envía el ESP32.
 
 ## Build y ejecución multiplataforma
-If you just want to install and run batView, choose the script that matches your computer and use only that one.
+If you want to install batView, open the guide for your system:
+
+- [macOS install guide](docs/INSTALL_MACOS.md)
+- [Linux install guide](docs/INSTALL_LINUX.md)
+- [Windows install guide](docs/INSTALL_WINDOWS.md)
+
+Each guide has two clear cases:
+
+- If nothing is installed yet.
+- If everything needed is already installed.
+
+Use only the guide for your own computer.
 
 | Your computer | Script to run |
 |---|---|
@@ -304,88 +318,3 @@ ctest --test-dir build-tests --output-on-failure
 ## Estado del proyecto
 El proyecto ya cuenta con una base funcional sólida para pruebas reales con ESP32.
 
-Mejoras ya incorporadas:
-- Gráficas reales renderizadas desde la app.
-- Mayor cobertura de pruebas para exportación y plots.
-- Exportación de sesión y de gráficos a MAT/XLSX.
-- Empaquetado distribuible en `dist/` con artefactos por plataforma.
-
-Áreas que todavía pueden crecer:
-- Firma/certificación de instaladores por plataforma.
-- Detección y empaquetado automático del runtime Python embebido para XLSX en distribuciones finales.
-- Más pruebas de integración con hardware real.
-# batView
-
-batView es una app de escritorio para controlar pruebas de baterías con un ESP32 por USB.
-
-## Lo que necesitas
-
-### macOS
-
-```bash
-xcode-select --install
-brew install cmake wxwidgets python pkg-config
-```
-
-### Ubuntu / Debian
-
-```bash
-sudo apt update
-sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-dev python3-pip
-```
-
-### Windows
-
-Instala estos programas:
-
-- Visual Studio 2022 con `Desktop development with C++`
-- `CMake`
-- `Python 3`
-- `wxWidgets` compatible con tu compilador
-
-## Cómo construir la app
-
-Usa solo el script de tu sistema operativo:
-
-### macOS
-
-```bash
-./install_macos.sh
-```
-
-### Linux
-
-```bash
-./install_linux.sh
-```
-
-### Windows
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
-```
-
-Si ya instalaste las herramientas antes, puedes saltarte esa parte:
-
-```bash
-./install_macos.sh --skip-deps
-./install_linux.sh --skip-deps
-```
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps
-```
-
-## Cómo usar la app fuera del repo
-
-Después de correr el script:
-
-- macOS: arrastra `build-release/batView.app` a `Applications`.
-- Linux: copia `build-release/batView` y la carpeta `assets/` a una carpeta fuera del repo, por ejemplo `~/Apps/batView`.
-- Windows: usa el `.exe` o el paquete que quede en `dist/`.
-
-## Si algo falla
-
-- Asegúrate de estar dentro de la carpeta `batView`.
-- Si cambias de computadora o de sistema operativo, borra `build-release` y vuelve a correr el script.
-- Si `wxWidgets` no se encuentra, instala el paquete de desarrollo para tu sistema y vuelve a intentar.
