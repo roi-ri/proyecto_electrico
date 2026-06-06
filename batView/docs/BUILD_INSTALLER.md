@@ -4,227 +4,172 @@ These scripts prepare the computer, build batView, package it, and optionally op
 
 This guide assumes no previous build experience. Follow it in order.
 
-## Before Running Anything
+## Start Here
 
-### 1. Use the Correct Branch
+Use only the script for your own computer. Do not mix the scripts.
 
-For this version of batView, use the `batView` branch.
+| Computer | Script |
+|---|---|
+| Mac | `install_macos.sh` |
+| Linux | `install_linux.sh` |
+| Windows | `install_windows.ps1` |
 
-If you already have the project folder, open a terminal inside the repository and run:
+If you are unsure, stop here and check the label on your computer first.
 
-```bash
-git checkout batView
-```
+## What These Scripts Do
 
-On Windows PowerShell:
+Each install script does the same basic job:
 
-```powershell
-git checkout batView
-```
+1. It installs the tools needed to build batView.
+2. It builds the app.
+3. It creates the package or desktop launcher for your system.
 
-If Git says the branch does not exist, fetch the branches and try again:
-
-```bash
-git fetch --all
-git checkout batView
-```
-
-### 2. Go to the Project Folder
-
-All commands must be run from the folder that contains these files:
+The results are written to:
 
 ```text
-README.md
-CMakeLists.txt
-install_windows.ps1
-install_macos.sh
-install_linux.sh
+dist/
 ```
 
-If your terminal is one folder above the project, enter the folder first:
+The build files are written to:
+
+```text
+build-release/
+```
+
+## Before You Begin
+
+Make sure you are inside the batView folder before running anything.
+
+If you are one folder above it, go into the folder first:
 
 ```bash
 cd batView
 ```
 
-On Windows, a common location looks like:
+On Windows, the full path may look like this:
 
 ```powershell
 cd C:\Users\YourName\Downloads\proyecto_electrico\batView
 ```
 
-### 3. Pick the Script for Your OS
+If you cloned the repository with Git, you can confirm the branch with:
 
-Run only the script for the computer you are using:
-
-- Windows: `install_windows.ps1`
-- macOS: `install_macos.sh`
-- Linux: `install_linux.sh`
-
-The result is written to:
-
-```text
-dist/
+```bash
+git branch --show-current
 ```
 
-The local build files are written to:
-
-```text
-build-release/
-```
+It should say `batView`.
 
 ## Quick Start
 
 ### Windows
 
-Open PowerShell as Administrator from the `batView` project folder.
-
-If you are not sure you are in the correct folder, run:
-
-```powershell
-dir
-```
-
-You should see `README.md`, `CMakeLists.txt`, and `install_windows.ps1`.
-
-Then run:
+1. Open PowerShell in the batView folder.
+2. Run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
 ```
 
-Build without opening the app at the end:
+If you do not want the app to open at the end, use:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -NoRun
 ```
 
-What the script prepares:
+What this installs:
 
 - Git
 - CMake
 - Python 3
-- Visual Studio Build Tools with C++ tools
-- NSIS for `.exe` installer packaging when available
+- Visual Studio Build Tools with C++ support
+- NSIS when available, for installer packaging
 - wxWidgets through local `tools/vcpkg`
 
-If Windows was just updated by the script, close PowerShell, open it again, and rerun the same command.
+If Windows just installed or updated a tool, close PowerShell, open it again, and run the same command again.
 
 ### macOS
 
-Open Terminal from the `batView` project folder.
-
-If you are not sure you are in the correct folder, run:
-
-```bash
-ls
-```
-
-You should see `README.md`, `CMakeLists.txt`, and `install_macos.sh`.
-
-Then run:
+1. Open Terminal in the batView folder.
+2. Run:
 
 ```bash
 ./install_macos.sh
 ```
 
-Build without opening the app at the end:
+If you do not want the app to open at the end, use:
 
 ```bash
 ./install_macos.sh --no-run
 ```
 
-What the script prepares:
+What this installs:
 
 - Apple command line tools
-- Homebrew packages: `cmake`, `wxwidgets`, `python`, `pkg-config`
+- Homebrew
+- CMake
+- wxWidgets
+- Python
+- pkg-config
 
-If the Apple command line tools installer opens, finish that installer and rerun the script.
+If the Apple command line tools installer opens, finish it first, then run the script again.
 
 ### Linux
 
-Open Terminal from the `batView` project folder.
-
-If you are not sure you are in the correct folder, run:
-
-```bash
-ls
-```
-
-You should see `README.md`, `CMakeLists.txt`, and `install_linux.sh`.
-
-Then run:
+1. Open Terminal in the batView folder.
+2. Run:
 
 ```bash
 ./install_linux.sh
 ```
 
-Build without opening the app at the end:
+If you do not want the app to open at the end, use:
 
 ```bash
 ./install_linux.sh --no-run
 ```
 
-What the script prepares:
+What this installs:
 
 - CMake
-- C++ compiler and build tools
-- wxWidgets development package
-- GTK development package
+- A C++ compiler and build tools
+- wxWidgets development files
+- GTK development files
 - Python 3, Python headers, and pip
-- packaging helpers such as `dpkg-dev`, `fakeroot`, or `zip` when available
+- Packaging helpers such as `dpkg-dev`, `fakeroot`, or `zip` when available
 
-The Linux script supports `apt`, `dnf`, and `pacman`.
+The Linux script works with `apt`, `dnf`, and `pacman`.
 
 ## How to Know It Worked
 
-The script worked if:
+The install worked if:
 
-- the terminal prints `batView full listo.`;
-- the app opens automatically, unless you used `--no-run` or `-NoRun`;
-- the `dist/` folder contains a generated package;
-- the `build-release/` folder contains the compiled app.
+1. The terminal ends with `batView full listo.`
+2. The app opens automatically, unless you used `--no-run` or `-NoRun`.
+3. A package appears in `dist/`.
+4. The compiled app appears in `build-release/`.
 
-On Windows, look in:
+Desktop results by system:
 
-```text
-dist/
-build-release/
-```
-
-On macOS, the app bundle is usually:
-
-```text
-~/Desktop/batView.app
-```
-
-On Linux, the desktop launcher is usually:
-
-```text
-~/Desktop/batView.desktop
-```
-
-On Windows, the desktop shortcut is usually:
-
-```text
-~/Desktop/batView.lnk
-```
+- Mac: `~/Desktop/batView.app`
+- Linux: `~/Desktop/batView.desktop`
+- Windows: `~/Desktop/batView.lnk`
 
 ## If Something Fails
 
-Do these checks first:
+Check these things first:
 
-- Make sure you are on branch `batView`.
-- Make sure you are inside the `batView` project folder.
-- On Windows, close and reopen PowerShell after installing tools.
-- On macOS, finish the Apple command line tools installer if it appears.
-- On Linux, enter your password if `sudo` asks for it.
+1. You are on the `batView` branch.
+2. You are inside the `batView` folder.
+3. On Windows, PowerShell was closed and opened again after tool installation.
+4. On macOS, the Apple command line tools installer finished.
+5. On Linux, you entered your password if `sudo` asked for it.
 
-Then rerun the same install command.
+Then run the same install command again.
 
-## Skip Dependency Installation
+## If the Tools Are Already Installed
 
-If the computer already has the required tools installed:
+Use these commands when the computer already has the required build tools:
 
 ```bash
 ./install_macos.sh --skip-deps --no-run
@@ -239,7 +184,7 @@ powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps -NoRun
 
 ## Clean Generated Artifacts
 
-If you want to remove what the build scripts generated and start fresh, run:
+If you want to remove what the build scripts generated and start over, run:
 
 ```bash
 ./build_app.sh --clean
@@ -255,7 +200,7 @@ This removes `build-release/`, `dist/`, `python/runtime/`, and the Desktop launc
 
 ## Existing Build Scripts
 
-The install scripts call the existing build scripts after preparing dependencies:
+The install scripts call the build scripts after preparing dependencies:
 
 ```bash
 ./build_app.sh
@@ -265,7 +210,7 @@ The install scripts call the existing build scripts after preparing dependencies
 powershell -ExecutionPolicy Bypass -File .\build_app.ps1
 ```
 
-Use the build scripts directly only when dependencies are already installed.
+Use the build scripts directly only when the tools are already installed.
 
 ## Package Types
 

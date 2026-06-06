@@ -123,52 +123,60 @@ Los datos que la aplicación grafica y exporta provienen del ESP32 a través de 
 La aplicación no fabrica esos valores. Lo único que hace en la gráfica es convertir `timestamp` de milisegundos a segundos para mostrar un eje de tiempo más legible. El dato original almacenado sigue siendo el que envía el ESP32.
 
 ## Build y ejecución multiplataforma
-Si solo quieres usar batView, abre el script de instalación de tu sistema operativo. Si quieres construirlo desde código, sigue estos pasos:
+If you just want to install and run batView, choose the script that matches your computer and use only that one.
 
-1. Abre una terminal dentro de la carpeta del proyecto.
-2. Instala las herramientas base de tu sistema.
-3. Ejecuta el script de tu sistema operativo.
+| Your computer | Script to run |
+|---|---|
+| Mac | `./install_macos.sh` |
+| Linux | `./install_linux.sh` |
+| Windows | `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` |
 
-### Comandos para instalar lo necesario
-#### macOS
+Do not run the other scripts. Each one is for a different operating system.
+
+### What you need before installing
+If you are not sure what to install first, use this checklist.
+
+#### Mac
+Install these once if they are not already installed:
+
+1. Apple command line tools.
+2. Homebrew.
+3. These Homebrew packages: `cmake`, `wxwidgets`, `python`, `pkg-config`.
+
+How:
 
 ```bash
 xcode-select --install
 brew install cmake wxwidgets python pkg-config
 ```
 
-#### Ubuntu / Debian
+#### Linux
+Install these packages:
+
+1. CMake.
+2. A C++ compiler and build tools.
+3. wxWidgets development files.
+4. GTK development files.
+5. Python 3, Python headers, and pip.
+
+How on Ubuntu or Debian:
+
 ```bash
 sudo apt update
 sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-dev python3-pip
 ```
 
 #### Windows
-Instala estos programas:
+Install these programs:
 
-- Visual Studio 2022 con `Desktop development with C++`
-- `CMake`
-- `Python 3`
-- `wxWidgets` compatible con tu compilador
+1. Visual Studio 2022 with the `Desktop development with C++` workload.
+2. CMake.
+3. Python 3.
+4. wxWidgets compatible with your compiler.
 
-### Script para construir la app
-#### macOS
+### If the tools are already installed
+Use the same script, but add the skip-deps option.
 
-```bash
-./install_macos.sh
-```
-
-#### Linux
-```bash
-./install_linux.sh
-```
-
-#### Windows
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
-```
-
-### Si ya tienes las herramientas instaladas
 ```bash
 ./install_macos.sh --skip-deps
 ./install_linux.sh --skip-deps

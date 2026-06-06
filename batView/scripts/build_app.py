@@ -17,6 +17,7 @@ BUILD_DIR = PROJECT_ROOT / "build-release"
 DIST_DIR = PROJECT_ROOT / "dist"
 PYTHON_CACHE_ROOT = PROJECT_ROOT / "python" / "runtime"
 DESKTOP_DIR = Path.home() / "Desktop"
+ICLOUD_DESKTOP_DIR = Path.home() / "Library" / "Mobile Documents" / "com~apple~CloudDocs" / "Desktop"
 DESKTOP_APP = DESKTOP_DIR / "batView.app"
 DESKTOP_LINUX_LAUNCHER = DESKTOP_DIR / "batView.desktop"
 DESKTOP_WINDOWS_SHORTCUT = DESKTOP_DIR / "batView.lnk"
@@ -215,7 +216,11 @@ def remove_path(path: Path) -> bool:
 def clean_generated_artifacts() -> list[Path]:
     removed_paths = []
 
-    for path in (BUILD_DIR, DIST_DIR, PYTHON_CACHE_ROOT, DESKTOP_APP, DESKTOP_LINUX_LAUNCHER, DESKTOP_WINDOWS_SHORTCUT):
+    desktop_candidates = [DESKTOP_APP, DESKTOP_LINUX_LAUNCHER, DESKTOP_WINDOWS_SHORTCUT]
+    if platform.system() == "Darwin":
+        desktop_candidates.append(ICLOUD_DESKTOP_DIR / "batView.app")
+
+    for path in (BUILD_DIR, DIST_DIR, PYTHON_CACHE_ROOT, *desktop_candidates):
         if remove_path(path):
             removed_paths.append(path)
 
