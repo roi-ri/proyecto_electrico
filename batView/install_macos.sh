@@ -45,4 +45,8 @@ else
     echo "Skipping dependency installation."
 fi
 
-"$SCRIPT_DIR/build_app.sh" "${BUILD_ARGS[@]}"
+if [[ "${#BUILD_ARGS[@]}" -gt 0 ]]; then
+    "$SCRIPT_DIR/build_app.sh" "${BUILD_ARGS[@]}"
+else
+    "$SCRIPT_DIR/build_app.sh"
+fi
