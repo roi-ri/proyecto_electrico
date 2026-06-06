@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "models/Measurement.h"
+#include "core/models/Measurement.h"
 #include "core/services/PlotService.h"
 
 namespace batview::infrastructure::python {

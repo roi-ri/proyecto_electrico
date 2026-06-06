@@ -3,7 +3,7 @@
 #include <optional>
 #include <string>
 
-#include "models/Measurement.h"
+#include "core/models/Measurement.h"
 
 namespace batview::core::protocol {
 

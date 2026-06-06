@@ -50,7 +50,7 @@ Módulos:
 
 - `protocol/`
 - `services/`
-- `models/`
+- `core/models/`
 
 ### Infrastructure
 
