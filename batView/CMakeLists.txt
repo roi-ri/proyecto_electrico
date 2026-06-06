@@ -123,10 +123,6 @@ if(BATVIEW_ENABLE_WX)
     list(APPEND BATVIEW_APP_SOURCES
         src/ui/BatViewApp.cpp
         src/ui/frames/MainFrame.cpp
-        src/ui/frames/MainFrameEvents.cpp
-        src/ui/frames/MainFrameLayout.cpp
-        src/ui/frames/MainFrameState.cpp
-        src/ui/frames/MainFrameSupport.cpp
         src/ui/dialogs/ExportDialog.cpp
         src/ui/panels/ConnectionPanel.cpp
         src/ui/panels/PlotPanel.cpp

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "core/models/Measurement.h"
+#include "models/Measurement.h"
 
 namespace batview::core::services {
 

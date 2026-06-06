@@ -36,7 +36,6 @@ batView/
 │   │   ├── AppController.h
 │   │   └── AppController.cpp
 │   ├── core/                         protocolo y logica de negocio
-│   │   ├── models/                   modelos de dominio como Measurement
 │   │   ├── protocol/                 codec, parser y tipos de mensajes seriales
 │   │   └── services/                 conexion, adquisicion, exportacion y sesiones
 │   ├── infrastructure/               adaptadores concretos
@@ -44,6 +43,7 @@ batView/
 │   │   ├── logging/                  logger de consola
 │   │   ├── python/                   motor embebido para graficas/exportacion
 │   │   └── serial/                   puertos seriales POSIX, Windows y stub
+│   ├── models/                       estructuras de mediciones
 │   └── ui/                           interfaz wxWidgets
 │       ├── BatViewApp.h/.cpp         arranque grafico de la aplicacion
 │       ├── dialogs/                  dialogos como exportacion
@@ -86,8 +86,9 @@ batView/
 ## Arquitectura del código
 
 - `src/app/`: punto de entrada y composición de la aplicación.
-- `src/core/`: modelos de dominio, protocolo y lógica de negocio.
+- `src/core/`: protocolo y lógica de negocio.
 - `src/infrastructure/`: adaptadores para CSV, logging y serial.
+- `src/models/`: entidades y estructuras de dominio.
 - `src/ui/`: ventanas, paneles, diálogos y viewmodels.
 
 ## Protocolo soportado

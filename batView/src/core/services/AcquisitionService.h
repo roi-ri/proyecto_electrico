@@ -10,7 +10,7 @@
 #include "core/protocol/IMessageParser.h"
 #include "core/services/ILogger.h"
 #include "core/services/ISerialPort.h"
-#include "core/models/Measurement.h"
+#include "models/Measurement.h"
 
 namespace batview::core::services {
 

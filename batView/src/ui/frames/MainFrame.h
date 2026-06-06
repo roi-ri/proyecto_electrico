@@ -1,38 +1,23 @@
 #pragma once
 
+#include <wx/animate.h>
+#include <wx/gauge.h>
 #include <wx/frame.h>
-#include <wx/string.h>
+#include <wx/button.h>
+#include <wx/choice.h>
+#include <wx/radiobut.h>
+#include <wx/simplebook.h>
+#include <wx/splitter.h>
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
 #include <wx/timer.h>
 
-#include <cstddef>
-#include <memory>
-#include <string>
 #include <vector>
 
-#include "core/protocol/ProtocolTypes.h"
-
-class wxAnimationCtrl;
-class wxButton;
-class wxChoice;
-class wxCommandEvent;
-class wxGauge;
-class wxPanel;
-class wxRadioButton;
-class wxSimplebook;
-class wxSplitterWindow;
-class wxStaticText;
-class wxTextCtrl;
-class wxTimerEvent;
-class wxWindow;
-
-namespace batview::ui::panels {
-class ConnectionPanel;
-class PlotPanel;
-} // namespace batview::ui::panels
-
-namespace batview::ui::viewmodels {
-class MainViewModel;
-} // namespace batview::ui::viewmodels
+#include "ui/panels/ConnectionPanel.h"
+#include "ui/panels/PlotPanel.h"
+#include "ui/viewmodels/MainViewModel.h"
+#include "ui/dialogs/ExportDialog.h"
 
 namespace batview::ui::frames {
 
