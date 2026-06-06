@@ -23,6 +23,13 @@
 
 namespace batview::ui::frames {
 
+namespace {
+
+const int kRadioButtonMinHeight = 32;
+const int kFunctionPanelMinHeight = 88;
+
+} // namespace
+
 void MainFrame::BuildLayout() {
     mainPanel_ = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
     detail::PrepareFlatPanel(mainPanel_);
@@ -162,19 +169,23 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     chargeRadio_ = new wxRadioButton(functionPanel_, wxID_ANY, "Carga", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
     dischargeRadio_ = new wxRadioButton(functionPanel_, wxID_ANY, "Descarga");
     cycleRadio_ = new wxRadioButton(functionPanel_, wxID_ANY, "Ciclado");
+    chargeRadio_->SetMinSize(wxSize(-1, kRadioButtonMinHeight));
+    dischargeRadio_->SetMinSize(wxSize(-1, kRadioButtonMinHeight));
+    cycleRadio_->SetMinSize(wxSize(-1, kRadioButtonMinHeight));
     chargeRadio_->SetValue(false);
     dischargeRadio_->SetValue(false);
     cycleRadio_->SetValue(false);
 
     auto* functionRow = new wxBoxSizer(wxHORIZONTAL);
-    functionRow->Add(chargeRadio_, 0, wxRIGHT, 14);
-    functionRow->Add(dischargeRadio_, 0, wxRIGHT, 14);
-    functionRow->Add(cycleRadio_, 0);
+    functionRow->Add(chargeRadio_, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 14);
+    functionRow->Add(dischargeRadio_, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 14);
+    functionRow->Add(cycleRadio_, 0, wxALIGN_CENTER_VERTICAL);
 
     auto* functionSizer = new wxBoxSizer(wxVERTICAL);
     functionSizer->Add(functionLabel, 0, wxBOTTOM, 4);
-    functionSizer->Add(functionRow, 0, wxTOP, 2);
+    functionSizer->Add(functionRow, 0, wxEXPAND | wxTOP, 2);
     functionPanel_->SetSizer(functionSizer);
+    functionPanel_->SetMinSize(wxSize(-1, kFunctionPanelMinHeight));
 
     optionsPanel_ = new wxPanel(flowPanel_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
     detail::PrepareFlatPanel(optionsPanel_);
