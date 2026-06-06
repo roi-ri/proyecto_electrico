@@ -195,7 +195,7 @@ build-release/
 On macOS, the app bundle is usually:
 
 ```text
-build-release/batView.app
+~/Desktop/batView.app
 ```
 
 On Linux, the executable is usually:
@@ -230,6 +230,22 @@ On Windows:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps -NoRun
 ```
+
+## Clean Generated Artifacts
+
+If you want to remove what the build scripts generated and start fresh, run:
+
+```bash
+./build_app.sh --clean
+```
+
+On Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_app.ps1 --clean
+```
+
+This removes `build-release/`, `dist/`, `python/runtime/`, and the Desktop copy of `batView.app`.
 
 ## Existing Build Scripts
 

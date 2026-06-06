@@ -178,10 +178,25 @@ powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps
 ```
 
+### Limpiar artefactos generados
+Si quieres borrar lo que generan los scripts sin tocar el codigo fuente:
+
+```bash
+./build_app.sh --clean
+```
+
+En Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_app.ps1 --clean
+```
+
+Esto elimina `build-release/`, `dist/`, `python/runtime/` y la copia de `batView.app` en el Desktop.
+
 ### Para dejar la app fuera del repo
 Después de compilar:
 
-- macOS: arrastra `build-release/batView.app` a `Applications`.
+- macOS: el script copia `batView.app` al `Desktop`.
 - Linux: copia `build-release/batView` y la carpeta `assets/` a una carpeta fuera del repo, por ejemplo `~/Apps/batView`.
 - Windows: usa el `.exe` o el paquete portable que quede en `dist/`.
 

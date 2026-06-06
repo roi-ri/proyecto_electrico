@@ -16,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BUILD_DIR = PROJECT_ROOT / "build-release"
 DIST_DIR = PROJECT_ROOT / "dist"
 PYTHON_CACHE_ROOT = PROJECT_ROOT / "python" / "runtime"
+DESKTOP_APP = Path.home() / "Desktop" / "batView.app"
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:
@@ -94,6 +95,46 @@ def copy_file(src: Path, dst: Path) -> None:
 def copy_optional_tree(src: Path, dst: Path) -> None:
     if src.exists():
         copy_tree(src, dst)
+
+
+def desktop_app_path() -> Path:
+    return DESKTOP_APP
+
+
+def copy_app_to_desktop() -> Path:
+    source_app = BUILD_DIR / "batView.app"
+    target_app = desktop_app_path()
+
+    if not source_app.exists():
+        raise SystemExit("No se encontro el bundle de macOS para copiar al Desktop.")
+
+    if target_app.exists():
+        shutil.rmtree(target_app)
+
+    target_app.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source_app, target_app)
+    return target_app
+
+
+def remove_path(path: Path) -> bool:
+    if not path.exists():
+        return False
+
+    if path.is_dir():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+    return True
+
+
+def clean_generated_artifacts() -> list[Path]:
+    removed_paths = []
+
+    for path in (BUILD_DIR, DIST_DIR, PYTHON_CACHE_ROOT, DESKTOP_APP):
+        if remove_path(path):
+            removed_paths.append(path)
+
+    return removed_paths
 
 
 def copy_windows_python_runtime(info: dict[str, str], runtime_root: Path) -> Path:
@@ -199,7 +240,11 @@ def package_format_for_host() -> str:
 def launch_app() -> None:
     system = platform.system()
     if system == "Darwin":
-        run(["open", str(BUILD_DIR / "batView.app")])
+        desktop_app = desktop_app_path()
+        if desktop_app.exists():
+            run(["open", str(desktop_app)])
+        else:
+            run(["open", str(BUILD_DIR / "batView.app")])
         return
     if system == "Windows":
         candidates = [BUILD_DIR / "Release" / "batView.exe", BUILD_DIR / "batView.exe"]
@@ -217,11 +262,22 @@ def launch_app() -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Construye y abre batView como app full en un solo comando.")
+    parser = argparse.ArgumentParser(description="Construye, limpia o abre batView como app full en un solo comando.")
     parser.add_argument("--python", dest="python_exe", help="Ejecutable de Python a usar para preparar el runtime full.")
     parser.add_argument("--no-run", action="store_true", help="Construye y empaqueta, pero no abre la app al final.")
+    parser.add_argument("--clean", action="store_true", help="Elimina los artefactos generados y sale.")
     parser.add_argument("--cmake-toolchain", help="Archivo CMake toolchain opcional, por ejemplo vcpkg.cmake.")
     args = parser.parse_args()
+
+    if args.clean:
+        removed_paths = clean_generated_artifacts()
+        if removed_paths:
+            print("Artefactos eliminados:")
+            for path in removed_paths:
+                print(f"- {path}")
+        else:
+            print("No habia artefactos generados para eliminar.")
+        return
 
     python_exe = find_python_executable(args.python_exe)
     runtime_root, version, site_packages = prepare_runtime(python_exe)
@@ -268,6 +324,10 @@ def main() -> None:
     run(configure_cmd, cwd=PROJECT_ROOT)
     run(["cmake", "--build", str(BUILD_DIR), "--config", "Release"], cwd=PROJECT_ROOT)
     run(["cmake", "--build", str(BUILD_DIR), "--config", "Release", "--target", "package"], cwd=PROJECT_ROOT)
+
+    if platform.system() == "Darwin":
+        desktop_app = copy_app_to_desktop()
+        print(f"App copiada al Desktop: {desktop_app}")
 
     if not args.no_run:
         launch_app()
