@@ -16,7 +16,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 BUILD_DIR = PROJECT_ROOT / "build-release"
 DIST_DIR = PROJECT_ROOT / "dist"
 PYTHON_CACHE_ROOT = PROJECT_ROOT / "python" / "runtime"
-DESKTOP_APP = Path.home() / "Desktop" / "batView.app"
+DESKTOP_DIR = Path.home() / "Desktop"
+DESKTOP_APP = DESKTOP_DIR / "batView.app"
+DESKTOP_LINUX_LAUNCHER = DESKTOP_DIR / "batView.desktop"
+DESKTOP_WINDOWS_SHORTCUT = DESKTOP_DIR / "batView.lnk"
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:
@@ -101,6 +104,30 @@ def desktop_app_path() -> Path:
     return DESKTOP_APP
 
 
+def desktop_launcher_path() -> Path:
+    system = platform.system()
+    if system == "Windows":
+        return DESKTOP_WINDOWS_SHORTCUT
+    if system == "Linux":
+        return DESKTOP_LINUX_LAUNCHER
+    return DESKTOP_APP
+
+
+def desktop_executable_path() -> Path:
+    system = platform.system()
+    if system == "Windows":
+        candidates = [BUILD_DIR / "Release" / "batView.exe", BUILD_DIR / "batView.exe"]
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        return candidates[0]
+
+    if system == "Linux":
+        return BUILD_DIR / "batView"
+
+    return BUILD_DIR / "batView.app"
+
+
 def copy_app_to_desktop() -> Path:
     source_app = BUILD_DIR / "batView.app"
     target_app = desktop_app_path()
@@ -114,6 +141,64 @@ def copy_app_to_desktop() -> Path:
     target_app.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(source_app, target_app)
     return target_app
+
+
+def create_linux_desktop_launcher(executable_path: Path) -> Path:
+    launcher_path = desktop_launcher_path()
+    icon_path = BUILD_DIR / "assets" / "BatView.png"
+    launcher_contents = "\n".join(
+        [
+            "[Desktop Entry]",
+            "Type=Application",
+            "Name=batView",
+            "Comment=Desktop application for ESP32 battery test control",
+            f"Exec={executable_path}",
+            f"Path={executable_path.parent}",
+            f"Icon={icon_path}",
+            "Terminal=false",
+            "Categories=Utility;",
+            "",
+        ]
+    )
+
+    launcher_path.parent.mkdir(parents=True, exist_ok=True)
+    launcher_path.write_text(launcher_contents, encoding="utf-8")
+    launcher_path.chmod(0o755)
+    return launcher_path
+
+
+def create_windows_shortcut(executable_path: Path) -> Path:
+    shortcut_path = desktop_launcher_path()
+    icon_path = BUILD_DIR / "assets" / "BatView.ico"
+    shortcut_path.parent.mkdir(parents=True, exist_ok=True)
+
+    script = rf"""
+$shell = New-Object -ComObject WScript.Shell
+$shortcut = $shell.CreateShortcut('{shortcut_path}')
+$shortcut.TargetPath = '{executable_path}'
+$shortcut.WorkingDirectory = '{executable_path.parent}'
+$shortcut.IconLocation = '{icon_path}'
+$shortcut.Save()
+""".strip()
+
+    run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script])
+    return shortcut_path
+
+
+def create_desktop_launcher() -> Path:
+    system = platform.system()
+    if system == "Darwin":
+        return copy_app_to_desktop()
+
+    executable_path = desktop_executable_path()
+    if system == "Windows":
+        if not executable_path.exists():
+            raise SystemExit("No se encontro el ejecutable de Windows para crear el acceso directo.")
+        return create_windows_shortcut(executable_path)
+
+    if not executable_path.exists():
+        raise SystemExit("No se encontro el ejecutable de Linux para crear el acceso directo.")
+    return create_linux_desktop_launcher(executable_path)
 
 
 def remove_path(path: Path) -> bool:
@@ -130,7 +215,7 @@ def remove_path(path: Path) -> bool:
 def clean_generated_artifacts() -> list[Path]:
     removed_paths = []
 
-    for path in (BUILD_DIR, DIST_DIR, PYTHON_CACHE_ROOT, DESKTOP_APP):
+    for path in (BUILD_DIR, DIST_DIR, PYTHON_CACHE_ROOT, DESKTOP_APP, DESKTOP_LINUX_LAUNCHER, DESKTOP_WINDOWS_SHORTCUT):
         if remove_path(path):
             removed_paths.append(path)
 
@@ -325,9 +410,8 @@ def main() -> None:
     run(["cmake", "--build", str(BUILD_DIR), "--config", "Release"], cwd=PROJECT_ROOT)
     run(["cmake", "--build", str(BUILD_DIR), "--config", "Release", "--target", "package"], cwd=PROJECT_ROOT)
 
-    if platform.system() == "Darwin":
-        desktop_app = copy_app_to_desktop()
-        print(f"App copiada al Desktop: {desktop_app}")
+    desktop_launcher = create_desktop_launcher()
+    print(f"Acceso directo creado en el Desktop: {desktop_launcher}")
 
     if not args.no_run:
         launch_app()

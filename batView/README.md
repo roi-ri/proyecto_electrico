@@ -197,8 +197,8 @@ Esto elimina `build-release/`, `dist/`, `python/runtime/` y la copia de `batView
 Después de compilar:
 
 - macOS: el script copia `batView.app` al `Desktop`.
-- Linux: copia `build-release/batView` y la carpeta `assets/` a una carpeta fuera del repo, por ejemplo `~/Apps/batView`.
-- Windows: usa el `.exe` o el paquete portable que quede en `dist/`.
+- Linux: el script crea un lanzador `batView.desktop` en el `Desktop`.
+- Windows: el script crea un acceso directo `batView.lnk` en el `Desktop`.
 
 ### App wxWidgets
 Esta sección es la ruta manual avanzada. Solo úsala si quieres compilar paso a paso sin el script automático.

@@ -198,10 +198,16 @@ On macOS, the app bundle is usually:
 ~/Desktop/batView.app
 ```
 
-On Linux, the executable is usually:
+On Linux, the desktop launcher is usually:
 
 ```text
-build-release/batView
+~/Desktop/batView.desktop
+```
+
+On Windows, the desktop shortcut is usually:
+
+```text
+~/Desktop/batView.lnk
 ```
 
 ## If Something Fails
@@ -245,7 +251,7 @@ On Windows:
 powershell -ExecutionPolicy Bypass -File .\build_app.ps1 --clean
 ```
 
-This removes `build-release/`, `dist/`, `python/runtime/`, and the Desktop copy of `batView.app`.
+This removes `build-release/`, `dist/`, `python/runtime/`, and the Desktop launcher or bundle created for the current OS.
 
 ## Existing Build Scripts
 
