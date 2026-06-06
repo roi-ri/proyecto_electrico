@@ -157,10 +157,21 @@ Install these once if they are not already installed:
 2. Homebrew.
 3. These Homebrew packages: `cmake`, `wxwidgets`, `python`, `pkg-config`.
 
-How:
+Step by step:
 
 ```bash
 xcode-select --install
+```
+
+Then install Homebrew if needed:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then install the required packages:
+
+```bash
 brew install cmake wxwidgets python pkg-config
 ```
 
@@ -173,11 +184,23 @@ Install these packages:
 4. GTK development files.
 5. Python 3, Python headers, and pip.
 
-How on Ubuntu or Debian:
+Step by step on Ubuntu or Debian:
 
 ```bash
 sudo apt update
 sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-dev python3-pip
+```
+
+Step by step on Fedora:
+
+```bash
+sudo dnf install -y cmake gcc-c++ make pkgconf-pkg-config wxGTK-devel gtk3-devel python3 python3-devel python3-pip rpm-build zip
+```
+
+Step by step on Arch Linux:
+
+```bash
+sudo pacman -S --needed cmake gcc make pkgconf wxwidgets-gtk3 gtk3 python python-pip zip
 ```
 
 #### Windows
@@ -187,6 +210,25 @@ Install these programs:
 2. CMake.
 3. Python 3.
 4. wxWidgets compatible with your compiler.
+5. Git.
+6. NSIS if you want an installer package.
+
+Step by step:
+
+```powershell
+winget --version
+winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --silent --accept-package-agreements --accept-source-agreements --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+winget install --id Kitware.CMake --exact --silent --accept-package-agreements --accept-source-agreements
+winget install --id Python.Python.3.13 --exact --silent --accept-package-agreements --accept-source-agreements
+winget install --id Git.Git --exact --silent --accept-package-agreements --accept-source-agreements
+winget install --id NSIS.NSIS --exact --silent --accept-package-agreements --accept-source-agreements
+```
+
+Then run the project installer:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
 
 ### If the tools are already installed
 Use the same script, but add the skip-deps option.
@@ -317,4 +359,3 @@ ctest --test-dir build-tests --output-on-failure
 
 ## Estado del proyecto
 El proyecto ya cuenta con una base funcional sólida para pruebas reales con ESP32.
-
