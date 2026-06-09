@@ -76,6 +76,52 @@ function Install-VcpkgWxWidgets {
     $env:BATVIEW_CMAKE_TOOLCHAIN_FILE = Join-Path $vcpkgRoot "scripts\buildsystems\vcpkg.cmake"
 }
 
+function Get-EmbeddingPython {
+    $probe = @'
+import pathlib
+import sys
+import sysconfig
+
+version = f"{sys.version_info.major}{sys.version_info.minor}"
+library = pathlib.Path(sys.base_prefix) / "libs" / f"python{version}.lib"
+include = pathlib.Path(sysconfig.get_path("include") or "") / "Python.h"
+stdlib = pathlib.Path(sysconfig.get_path("stdlib") or "")
+
+print(sys.executable if library.exists() and include.exists() and stdlib.exists() else "")
+'@
+
+    $commands = @(
+        @("py", "-3.13"),
+        @("py", "-3.12"),
+        @("py"),
+        @("python"),
+        @("python3"),
+        @((Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe")),
+        @((Join-Path $env:LOCALAPPDATA "Programs\Python\Python312\python.exe")),
+        @((Join-Path $env:ProgramFiles "Python313\python.exe")),
+        @((Join-Path $env:ProgramFiles "Python312\python.exe"))
+    )
+
+    foreach ($command in $commands) {
+        $program = $command[0]
+        $programArgs = @()
+        if ($command.Length -gt 1) {
+            $programArgs = $command[1..($command.Length - 1)]
+        }
+
+        try {
+            $pythonPath = & $program @programArgs -c $probe 2>$null
+            if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($pythonPath)) {
+                return $pythonPath.Trim()
+            }
+        } catch {
+            continue
+        }
+    }
+
+    throw "No se encontro un Python valido para compilar Python embebido. Verifica que Python 3.13 tenga libs\python313.lib."
+}
+
 Write-Host "batView Windows setup"
 
 if (-not $SkipDeps) {
@@ -86,6 +132,11 @@ if (-not $SkipDeps) {
 }
 
 $buildArgs = @()
+$embeddingPython = Get-EmbeddingPython
+Write-Host "Python embebido: $embeddingPython"
+$buildArgs += "--python"
+$buildArgs += $embeddingPython
+
 if ($NoRun) {
     $buildArgs += "--no-run"
 }
