@@ -91,15 +91,15 @@ print(sys.executable if library.exists() and include.exists() and stdlib.exists(
 '@
 
     $commands = @(
-        @("py", "-3.13"),
-        @("py", "-3.12"),
-        @("py"),
-        @("python"),
-        @("python3"),
-        @((Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe")),
-        @((Join-Path $env:LOCALAPPDATA "Programs\Python\Python312\python.exe")),
-        @((Join-Path $env:ProgramFiles "Python313\python.exe")),
-        @((Join-Path $env:ProgramFiles "Python312\python.exe"))
+        ,@("py", "-3.13"),
+        ,@("py", "-3.12"),
+        ,@("py"),
+        ,@("python"),
+        ,@("python3"),
+        ,@((Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe")),
+        ,@((Join-Path $env:LOCALAPPDATA "Programs\Python\Python312\python.exe")),
+        ,@((Join-Path $env:ProgramFiles "Python313\python.exe")),
+        ,@((Join-Path $env:ProgramFiles "Python312\python.exe"))
     )
 
     foreach ($command in $commands) {
