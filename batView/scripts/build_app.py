@@ -61,29 +61,7 @@ def find_cmake_executable() -> str:
     )
 
 
-def find_python_executable(explicit: str | None) -> str:
-    if explicit:
-        return explicit
-
-    candidates = []
-    if sys.executable:
-        candidates.append(sys.executable)
-    if os.name == "nt":
-        candidates.extend(["py", "python", "python3"])
-    else:
-        candidates.extend(["python3", "python"])
-
-    for candidate in candidates:
-        try:
-            subprocess.run([candidate, "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return candidate
-        except Exception:
-            continue
-
-    raise SystemExit("No se encontro un ejecutable de Python para preparar la version full.")
-
-
-def python_info(python_exe: str) -> dict[str, str]:
+def python_info_from_command(command: list[str]) -> dict[str, str]:
     code = r"""
 import json
 import os
@@ -111,7 +89,104 @@ else:
 
 print(json.dumps(data))
 """
-    return json.loads(capture([python_exe, "-c", code]))
+    return json.loads(capture([*command, "-c", code]))
+
+
+def python_info(python_exe: str) -> dict[str, str]:
+    return python_info_from_command([python_exe])
+
+
+def windows_python_import_library(info: dict[str, str]) -> Path | None:
+    version_token = info["version"].replace(".", "")
+    library_name = f"python{version_token}.lib"
+    base_prefix = Path(info["base_prefix"])
+    executable_dir = Path(info["executable"]).parent
+    candidates = [
+        base_prefix / "libs" / library_name,
+        executable_dir / "libs" / library_name,
+        base_prefix / library_name,
+        executable_dir / library_name,
+    ]
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    return None
+
+
+def is_python_usable_for_embedding(info: dict[str, str]) -> bool:
+    include_src = Path(info["include_dir"])
+    stdlib_src = Path(info["stdlib_dir"])
+    if not (include_src / "Python.h").exists() or not stdlib_src.exists():
+        return False
+
+    if platform.system() == "Windows":
+        return windows_python_import_library(info) is not None
+
+    return True
+
+
+def find_python_executable(explicit: str | None) -> str:
+    if explicit:
+        try:
+            info = python_info(explicit)
+        except Exception as exc:
+            raise SystemExit(f"No se pudo ejecutar Python en '{explicit}': {exc}") from exc
+        if not is_python_usable_for_embedding(info):
+            raise SystemExit(
+                "El Python indicado no sirve para compilar Python embebido. "
+                "En Windows debe incluir include\\Python.h y libs\\pythonXY.lib."
+            )
+        return info["executable"]
+
+    candidate_commands: list[list[str]] = []
+    if os.name == "nt":
+        candidate_commands.extend(
+            [
+                ["py", "-3.13"],
+                ["py", "-3.12"],
+                ["py"],
+                ["python"],
+                ["python3"],
+            ]
+        )
+        for root in (
+            Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Python",
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files")),
+            Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")),
+        ):
+            for version_dir in ("Python313", "Python312"):
+                candidate = root / version_dir / "python.exe"
+                if candidate.exists():
+                    candidate_commands.append([str(candidate)])
+    else:
+        if sys.executable:
+            candidate_commands.append([sys.executable])
+        candidate_commands.extend([["python3"], ["python"]])
+
+    rejected: list[str] = []
+    for command in candidate_commands:
+        try:
+            subprocess.run([*command, "--version"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            info = python_info_from_command(command)
+        except Exception:
+            continue
+
+        if is_python_usable_for_embedding(info):
+            return info["executable"]
+
+        rejected.append(info.get("executable", " ".join(command)))
+
+    if rejected and platform.system() == "Windows":
+        raise SystemExit(
+            "Se encontro Python, pero ninguno incluye la libreria de enlace requerida "
+            "libs\\pythonXY.lib. Instala Python desde python.org o con "
+            "`winget install --id Python.Python.3.13 --exact`, cierra PowerShell, "
+            "abre una nueva ventana y vuelve a ejecutar install_windows.ps1."
+        )
+
+    raise SystemExit("No se encontro un ejecutable de Python para preparar la version full.")
 
 
 def copy_tree(src: Path, dst: Path) -> None:
@@ -260,11 +335,19 @@ def copy_windows_python_runtime(info: dict[str, str], runtime_root: Path) -> Pat
     base_prefix = Path(info["base_prefix"])
     include_src = Path(info["include_dir"])
     stdlib_src = Path(info["stdlib_dir"])
+    import_library = windows_python_import_library(info)
+    if import_library is None:
+        raise SystemExit(
+            "No se encontro la libreria de enlace de Python para Windows "
+            f"(python{info['version'].replace('.', '')}.lib). "
+            "Instala Python desde python.org o con winget, no solo el alias de Microsoft Store."
+        )
 
     copy_tree(include_src, runtime_root / "include")
     copy_tree(stdlib_src, runtime_root / "Lib")
     copy_optional_tree(base_prefix / "libs", runtime_root / "libs")
     copy_optional_tree(base_prefix / "DLLs", runtime_root / "DLLs")
+    copy_file(import_library, runtime_root / "libs" / import_library.name)
 
     python_dlls = list(base_prefix.glob("python*.dll"))
     executable_dir = Path(info["executable"]).parent

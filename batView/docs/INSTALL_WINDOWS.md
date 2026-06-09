@@ -36,7 +36,7 @@ The project needs:
 
 1. Visual Studio 2022 Build Tools with the C++ workload.
 2. CMake.
-3. Python 3.
+3. Python 3 from python.org or `winget` package `Python.Python.3.13`.
 4. Git.
 5. NSIS.
 6. `wxWidgets`, which the script installs through `vcpkg`.
@@ -53,6 +53,9 @@ winget install --id NSIS.NSIS --exact --silent --accept-package-agreements --acc
 
 After those finish, close PowerShell and open it again so commands like `git` and `cmake` are available in the terminal.
 If you forget this step, the build script also checks the usual CMake install folders on Windows.
+
+Avoid using only the Microsoft Store Python app alias. It can run Python scripts, but it may not include
+`libs\pythonXY.lib`, which is required to link batView with embedded Python.
 
 ### Step 4: Run the project installer
 
