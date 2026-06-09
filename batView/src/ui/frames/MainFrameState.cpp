@@ -138,38 +138,38 @@ void MainFrame::RefreshBatteryProfileChoices() {
 bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& outProfile,
                                        wxString& outError) const {
     if (!batteryNameCtrl_ || !batteryVoltageMaxCtrl_ || !batteryVoltageMinCtrl_ || !batteryMaxCurrentCtrl_) {
-        outError = "El formulario de bateria no esta listo.";
+        outError = "The battery profile form is not ready.";
         return false;
     }
 
     outProfile.nameId = detail::TrimmedUtf8(batteryNameCtrl_->GetValue());
     if (outProfile.nameId.empty()) {
-        outError = "Ingrese un BatteryNameID.";
+        outError = "Enter a profile name.";
         return false;
     }
     if (outProfile.nameId.find(',') != std::string::npos) {
-        outError = "BatteryNameID no puede contener comas.";
+        outError = "Profile name cannot contain commas.";
         return false;
     }
 
     if (!batteryVoltageMaxCtrl_->GetValue().ToDouble(&outProfile.voltageAtMax)) {
-        outError = "Ingrese un V@max numerico.";
+        outError = "Enter a numeric V at max charge.";
         return false;
     }
     if (!batteryVoltageMinCtrl_->GetValue().ToDouble(&outProfile.voltageAtMin)) {
-        outError = "Ingrese un V@min numerico.";
+        outError = "Enter a numeric V at min charge.";
         return false;
     }
     if (!batteryMaxCurrentCtrl_->GetValue().ToDouble(&outProfile.maxCurrent)) {
-        outError = "Ingrese un Amax numerico.";
+        outError = "Enter a numeric Max current.";
         return false;
     }
     if (outProfile.voltageAtMax <= 0.0 || outProfile.voltageAtMin <= 0.0 || outProfile.maxCurrent <= 0.0) {
-        outError = "V@max, V@min y Amax deben ser mayores que cero.";
+        outError = "V at max charge, V at min charge, and Max current must be greater than zero.";
         return false;
     }
     if (outProfile.voltageAtMin >= outProfile.voltageAtMax) {
-        outError = "V@min debe ser menor que V@max.";
+        outError = "V at min charge must be lower than V at max charge.";
         return false;
     }
 

@@ -11,8 +11,12 @@ Follow these steps in order.
 Open `PowerShell` as a normal user and move into the project folder:
 
 ```powershell
-cd C:\path\to\batView
+cd C:\path\to\proyecto_electrico\batView
 ```
+
+The script is inside the `batView` folder. If you run it from the parent
+`proyecto_electrico` folder, PowerShell will say that `.\install_windows.ps1`
+does not exist.
 
 ### Step 2: Check if `winget` is available
 
@@ -48,6 +52,7 @@ winget install --id NSIS.NSIS --exact --silent --accept-package-agreements --acc
 ```
 
 After those finish, close PowerShell and open it again so commands like `git` and `cmake` are available in the terminal.
+If you forget this step, the build script also checks the usual CMake install folders on Windows.
 
 ### Step 4: Run the project installer
 

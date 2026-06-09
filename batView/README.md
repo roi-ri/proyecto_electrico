@@ -227,6 +227,7 @@ winget install --id NSIS.NSIS --exact --silent --accept-package-agreements --acc
 Then run the project installer:
 
 ```powershell
+cd C:\path\to\proyecto_electrico\batView
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
 ```
 

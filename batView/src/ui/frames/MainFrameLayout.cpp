@@ -121,7 +121,7 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
 
     batteryPanel_ = new wxPanel(flowPanel_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
     detail::PrepareFlatPanel(batteryPanel_);
-    auto* batteryTitle = new wxStaticText(batteryPanel_, wxID_ANY, "Perfiles de bateria");
+    auto* batteryTitle = new wxStaticText(batteryPanel_, wxID_ANY, "Battery profiles");
     wxFont batteryTitleFont = batteryTitle->GetFont();
     batteryTitleFont.SetWeight(wxFONTWEIGHT_BOLD);
     batteryTitle->SetFont(batteryTitleFont);
@@ -130,35 +130,37 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     batteryProfileChoice_->SetSelection(wxNOT_FOUND);
 
     batteryNameCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryNameCtrl_->SetHint("BatteryNameID");
+    batteryNameCtrl_->SetHint("Profile name");
     batteryVoltageMaxCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryVoltageMaxCtrl_->SetHint("V@max");
+    batteryVoltageMaxCtrl_->SetHint("V at max charge");
     batteryVoltageMinCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryVoltageMinCtrl_->SetHint("V@min");
+    batteryVoltageMinCtrl_->SetHint("V at min charge");
     batteryMaxCurrentCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryMaxCurrentCtrl_->SetHint("Amax");
-    saveBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Agregar / actualizar perfil");
-    chooseBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Elegir bateria");
+    batteryMaxCurrentCtrl_->SetHint("Max current");
+    saveBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Add / update profile");
+    chooseBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Choose battery");
+    clearBatteryProfilesButton_ = new wxButton(batteryPanel_, wxID_ANY, "Clear profiles");
 
     auto* batteryGrid = new wxFlexGridSizer(2, 8, 8);
     batteryGrid->AddGrowableCol(1, 1);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "BatteryNameID"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Profile name"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryNameCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V@max"), 0, wxALIGN_CENTER_VERTICAL);
-    batteryGrid->Add(batteryVoltageMaxCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V@min"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V at min charge"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryVoltageMinCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Amax"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V at max charge"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(batteryVoltageMaxCtrl_, 1, wxEXPAND);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Max current"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryMaxCurrentCtrl_, 1, wxEXPAND);
 
     auto* batteryActions = new wxBoxSizer(wxHORIZONTAL);
     batteryActions->Add(saveBatteryProfileButton_, 0, wxRIGHT, 8);
-    batteryActions->Add(chooseBatteryProfileButton_, 0);
+    batteryActions->Add(chooseBatteryProfileButton_, 0, wxRIGHT, 8);
+    batteryActions->Add(clearBatteryProfilesButton_, 0);
 
     auto* batterySizer = new wxBoxSizer(wxVERTICAL);
     batterySizer->Add(batteryTitle, 0, wxBOTTOM, 6);
     batterySizer->Add(batteryGrid, 0, wxEXPAND | wxBOTTOM, 8);
-    batterySizer->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Perfil guardado"), 0, wxBOTTOM, 4);
+    batterySizer->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Saved profile"), 0, wxBOTTOM, 4);
     batterySizer->Add(batteryProfileChoice_, 0, wxEXPAND | wxBOTTOM, 8);
     batterySizer->Add(batteryActions, 0);
     batteryPanel_->SetSizer(batterySizer);
@@ -267,6 +269,7 @@ void MainFrame::BindEvents() {
     batteryProfileChoice_->Bind(wxEVT_CHOICE, &MainFrame::OnBatteryProfileChanged, this);
     saveBatteryProfileButton_->Bind(wxEVT_BUTTON, &MainFrame::OnSaveBatteryProfile, this);
     chooseBatteryProfileButton_->Bind(wxEVT_BUTTON, &MainFrame::OnChooseBatteryProfile, this);
+    clearBatteryProfilesButton_->Bind(wxEVT_BUTTON, &MainFrame::OnClearBatteryProfiles, this);
     chargeRadio_->Bind(wxEVT_RADIOBUTTON, &MainFrame::OnFunctionChanged, this);
     dischargeRadio_->Bind(wxEVT_RADIOBUTTON, &MainFrame::OnFunctionChanged, this);
     cycleRadio_->Bind(wxEVT_RADIOBUTTON, &MainFrame::OnFunctionChanged, this);

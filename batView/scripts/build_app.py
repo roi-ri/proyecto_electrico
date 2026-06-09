@@ -25,11 +25,40 @@ DESKTOP_WINDOWS_SHORTCUT = DESKTOP_DIR / "batView.lnk"
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:
     print("+", " ".join(str(part) for part in cmd))
-    subprocess.run(cmd, cwd=cwd, check=True)
+    try:
+        subprocess.run(cmd, cwd=cwd, check=True)
+    except FileNotFoundError as exc:
+        program = cmd[0]
+        raise SystemExit(
+            f"No se encontro el comando '{program}'. Instala la herramienta requerida "
+            "o cierra y abre PowerShell para actualizar el PATH."
+        ) from exc
 
 
 def capture(cmd: list[str]) -> str:
     return subprocess.check_output(cmd, text=True).strip()
+
+
+def find_cmake_executable() -> str:
+    cmake = shutil.which("cmake")
+    if cmake:
+        return cmake
+
+    if platform.system() == "Windows":
+        candidates = [
+            Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "CMake" / "bin" / "cmake.exe",
+            Path(os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")) / "CMake" / "bin" / "cmake.exe",
+            Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "CMake" / "bin" / "cmake.exe",
+        ]
+
+        for candidate in candidates:
+            if candidate.exists():
+                return str(candidate)
+
+    raise SystemExit(
+        "No se encontro CMake. Instala CMake con winget o cierra y abre PowerShell "
+        "si CMake se instalo en esta misma sesion."
+    )
 
 
 def find_python_executable(explicit: str | None) -> str:
@@ -377,6 +406,9 @@ def main() -> None:
     print(f"Python embebido detectado: {version}")
     print(f"Formato de paquete seleccionado: {package_format}")
 
+    cmake_exe = find_cmake_executable()
+    print(f"CMake detectado en: {cmake_exe}")
+
     if BUILD_DIR.exists():
         shutil.rmtree(BUILD_DIR)
     DIST_DIR.mkdir(parents=True, exist_ok=True)
@@ -385,7 +417,7 @@ def main() -> None:
         generate_windows_icon(BUILD_DIR, site_packages)
 
     configure_cmd = [
-        "cmake",
+        cmake_exe,
         "-S",
         ".",
         "-B",
@@ -412,8 +444,8 @@ def main() -> None:
         print(f"CMake toolchain: {toolchain_file}")
 
     run(configure_cmd, cwd=PROJECT_ROOT)
-    run(["cmake", "--build", str(BUILD_DIR), "--config", "Release"], cwd=PROJECT_ROOT)
-    run(["cmake", "--build", str(BUILD_DIR), "--config", "Release", "--target", "package"], cwd=PROJECT_ROOT)
+    run([cmake_exe, "--build", str(BUILD_DIR), "--config", "Release"], cwd=PROJECT_ROOT)
+    run([cmake_exe, "--build", str(BUILD_DIR), "--config", "Release", "--target", "package"], cwd=PROJECT_ROOT)
 
     desktop_launcher = create_desktop_launcher()
     print(f"Acceso directo creado en el Desktop: {desktop_launcher}")

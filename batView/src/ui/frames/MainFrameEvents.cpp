@@ -174,6 +174,33 @@ void MainFrame::OnChooseBatteryProfile(wxCommandEvent& event) {
     UpdateFunctionOptions();
 }
 
+void MainFrame::OnClearBatteryProfiles(wxCommandEvent& event) {
+    (void)event;
+
+    batteryProfiles_.clear();
+    if (batteryProfileChoice_) {
+        batteryProfileChoice_->Clear();
+    }
+    if (batteryNameCtrl_) {
+        batteryNameCtrl_->Clear();
+    }
+    if (batteryVoltageMinCtrl_) {
+        batteryVoltageMinCtrl_->Clear();
+    }
+    if (batteryVoltageMaxCtrl_) {
+        batteryVoltageMaxCtrl_->Clear();
+    }
+    if (batteryMaxCurrentCtrl_) {
+        batteryMaxCurrentCtrl_->Clear();
+    }
+
+    wizardStep_ = isConnected_ ? 1 : 0;
+    ResetWorkflowState();
+    AppendTraffic(true, "Battery profiles cleared.");
+    UpdateFlowVisibility();
+    UpdateFunctionOptions();
+}
+
 void MainFrame::OnFunctionChanged(wxCommandEvent& event) {
     (void)event;
     functionChosen_ = chargeRadio_->GetValue() || dischargeRadio_->GetValue() || cycleRadio_->GetValue();

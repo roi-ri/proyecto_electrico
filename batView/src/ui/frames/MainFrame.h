@@ -65,6 +65,7 @@ private:
     void OnBatteryProfileChanged(wxCommandEvent& event);
     void OnSaveBatteryProfile(wxCommandEvent& event);
     void OnChooseBatteryProfile(wxCommandEvent& event);
+    void OnClearBatteryProfiles(wxCommandEvent& event);
     void OnFunctionChanged(wxCommandEvent& event);
     void OnCycleModeChanged(wxCommandEvent& event);
     void OnBackStep(wxCommandEvent& event);
@@ -98,6 +99,7 @@ private:
     wxTextCtrl* batteryMaxCurrentCtrl_;
     wxButton* saveBatteryProfileButton_;
     wxButton* chooseBatteryProfileButton_;
+    wxButton* clearBatteryProfilesButton_;
     wxPanel* functionPanel_;
     wxRadioButton* chargeRadio_;
     wxRadioButton* dischargeRadio_;
