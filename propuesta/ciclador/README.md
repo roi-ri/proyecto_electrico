@@ -180,12 +180,14 @@ El sistema presenta las siguientes limitaciones:
   supervisión de personal con conocimientos básicos de electrónica y manejo de
   baterías.
 
+##[Diseño](Diseño/)
 
+En esta sección se encuentra la propuesta de diseño utilizada para el ciclador junto con los calculos correspondientes que justifican el diseño y el sistema de control. 
 
 ## [Simulación](PLECS/)
 
-En esta sección se encuentra el código utilizado para la implementación en PLECS y así poder utilizar un C2000, en esta misma también se muestran las simualciones.
+En esta sección se tiene la simulación en Plecs del sistema de control y el modelo utilizado para las pruebas software in the loop con el que se simula el comportmaiento del circuito. 
 
 ## [PCB](PCB/)
 
-En esta sección se encuentran los archivos utilizados para la creación de la PCB.
+En esta sección se encuentran los archivos de fabricación de la PCB. 
