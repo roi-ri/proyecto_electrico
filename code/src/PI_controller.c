@@ -5,7 +5,7 @@
 #include "driver/dac_oneshot.h"
 
 // Se implementa la función:
-void PI_controller(void)
+void PI_controller(float reference_current)
 {
 
     /*=================================================
@@ -26,9 +26,6 @@ void PI_controller(void)
     /*=================================================
         PARÁMETROS Y VARIABLES DEL CONTROLADOR PI
     =================================================*/
-
-    // Corriente de referencia:
-    float reference_current = 3.0;
 
     // Ganancia proporcional:
     float Kp = 2.3;
