@@ -180,7 +180,7 @@ El sistema presenta las siguientes limitaciones:
   supervisión de personal con conocimientos básicos de electrónica y manejo de
   baterías.
 
-##[Diseño](Diseño/)
+## [Diseño](Diseño/)
 
 En esta sección se encuentra la propuesta de diseño utilizada para el ciclador junto con los calculos correspondientes que justifican el diseño y el sistema de control. 
 
