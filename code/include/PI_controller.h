@@ -16,7 +16,7 @@
         - Actualiza la señal de control aplicada al DAC correspondiente.
 
     Entradas:
-        - Ninguna. La función obtiene internamente las mediciones necesarias.
+        - reference_current: Corriente de referencia a la que se debe mantener.
 
     Salidas:
         - Ninguna. La acción de control se aplica directamente mediante
