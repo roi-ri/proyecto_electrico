@@ -26,6 +26,6 @@
 #ifndef PI_CONTROLLER_H
 #define PI_CONTROLLER_H
 
-void PI_controller(void);
+void PI_controller(float reference_current);
 
 #endif
