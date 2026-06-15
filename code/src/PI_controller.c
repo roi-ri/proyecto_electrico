@@ -60,7 +60,7 @@ void PI_controller(void)
     // Salida final del controlador:
     float Vload = 0.0;
 
-    // Gancia de la entrada:
+    // Ganancia de la entrada:
     float ganancia_sensor = 10.0;
 
     // Constante de la entrada:
@@ -68,6 +68,9 @@ void PI_controller(void)
 
     // Señal medida modificada:
     float measured_current_modified = 0.0;
+
+    // Valor final a enviar al DAC:
+    float dac_output = 0.0;
 
 
     /*=================================================
@@ -94,6 +97,9 @@ void PI_controller(void)
     // Cálculo del error:
     error = reference_current - measured_current_modified;
 
+    // Acumulación de la integral:
+    integral = integral + (error * Ts);
+
     // Salida del PI sin saturación:
     Vload_unsat = (Kp * error) + (Ki * integral);
 
@@ -113,11 +119,27 @@ void PI_controller(void)
     // Diferencia entre la salida saturada y la no saturada:
     saturation_error = Vload_sat - Vload_unsat;
 
-    // Acumulación de la integral con anti-windup mediante el método Back Calculation:
-    integral = integral + (error * Ts) + (Kb * saturation_error * Ts);
+    // Corrección del integrador mediante anti-windup:
+    integral = integral + (Kb * saturation_error * Ts);
 
     // Salida final del controlador:
     Vload = Vload_sat;
+
+
+
+    /*=================================================
+                ESCALAMIENTO PARA EL TRANSISTOR
+    =================================================*/
+
+    // Si el controlador solicita corriente nula, el transistor se apaga completamente:
+    if(Vload <= 0.0) {
+        dac_output = 0.0;
+    }
+
+    // Si el controlador solicita corriente, se utiliza únicamente el rango útil del transistor (2.8 V a 3.3 V):
+    else {
+        dac_output = 216.0 + ((39.0 / 255.0) * Vload);
+    }
 
 
 
@@ -131,7 +153,7 @@ void PI_controller(void)
     dac_oneshot_new_channel(&dac_config, &dac_handle);
 
     // Actualización de la salida:
-    dac_oneshot_output_voltage(dac_handle, (uint8_t)Vload);
+    dac_oneshot_output_voltage(dac_handle, (uint8_t)dac_output);
 
     // Libera el DAC:
     dac_oneshot_del_channel(dac_handle);
