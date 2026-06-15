@@ -5,7 +5,7 @@
 #include "monitoring_load.h"
 #include "monitoring_unload.h"
 #include "PI_controller.h"
-#include "stop_charge.h"
+#include "stop_load.h"
 
 // Se incluyen los archivos necesarios del ESP32:
 #include "driver/dac_oneshot.h"
@@ -97,7 +97,7 @@ void battery_controller(int gpio_num, int gpio_value, int cycles)
                     ESP_LOGI(TAG, "Voltaje máximo alcanzado.");
 
                     // Apaga completamente la etapa de carga:
-                    stop_charge();
+                    stop_load();
 
                     break;
                 }
@@ -154,7 +154,7 @@ void battery_controller(int gpio_num, int gpio_value, int cycles)
                         ESP_LOGI(TAG, "Voltaje máximo alcanzado.");
 
                         // Apaga completamente la etapa de carga:
-                        stop_charge();
+                        stop_load();
 
                         break;
                     }
