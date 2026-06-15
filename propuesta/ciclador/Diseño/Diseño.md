@@ -8,7 +8,7 @@ Esta amplificación es necesaria para proporcionar un nivel de tensión adecuado
 
 ## Diagrama del circuito
 
-![Circuito de carga y descarga de la batería](Imagenes/circuito.PNG)
+![Circuito de carga y descarga de la batería](Imagenes/circuito.png)
 
 *Figura 1. Circuito de carga y descarga de la batería.*
 
