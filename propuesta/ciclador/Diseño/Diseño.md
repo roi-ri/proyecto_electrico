@@ -54,6 +54,8 @@ Durante los procesos de carga y descarga, la tensión de control debe ser sufici
 *Figura 1. Topología del circuito de carga y descarga de la batería.*
 
 
+## Función de transferencia
+
 ### 1. Ecuación de tensiones
 
 Aplicando la **Ley de Voltajes de Kirchhoff** en sentido horario sobre el circuito de carga, se obtiene:
