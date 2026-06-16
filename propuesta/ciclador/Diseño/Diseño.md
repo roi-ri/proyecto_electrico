@@ -54,23 +54,6 @@ Durante los procesos de carga y descarga, la tensión de control debe ser sufici
 *Figura 1. Topología del circuito de carga y descarga de la batería.*
 
 
-## Función de transferencia
-
-Para obtener la función de transferencia se analiza el circuito de carga. Debido a que las etapas de carga y descarga presentan una topología equivalente, ambas poseen la misma dinámica. Sin embargo, el signo de las tensiones y corrientes puede cambiar según el sentido de referencia definido para cada circuito.
-
-Para el análisis se utiliza la siguiente nomenclatura:
-
-* $v_C(t)$: tensión de la fuente de carga.
-* $v_T(t)$: caída de tensión en el transistor.
-* $v_L(t)$: tensión en el inductor.
-* $v_R(t)$: caída de tensión en la resistencia parásita.
-* $v_B(t)$: tensión de la batería.
-* $i_L(t)$: corriente que circula por el inductor.
-* $L$: inductancia del circuito.
-* $R$: resistencia parásita equivalente.
-
-La resistencia $R$ representa las pérdidas resistivas asociadas con el inductor, los conductores, el transistor y los demás componentes del circuito.
-
 ### 1. Ecuación de tensiones
 
 Aplicando la **Ley de Voltajes de Kirchhoff** en sentido horario sobre el circuito de carga, se obtiene:
@@ -88,106 +71,88 @@ $$
 Por otra parte, la caída de tensión en la resistencia parásita está dada por:
 
 $$
-v_R(t)=R,i_L(t)
+v_R(t)=R\cdot i_L(t)
 $$
 
-Sustituyendo ambas expresiones en la ecuación de tensiones:
+Sustituyendo ambas expresiones:
 
 $$
--v_C(t)+v_T(t)+L\frac{di_L(t)}{dt}+R,i_L(t)+v_B(t)=0
+-v_C(t)+v_T(t)+L\frac{di_L(t)}{dt}+R\cdot i_L(t)+v_B(t)=0
 $$
 
-Al reorganizar los términos, se obtiene la ecuación diferencial del circuito:
+Al reorganizar:
 
 $$
-L\frac{di_L(t)}{dt}+R,i_L(t)
-============================
-
+L\frac{di_L(t)}{dt}+R\cdot i_L(t)
+=
 v_C(t)-v_T(t)-v_B(t)
 $$
 
 ### 2. Transformada de Laplace
 
-Aplicando la transformada de Laplace y suponiendo condiciones iniciales iguales a cero:
+Aplicando la transformada de Laplace con condiciones iniciales iguales a cero:
 
 $$
 LsI_L(s)+RI_L(s)
-================
-
+=
 V_C(s)-V_T(s)-V_B(s)
 $$
 
-Factorizando la corriente del inductor:
+Factorizando:
 
 $$
 I_L(s)(Ls+R)
-============
-
+=
 V_C(s)-V_T(s)-V_B(s)
 $$
 
-Despejando $I_L(s)$:
+Despejando la corriente:
 
 $$
 I_L(s)
-======
-
-\frac{V_C(s)-V_T(s)-V_B(s)}
-{Ls+R}
+=
+\frac{V_C(s)-V_T(s)-V_B(s)}{Ls+R}
 $$
 
 ### 3. Función de transferencia
 
-Se define como entrada efectiva del circuito:
+Se define la entrada efectiva como:
 
 $$
 U(s)=V_C(s)-V_T(s)-V_B(s)
 $$
 
-Por lo tanto, la función de transferencia entre la entrada efectiva de tensión y la corriente del inductor es:
+Entonces:
 
 $$
 H(s)
-====
-
-# \frac{I_L(s)}{U(s)}
-
-\frac{I_L(s)}
-{V_C(s)-V_T(s)-V_B(s)}
+=
+\frac{I_L(s)}{U(s)}
+=
+\frac{1}{Ls+R}
 $$
 
-Finalmente:
+La forma estándar es:
 
 $$
-\boxed{
-H(s)=\frac{1}{Ls+R}
-}
+H(s)
+=
+\frac{\frac{1}{R}}{\frac{L}{R}s+1}
+=
+\frac{K}{\tau s+1}
 $$
 
-Esta función de transferencia corresponde a un sistema de primer orden, cuya constante de tiempo está dada por:
-
-$$
-\tau=\frac{L}{R}
-$$
-
-La ganancia estática del sistema es:
+donde:
 
 $$
 K=\frac{1}{R}
 $$
 
-Por lo tanto, la función de transferencia también puede expresarse en su forma estándar como:
-
 $$
-H(s)
-====
-
-\frac{\frac{1}{R}}
-{\frac{L}{R}s+1}
-================
-
-\frac{K}{\tau s+1}
+\tau=\frac{L}{R}
 $$
+
+
 
 
 
