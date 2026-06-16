@@ -83,9 +83,7 @@ $$
 Al reorganizar:
 
 $$
-L\frac{di_L(t)}{dt}+R\cdot i_L(t)
-=
-v_C(t)-v_T(t)-v_B(t)
+L\frac{di_L(t)}{dt}+R\cdot i_L(t) = v_C(t)-v_T(t)-v_B(t)
 $$
 
 ### 2. Transformada de Laplace
@@ -93,25 +91,19 @@ $$
 Aplicando la transformada de Laplace con condiciones iniciales iguales a cero:
 
 $$
-LsI_L(s)+RI_L(s)
-=
-V_C(s)-V_T(s)-V_B(s)
+LsI_L(s)+RI_L(s) = V_C(s)-V_T(s)-V_B(s)
 $$
 
 Factorizando:
 
 $$
-I_L(s)(Ls+R)
-=
-V_C(s)-V_T(s)-V_B(s)
+I_L(s)(Ls+R) = V_C(s)-V_T(s)-V_B(s)
 $$
 
 Despejando la corriente:
 
 $$
-I_L(s)
-=
-\frac{V_C(s)-V_T(s)-V_B(s)}{Ls+R}
+I_L(s) = \frac{V_C(s)-V_T(s)-V_B(s)}{Ls+R}
 $$
 
 ### 3. Función de transferencia
@@ -125,21 +117,13 @@ $$
 Entonces:
 
 $$
-H(s)
-=
-\frac{I_L(s)}{U(s)}
-=
-\frac{1}{Ls+R}
+H(s) = \frac{I_L(s)}{U(s)} = \frac{1}{Ls+R}
 $$
 
 La forma estándar es:
 
 $$
-H(s)
-=
-\frac{\frac{1}{R}}{\frac{L}{R}s+1}
-=
-\frac{K}{\tau s+1}
+H(s) = \frac{\frac{1}{R}}{\frac{L}{R}s+1} = \frac{K}{\tau s+1}
 $$
 
 donde:
