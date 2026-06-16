@@ -94,17 +94,17 @@ $$
 Sustituyendo ambas expresiones en la ecuación de tensiones:
 
 $$
--v_C(t)+v_T(t)+L\frac{di_L(t)}{dt}
-+R,i_L(t)+v_B(t)=0
+-v_C(t)+v_T(t)+L\frac{di_L(t)}{dt}+R,i_L(t)+v_B(t)=0
 $$
 
 Al reorganizar los términos, se obtiene la ecuación diferencial del circuito:
 
 $$
 L\frac{di_L(t)}{dt}+R,i_L(t)
+============================
 
-
-v_C(t)-v_T(t)-v_B)
+v_C(t)-v_T(t)-v_B(t)
+$$
 
 ### 2. Transformada de Laplace
 
@@ -112,7 +112,7 @@ Aplicando la transformada de Laplace y suponiendo condiciones iniciales iguales 
 
 $$
 LsI_L(s)+RI_L(s)
-
+================
 
 V_C(s)-V_T(s)-V_B(s)
 $$
@@ -121,7 +121,7 @@ Factorizando la corriente del inductor:
 
 $$
 I_L(s)(Ls+R)
-
+============
 
 V_C(s)-V_T(s)-V_B(s)
 $$
@@ -130,7 +130,7 @@ Despejando $I_L(s)$:
 
 $$
 I_L(s)
-
+======
 
 \frac{V_C(s)-V_T(s)-V_B(s)}
 {Ls+R}
@@ -148,7 +148,7 @@ Por lo tanto, la función de transferencia entre la entrada efectiva de tensión
 
 $$
 H(s)
-
+====
 
 # \frac{I_L(s)}{U(s)}
 
@@ -180,14 +180,14 @@ Por lo tanto, la función de transferencia también puede expresarse en su forma
 
 $$
 H(s)
-
+====
 
 \frac{\frac{1}{R}}
 {\frac{L}{R}s+1}
+================
 
 \frac{K}{\tau s+1}
 $$
-
 
 
 
