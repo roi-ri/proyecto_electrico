@@ -76,36 +76,27 @@ De esta manera, el primer C2000 simulará el comportamiento de la PCB, el segund
 C2000 simulará el comportamiento de la batería y el ESP32 realizará el control
 de corriente.
 
-El intercambio de señales entre los dispositivos permitirá reproducir el
-funcionamiento general del sistema:
+
+### Arquitectura de la simulación Hardware-in-the-Loop
+
+La arquitectura propuesta está compuesta por tres dispositivos. El ESP32
+ejecuta el sistema de control, el primer C2000 representa el comportamiento
+eléctrico del circuito ciclador y el segundo C2000 ejecuta el modelo dinámico
+de la batería.
 
 
-Referencia de corriente
-          |
-          v
-+-------------------+
-|       ESP32       |
-| Sistema de control|
-+-------------------+
-          |
-          | Señal de control
-          v
-+------------------------+
-|       C2000 N.° 1      |
-| Modelo del circuito de |
-| carga y descarga       |
-+------------------------+
-          |
-          | Corriente de la batería
-          v
-+------------------------+
-|       C2000 N.° 2      |
-| Modelo dinámico de la  |
-| batería                |
-+------------------------+
-          |
-          | Tensión y variables medidas
-          +-----------------------------> ESP32
+flowchart TD
+    REF["Referencia de corriente"] --> ESP32
+
+    ESP32["ESP32<br/>Sistema de control"]
+    CICLO["C2000 N.° 1<br/>Modelo del circuito ciclador<br/>Carga y descarga"]
+    BAT["C2000 N.° 2<br/>Modelo dinámico de la batería"]
+
+    ESP32 -->|"Señal de control"| CICLO
+    CICLO -->|"Corriente de carga o descarga"| BAT
+    BAT -->|"Tensión de la batería"| CICLO
+    CICLO -->|"Señales simuladas de los sensores"| ESP32
+    BAT -->|"Estado y variables de la batería"| ESP32
 
 
 La simulación HIL permitirá evaluar el controlador utilizando señales y
@@ -127,6 +118,8 @@ Esta arquitectura reduce el riesgo de dañar la batería, la PCB o los
 componentes de potencia durante las primeras pruebas. Además, permite detectar
 errores de programación, comunicación, escalamiento y control antes de realizar
 la integración final del sistema.
+
+En la **Figura 3** se tiene el circuito utilizado para hacer las pruebas hardware in the loop con sus respectivos puertos para comunicación con el C2000. 
 
 ![Circuito de carga y descarga de la batería para pruebas](Imagenes/hardware_in_the_loop.jpeg)
 
