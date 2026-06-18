@@ -76,7 +76,7 @@ De esta manera, el primer C2000 simulará el comportamiento de la PCB, el segund
 C2000 simulará el comportamiento de la batería y el ESP32 realizará el control
 de corriente.
 
-```marmaid
+```mermaid
 flowchart TD
     REF["Referencia de corriente"] --> ESP32
 
