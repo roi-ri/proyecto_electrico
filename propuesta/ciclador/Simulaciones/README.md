@@ -76,15 +76,7 @@ De esta manera, el primer C2000 simulará el comportamiento de la PCB, el segund
 C2000 simulará el comportamiento de la batería y el ESP32 realizará el control
 de corriente.
 
-
-### Arquitectura de la simulación Hardware-in-the-Loop
-
-La arquitectura propuesta está compuesta por tres dispositivos. El ESP32
-ejecuta el sistema de control, el primer C2000 representa el comportamiento
-eléctrico del circuito ciclador y el segundo C2000 ejecuta el modelo dinámico
-de la batería.
-
-
+```marmaid
 flowchart TD
     REF["Referencia de corriente"] --> ESP32
 
@@ -97,7 +89,7 @@ flowchart TD
     BAT -->|"Tensión de la batería"| CICLO
     CICLO -->|"Señales simuladas de los sensores"| ESP32
     BAT -->|"Estado y variables de la batería"| ESP32
-
+```
 
 La simulación HIL permitirá evaluar el controlador utilizando señales y
 dispositivos físicos, pero sin conectar inicialmente una batería real ni la
