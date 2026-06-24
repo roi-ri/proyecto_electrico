@@ -257,6 +257,10 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
 - Python link errors mention `pythonXY.lib`: install Python from python.org or
   with `winget install --id Python.Python.3.13 --exact`; do not rely only on
   the Microsoft Store Python app alias.
+- `No se encontro Python para compilar`: run `git pull` and try the installer
+  again. The installer refreshes PATH and also searches the usual Python install
+  folders directly. If it still fails, close PowerShell, open a new PowerShell
+  window, and run the installer again.
 - `Could NOT find wxWidgets`: run the installer without `-SkipDeps` so it can
   install `wxwidgets:x64-windows` through `vcpkg`.
 - Visual Studio or C++ compiler errors: rerun the installer without

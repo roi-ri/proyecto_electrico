@@ -24,6 +24,16 @@ function Get-DefaultVcpkgTriplet {
     return "x64-windows"
 }
 
+function Update-ProcessPath {
+    $pathParts = @(
+        [Environment]::GetEnvironmentVariable("Path", "Machine"),
+        [Environment]::GetEnvironmentVariable("Path", "User"),
+        [Environment]::GetEnvironmentVariable("Path", "Process")
+    ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    $env:Path = ($pathParts -join ";")
+}
+
 function Get-VisualStudioInstallerPath {
     $installerPath = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vs_installer.exe"
     if (Test-Path $installerPath) {
@@ -97,6 +107,7 @@ function Install-Dependencies {
         -ExtraArgs @("--override", "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
 
     Ensure-VisualStudioBuildTools
+    Update-ProcessPath
 }
 
 function Ensure-VisualStudioBuildTools {
@@ -187,7 +198,31 @@ function Get-PythonExecutable {
     return $null
 }
 
+function Find-InstalledPython {
+    $candidatePaths = @(
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python312\python.exe"),
+        (Join-Path $env:ProgramFiles "Python313\python.exe"),
+        (Join-Path $env:ProgramFiles "Python312\python.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "Python313\python.exe"),
+        (Join-Path ${env:ProgramFiles(x86)} "Python312\python.exe")
+    )
+
+    foreach ($candidate in $candidatePaths) {
+        if (Test-Path $candidate) {
+            $pythonPath = Get-PythonExecutable -Program $candidate
+            if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
+                return $pythonPath
+            }
+        }
+    }
+
+    return $null
+}
+
 function Get-EmbeddingPython {
+    Update-ProcessPath
+
     $pythonPath = Get-PythonExecutable -Program "py" -Arguments @("-3.13")
     if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
         return $pythonPath
@@ -203,12 +238,12 @@ function Get-EmbeddingPython {
         return $pythonPath
     }
 
-    $localPython313 = Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe"
-    if (Test-Path $localPython313) {
-        return $localPython313
+    $pythonPath = Find-InstalledPython
+    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
+        return $pythonPath
     }
 
-    throw "No se encontro Python para compilar. Verifica que `py -3.13` o `python` funcionen."
+    throw "No se encontro Python para compilar. Cierra y abre PowerShell, o instala Python 3.13 desde python.org o winget."
 }
 
 function Remove-BatViewPath {
