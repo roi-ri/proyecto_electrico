@@ -134,8 +134,11 @@ The script installs or prepares:
 3. Python 3.13.
 4. Visual Studio 2022 Build Tools with the C++ workload.
 5. `vcpkg` inside `tools\vcpkg`.
-6. `wxWidgets:x64-windows` through `vcpkg`.
+6. `wxWidgets` for the detected Windows architecture through `vcpkg`.
 7. batView itself.
+
+On ARM64 Windows, the installer uses `arm64-windows` instead of `x64-windows`
+and asks Visual Studio Build Tools for the ARM64 C++ tools.
 
 This step can take a while the first time because Visual Studio Build Tools,
 wxWidgets, and the C++ build are large.
@@ -195,6 +198,13 @@ To skip dependencies and also avoid opening the app:
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps -NoRun
 ```
 
+To force a specific vcpkg target architecture, use `-Triplet`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -Triplet arm64-windows
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -Triplet x64-windows
+```
+
 ## Optional: Update batView Later
 
 Open PowerShell and go back to the project:
@@ -229,6 +239,11 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
   did not install correctly. Run `git pull`, remove the partial `tools` folder
   with `Remove-Item -Recurse -Force .\tools`, and run
   `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` again.
+- `Unable to find a valid toolchain for requested target architecture arm64`:
+  update the repo with `git pull`, remove the partial `tools` folder with
+  `Remove-Item -Recurse -Force .\tools`, and run the installer again. The
+  current installer adds the Visual Studio ARM64 C++ tools and uses the
+  `arm64-windows` triplet automatically on ARM64 Windows.
 - `git` is not recognized after installing it: close PowerShell and open a new
   PowerShell window. If it still fails, add `C:\Program Files\Git\cmd` to your
   user `Path` environment variable, then reopen PowerShell.
