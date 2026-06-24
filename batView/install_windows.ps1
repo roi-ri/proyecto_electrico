@@ -1,7 +1,8 @@
 param(
     [switch]$NoRun,
     [switch]$SkipDeps,
-    [switch]$NoVcpkg
+    [switch]$NoVcpkg,
+    [switch]$Uninstall
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,7 +25,7 @@ function Install-WingetPackage {
         throw "winget is required for automatic dependency installation. Install App Installer from Microsoft Store or install dependencies manually."
     }
 
-    winget list --id $Id --exact | Out-Null
+    winget list --id $Id --exact --source winget | Out-Null
     if ($LASTEXITCODE -eq 0) {
         Write-Host "$Name already installed."
         return
@@ -35,19 +36,22 @@ function Install-WingetPackage {
         "install",
         "--id", $Id,
         "--exact",
+        "--source", "winget",
         "--silent",
         "--accept-package-agreements",
         "--accept-source-agreements"
     ) + $ExtraArgs
 
     & winget @args
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not install $Name with winget. Try running this command manually: winget install --id $Id --exact --source winget"
+    }
 }
 
 function Install-Dependencies {
     Install-WingetPackage -Id "Git.Git" -Name "Git"
     Install-WingetPackage -Id "Kitware.CMake" -Name "CMake"
     Install-WingetPackage -Id "Python.Python.3.13" -Name "Python 3"
-    Install-WingetPackage -Id "NSIS.NSIS" -Name "NSIS"
     Install-WingetPackage `
         -Id "Microsoft.VisualStudio.2022.BuildTools" `
         -Name "Visual Studio Build Tools" `
@@ -67,10 +71,20 @@ function Install-VcpkgWxWidgets {
     if (-not (Test-Path $vcpkgRoot)) {
         New-Item -ItemType Directory -Force -Path (Split-Path -Parent $vcpkgRoot) | Out-Null
         git clone https://github.com/microsoft/vcpkg.git $vcpkgRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not clone vcpkg. Check your internet connection and Git installation."
+        }
     }
 
     & (Join-Path $vcpkgRoot "bootstrap-vcpkg.bat")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not bootstrap vcpkg."
+    }
+
     & (Join-Path $vcpkgRoot "vcpkg.exe") install wxwidgets:x64-windows
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not install wxWidgets with vcpkg. Make sure Visual Studio 2022 Build Tools with the C++ workload is installed."
+    }
 
     $env:VCPKG_ROOT = $vcpkgRoot
     $env:BATVIEW_CMAKE_TOOLCHAIN_FILE = Join-Path $vcpkgRoot "scripts\buildsystems\vcpkg.cmake"
@@ -118,7 +132,30 @@ function Get-EmbeddingPython {
     throw "No se encontro Python para compilar. Verifica que `py -3.13` o `python` funcionen."
 }
 
+function Remove-BatViewPath {
+    param([string]$Path)
+
+    if (Test-Path $Path) {
+        Remove-Item -LiteralPath $Path -Recurse -Force
+        Write-Host "Removed $Path"
+    }
+}
+
+function Uninstall-BatView {
+    Remove-BatViewPath -Path (Join-Path $env:LOCALAPPDATA "batView")
+    Remove-BatViewPath -Path (Join-Path ([Environment]::GetFolderPath("Desktop")) "batView.lnk")
+    Remove-BatViewPath -Path (Join-Path $scriptDir "build-release")
+    Remove-BatViewPath -Path (Join-Path $scriptDir "python\runtime")
+    Remove-BatViewPath -Path (Join-Path $scriptDir "tools")
+    Write-Host "batView uninstall complete."
+}
+
 Write-Host "batView Windows setup"
+
+if ($Uninstall) {
+    Uninstall-BatView
+    return
+}
 
 if (-not $SkipDeps) {
     Install-Dependencies
@@ -138,3 +175,6 @@ if ($NoRun) {
 }
 
 & powershell -ExecutionPolicy Bypass -File (Join-Path $scriptDir "build_app.ps1") @buildArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "batView build failed."
+}

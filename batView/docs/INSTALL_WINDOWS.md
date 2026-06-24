@@ -140,6 +140,22 @@ The script installs or prepares:
 This step can take a while the first time because Visual Studio Build Tools,
 wxWidgets, and the C++ build are large.
 
+If the install stops after a failed first attempt, update the project and run it
+again:
+
+```powershell
+git pull
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
+
+If the failure happened while installing `vcpkg` or `wxWidgets`, you can remove
+the partial `tools` folder before trying again:
+
+```powershell
+Remove-Item -Recurse -Force .\tools
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
+
 ## Step 6: Wait for the Success Message
 
 When everything works, the terminal ends with:
@@ -209,6 +225,10 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
 - `winget` fails with `Failed when searching source: msstore`: rerun the
   command with `--source winget`, for example
   `winget install --id Git.Git --exact --source winget --silent --accept-package-agreements --accept-source-agreements`.
+- `Unable to find a valid Visual Studio instance`: Visual Studio Build Tools
+  did not install correctly. Run `git pull`, remove the partial `tools` folder
+  with `Remove-Item -Recurse -Force .\tools`, and run
+  `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` again.
 - `git` is not recognized after installing it: close PowerShell and open a new
   PowerShell window. If it still fails, add `C:\Program Files\Git\cmd` to your
   user `Path` environment variable, then reopen PowerShell.
