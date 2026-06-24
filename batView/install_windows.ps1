@@ -155,14 +155,17 @@ function Install-VcpkgWxWidgets {
         throw "Could not bootstrap vcpkg."
     }
 
-    & (Join-Path $vcpkgRoot "vcpkg.exe") install "wxwidgets:$script:BatViewVcpkgTriplet"
+    $env:VCPKG_DEFAULT_TRIPLET = $script:BatViewVcpkgTriplet
+    $env:VCPKG_TARGET_TRIPLET = $script:BatViewVcpkgTriplet
+    $env:VCPKG_DEFAULT_HOST_TRIPLET = $script:BatViewVcpkgHostTriplet
+    $env:VCPKG_HOST_TRIPLET = $script:BatViewVcpkgHostTriplet
+
+    & (Join-Path $vcpkgRoot "vcpkg.exe") install "wxwidgets:$script:BatViewVcpkgTriplet" "--host-triplet=$script:BatViewVcpkgHostTriplet"
     if ($LASTEXITCODE -ne 0) {
-        throw "Could not install wxWidgets with vcpkg for $script:BatViewVcpkgTriplet. Make sure Visual Studio 2022 Build Tools has the C++ workload and the matching architecture tools installed."
+        throw "Could not install wxWidgets with vcpkg for target $script:BatViewVcpkgTriplet and host $script:BatViewVcpkgHostTriplet. Make sure Visual Studio 2022 Build Tools has the C++ workload and the matching architecture tools installed."
     }
 
     $env:VCPKG_ROOT = $vcpkgRoot
-    $env:VCPKG_DEFAULT_TRIPLET = $script:BatViewVcpkgTriplet
-    $env:VCPKG_TARGET_TRIPLET = $script:BatViewVcpkgTriplet
     $env:BATVIEW_CMAKE_TOOLCHAIN_FILE = Join-Path $vcpkgRoot "scripts\buildsystems\vcpkg.cmake"
 }
 
@@ -233,6 +236,8 @@ if ([string]::IsNullOrWhiteSpace($script:BatViewVcpkgTriplet)) {
     $script:BatViewVcpkgTriplet = Get-DefaultVcpkgTriplet
 }
 Write-Host "vcpkg triplet: $script:BatViewVcpkgTriplet"
+$script:BatViewVcpkgHostTriplet = "x64-windows"
+Write-Host "vcpkg host triplet: $script:BatViewVcpkgHostTriplet"
 if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64" -and $script:BatViewVcpkgTriplet -eq "x64-windows") {
     Write-Host "ARM64 Windows detected. Building x64 by default because it runs under Windows emulation and is supported by standard Build Tools."
 }

@@ -139,8 +139,10 @@ The script installs or prepares:
 
 On ARM64 Windows, the installer detects the ARM64 machine but uses
 `x64-windows` by default. Windows ARM can run x64 apps through emulation, and
-this avoids requiring a native ARM64 Visual Studio toolchain. If you explicitly
-need a native ARM64 build, use `-Triplet arm64-windows`.
+this avoids requiring a native ARM64 Visual Studio toolchain. The vcpkg host
+triplet is also forced to `x64-windows` so vcpkg does not try to build its
+helper tools with an unavailable ARM64 compiler. If you explicitly need a native
+ARM64 build, use `-Triplet arm64-windows`.
 
 This step can take a while the first time because Visual Studio Build Tools,
 wxWidgets, and the C++ build are large.
@@ -243,8 +245,8 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
   with `Remove-Item -Recurse -Force .\tools`, and run
   `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` again.
 - `Unable to find a valid toolchain for requested target architecture arm64`:
-  use the default `x64-windows` build instead of forcing `arm64-windows`.
-  Run `git pull`, remove the partial `tools` folder with
+  use the default `x64-windows` build instead of forcing `arm64-windows`. Run
+  `git pull`, remove the partial `tools` folder with
   `Remove-Item -Recurse -Force .\tools`, and run
   `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` again.
 - `git` is not recognized after installing it: close PowerShell and open a new
