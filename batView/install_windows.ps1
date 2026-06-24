@@ -122,7 +122,6 @@ function Ensure-VisualStudioBuildTools {
         "modify",
         "--installPath", $installPath,
         "--quiet",
-        "--wait",
         "--norestart",
         "--includeRecommended"
     )
