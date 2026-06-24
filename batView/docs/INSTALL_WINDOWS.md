@@ -141,8 +141,9 @@ On ARM64 Windows, the installer detects the ARM64 machine but uses
 `x64-windows` by default. Windows ARM can run x64 apps through emulation, and
 this avoids requiring a native ARM64 Visual Studio toolchain. The vcpkg host
 triplet is also forced to `x64-windows` so vcpkg does not try to build its
-helper tools with an unavailable ARM64 compiler. If you explicitly need a native
-ARM64 build, use `-Triplet arm64-windows`.
+helper tools with an unavailable ARM64 compiler. The installer also uses x64
+Python for the embedded Python runtime when building x64. If you explicitly need
+a native ARM64 build, use `-Triplet arm64-windows`.
 
 This step can take a while the first time because Visual Studio Build Tools,
 wxWidgets, and the C++ build are large.
@@ -259,8 +260,9 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
   the Microsoft Store Python app alias.
 - `No se encontro Python para compilar`: run `git pull` and try the installer
   again. The installer refreshes PATH and also searches the usual Python install
-  folders directly. If it still fails, close PowerShell, open a new PowerShell
-  window, and run the installer again.
+  folders directly. On Windows ARM, the default x64 build needs x64 Python; if
+  it still fails, close PowerShell, open a new PowerShell window, and run the
+  installer again.
 - `Could NOT find wxWidgets`: run the installer without `-SkipDeps` so it can
   install `wxwidgets:x64-windows` through `vcpkg`.
 - Visual Studio or C++ compiler errors: rerun the installer without

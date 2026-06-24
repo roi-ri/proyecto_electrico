@@ -100,7 +100,7 @@ function Install-WingetPackage {
 function Install-Dependencies {
     Install-WingetPackage -Id "Git.Git" -Name "Git"
     Install-WingetPackage -Id "Kitware.CMake" -Name "CMake"
-    Install-WingetPackage -Id "Python.Python.3.13" -Name "Python 3"
+    Install-PythonDependency
     Install-WingetPackage `
         -Id "Microsoft.VisualStudio.2022.BuildTools" `
         -Name "Visual Studio Build Tools" `
@@ -141,6 +141,30 @@ function Ensure-VisualStudioBuildTools {
     if ($LASTEXITCODE -eq 3010) {
         Write-Host "Visual Studio Build Tools requested a restart. Restart Windows if the next build step still cannot find the toolchain."
     }
+}
+
+function Install-PythonDependency {
+    if ($script:BatViewVcpkgTriplet -eq "x64-windows" -and $env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+        Write-Host "Ensuring x64 Python 3.13 for x64 build..."
+        $args = @(
+            "install",
+            "--id", "Python.Python.3.13",
+            "--exact",
+            "--source", "winget",
+            "--architecture", "x64",
+            "--force",
+            "--silent",
+            "--accept-package-agreements",
+            "--accept-source-agreements"
+        )
+        & winget @args
+        if ($LASTEXITCODE -ne 0) {
+            throw "Could not install x64 Python 3.13 with winget."
+        }
+        return
+    }
+
+    Install-WingetPackage -Id "Python.Python.3.13" -Name "Python 3"
 }
 
 function Install-VcpkgWxWidgets {
@@ -198,10 +222,50 @@ function Get-PythonExecutable {
     return $null
 }
 
+function Get-RequiredPythonMachine {
+    if ($script:BatViewVcpkgTriplet -eq "arm64-windows") {
+        return "arm64"
+    }
+
+    return "amd64"
+}
+
+function Test-PythonArchitecture {
+    param([string]$PythonPath)
+
+    try {
+        $machine = & $PythonPath -c "import platform; print(platform.machine().lower())" 2>$null
+        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($machine)) {
+            return $false
+        }
+
+        return $machine.Trim().ToLowerInvariant() -eq (Get-RequiredPythonMachine)
+    } catch {
+        return $false
+    }
+}
+
+function Use-PythonIfMatching {
+    param([string]$PythonPath)
+
+    if ([string]::IsNullOrWhiteSpace($PythonPath)) {
+        return $null
+    }
+
+    if (Test-PythonArchitecture -PythonPath $PythonPath) {
+        return $PythonPath
+    }
+
+    Write-Host "Skipping Python with wrong architecture: $PythonPath"
+    return $null
+}
+
 function Find-InstalledPython {
     $candidatePaths = @(
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python313-arm64\python.exe"),
         (Join-Path $env:LOCALAPPDATA "Programs\Python\Python312\python.exe"),
+        (Join-Path $env:LOCALAPPDATA "Programs\Python\Python312-arm64\python.exe"),
         (Join-Path $env:ProgramFiles "Python313\python.exe"),
         (Join-Path $env:ProgramFiles "Python312\python.exe"),
         (Join-Path ${env:ProgramFiles(x86)} "Python313\python.exe"),
@@ -211,8 +275,9 @@ function Find-InstalledPython {
     foreach ($candidate in $candidatePaths) {
         if (Test-Path $candidate) {
             $pythonPath = Get-PythonExecutable -Program $candidate
-            if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
-                return $pythonPath
+            $matchingPython = Use-PythonIfMatching -PythonPath $pythonPath
+            if (-not [string]::IsNullOrWhiteSpace($matchingPython)) {
+                return $matchingPython
             }
         }
     }
@@ -224,18 +289,21 @@ function Get-EmbeddingPython {
     Update-ProcessPath
 
     $pythonPath = Get-PythonExecutable -Program "py" -Arguments @("-3.13")
-    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
-        return $pythonPath
+    $matchingPython = Use-PythonIfMatching -PythonPath $pythonPath
+    if (-not [string]::IsNullOrWhiteSpace($matchingPython)) {
+        return $matchingPython
     }
 
     $pythonPath = Get-PythonExecutable -Program "python"
-    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
-        return $pythonPath
+    $matchingPython = Use-PythonIfMatching -PythonPath $pythonPath
+    if (-not [string]::IsNullOrWhiteSpace($matchingPython)) {
+        return $matchingPython
     }
 
     $pythonPath = Get-PythonExecutable -Program "py" -Arguments @("-3.12")
-    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
-        return $pythonPath
+    $matchingPython = Use-PythonIfMatching -PythonPath $pythonPath
+    if (-not [string]::IsNullOrWhiteSpace($matchingPython)) {
+        return $matchingPython
     }
 
     $pythonPath = Find-InstalledPython
@@ -243,7 +311,7 @@ function Get-EmbeddingPython {
         return $pythonPath
     }
 
-    throw "No se encontro Python para compilar. Cierra y abre PowerShell, o instala Python 3.13 desde python.org o winget."
+    throw "No se encontro Python para compilar con arquitectura $(Get-RequiredPythonMachine). Cierra y abre PowerShell, o instala Python 3.13 x64 desde python.org o winget."
 }
 
 function Remove-BatViewPath {

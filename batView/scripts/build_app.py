@@ -515,6 +515,15 @@ def main() -> None:
     if platform.system() == "Darwin":
         configure_cmd.append("-DBATVIEW_BUILD_MACOS_ICON=ON")
 
+    if platform.system() == "Windows":
+        vcpkg_triplet = os.environ.get("VCPKG_TARGET_TRIPLET") or os.environ.get("VCPKG_DEFAULT_TRIPLET")
+        if vcpkg_triplet == "x64-windows":
+            configure_cmd.extend(["-A", "x64"])
+            print("CMake platform: x64")
+        elif vcpkg_triplet == "arm64-windows":
+            configure_cmd.extend(["-A", "ARM64"])
+            print("CMake platform: ARM64")
+
     toolchain_file = args.cmake_toolchain or os.environ.get("BATVIEW_CMAKE_TOOLCHAIN_FILE")
     vcpkg_root = os.environ.get("VCPKG_ROOT")
     if not toolchain_file and vcpkg_root:
