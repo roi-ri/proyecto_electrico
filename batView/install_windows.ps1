@@ -229,19 +229,41 @@ function Get-RequiredPythonMachine {
     return "amd64"
 }
 
+function Get-WindowsExecutableMachine {
+    param([string]$Path)
+
+    try {
+        $stream = [System.IO.File]::OpenRead($Path)
+        try {
+            $reader = New-Object System.IO.BinaryReader($stream)
+            $stream.Seek(0x3C, [System.IO.SeekOrigin]::Begin) | Out-Null
+            $peOffset = $reader.ReadInt32()
+            $stream.Seek($peOffset + 4, [System.IO.SeekOrigin]::Begin) | Out-Null
+            $machine = $reader.ReadUInt16()
+        } finally {
+            if ($reader) {
+                $reader.Close()
+            } else {
+                $stream.Close()
+            }
+        }
+
+        switch ($machine) {
+            0x8664 { return "amd64" }
+            0xAA64 { return "arm64" }
+            0x14C { return "x86" }
+            default { return "unknown" }
+        }
+    } catch {
+        return "unknown"
+    }
+}
+
 function Test-PythonArchitecture {
     param([string]$PythonPath)
 
-    try {
-        $machine = & $PythonPath -c "import platform; print(platform.machine().lower())" 2>$null
-        if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($machine)) {
-            return $false
-        }
-
-        return $machine.Trim().ToLowerInvariant() -eq (Get-RequiredPythonMachine)
-    } catch {
-        return $false
-    }
+    $machine = Get-WindowsExecutableMachine -Path $PythonPath
+    return $machine -eq (Get-RequiredPythonMachine)
 }
 
 function Use-PythonIfMatching {
@@ -255,7 +277,8 @@ function Use-PythonIfMatching {
         return $PythonPath
     }
 
-    Write-Host "Skipping Python with wrong architecture: $PythonPath"
+    $actualMachine = Get-WindowsExecutableMachine -Path $PythonPath
+    Write-Host "Skipping Python with wrong architecture ($actualMachine): $PythonPath"
     return $null
 }
 

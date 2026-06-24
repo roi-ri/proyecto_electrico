@@ -262,7 +262,8 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
   again. The installer refreshes PATH and also searches the usual Python install
   folders directly. On Windows ARM, the default x64 build needs x64 Python; if
   it still fails, close PowerShell, open a new PowerShell window, and run the
-  installer again.
+  installer again. The installer checks Python architecture from the executable
+  itself so x64 Python running on Windows ARM is accepted correctly.
 - `Could NOT find wxWidgets`: run the installer without `-SkipDeps` so it can
   install `wxwidgets:x64-windows` through `vcpkg`.
 - Visual Studio or C++ compiler errors: rerun the installer without
