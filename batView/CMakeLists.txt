@@ -52,6 +52,7 @@ if(BATVIEW_ENABLE_EMBEDDED_PYTHON AND BATVIEW_EMBEDDED_PYTHON_ROOT)
     foreach(BATVIEW_LIBRARY_PATH IN LISTS BATVIEW_EMBEDDED_PYTHON_LIBRARY_CANDIDATES)
         if(EXISTS "${BATVIEW_LIBRARY_PATH}")
             set(BATVIEW_EMBEDDED_PYTHON_LIBRARY "${BATVIEW_LIBRARY_PATH}")
+            get_filename_component(BATVIEW_EMBEDDED_PYTHON_LIBRARY_DIR "${BATVIEW_LIBRARY_PATH}" DIRECTORY)
             break()
         endif()
     endforeach()
@@ -73,6 +74,7 @@ if(BATVIEW_ENABLE_EMBEDDED_PYTHON AND BATVIEW_EMBEDDED_PYTHON_ROOT)
 else()
     set(BATVIEW_EMBEDDED_PYTHON_INCLUDE "")
     set(BATVIEW_EMBEDDED_PYTHON_LIBRARY "")
+    set(BATVIEW_EMBEDDED_PYTHON_LIBRARY_DIR "")
     set(BATVIEW_EMBEDDED_PYTHON_LIB "")
     set(BATVIEW_EMBEDDED_PYTHON_SITE_PACKAGES "")
 endif()
@@ -123,6 +125,10 @@ if(BATVIEW_ENABLE_WX)
     list(APPEND BATVIEW_APP_SOURCES
         src/ui/BatViewApp.cpp
         src/ui/frames/MainFrame.cpp
+        src/ui/frames/MainFrameEvents.cpp
+        src/ui/frames/MainFrameLayout.cpp
+        src/ui/frames/MainFrameState.cpp
+        src/ui/frames/MainFrameSupport.cpp
         src/ui/dialogs/ExportDialog.cpp
         src/ui/panels/ConnectionPanel.cpp
         src/ui/panels/PlotPanel.cpp
@@ -173,8 +179,15 @@ if(BATVIEW_ENABLE_WX)
         endif()
     endif()
 
-    if(WIN32 AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
-        set(BATVIEW_WINDOWS_ICON ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
+    if(WIN32)
+        if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/assets/BatView.ico)
+            set(BATVIEW_WINDOWS_ICON ${CMAKE_CURRENT_BINARY_DIR}/assets/BatView.ico)
+        elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
+            set(BATVIEW_WINDOWS_ICON ${CMAKE_CURRENT_SOURCE_DIR}/assets/BatView.ico)
+        endif()
+    endif()
+
+    if(WIN32 AND BATVIEW_WINDOWS_ICON)
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/batView.rc.in
                        ${CMAKE_CURRENT_BINARY_DIR}/batView.rc
                        @ONLY)
@@ -192,6 +205,7 @@ endif()
 target_include_directories(batView PRIVATE src)
 if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
     target_include_directories(batView PRIVATE "${BATVIEW_EMBEDDED_PYTHON_INCLUDE}")
+    target_link_directories(batView PRIVATE "${BATVIEW_EMBEDDED_PYTHON_LIBRARY_DIR}")
 endif()
 
 if(BATVIEW_ENABLE_WX)
@@ -291,6 +305,7 @@ if(BATVIEW_BUILD_TESTS)
     target_link_libraries(run_tests PRIVATE gtest gtest_main)
     if(BATVIEW_EMBEDDED_PYTHON_ACTIVE)
         target_include_directories(run_tests PRIVATE "${BATVIEW_EMBEDDED_PYTHON_INCLUDE}")
+        target_link_directories(run_tests PRIVATE "${BATVIEW_EMBEDDED_PYTHON_LIBRARY_DIR}")
         target_compile_definitions(run_tests PRIVATE
             BATVIEW_ENABLE_EMBEDDED_PYTHON=1
             BATVIEW_EMBEDDED_PYTHON_HOME="${BATVIEW_EMBEDDED_PYTHON_ROOT}"
@@ -316,7 +331,6 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
 install(FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
-    "${CMAKE_CURRENT_SOURCE_DIR}/docs/DOWNLOAD_AND_INSTALL.md"
     DESTINATION .
 )
 

@@ -1,23 +1,38 @@
 #pragma once
 
-#include <wx/animate.h>
-#include <wx/gauge.h>
 #include <wx/frame.h>
-#include <wx/button.h>
-#include <wx/choice.h>
-#include <wx/radiobut.h>
-#include <wx/simplebook.h>
-#include <wx/splitter.h>
-#include <wx/textctrl.h>
-#include <wx/stattext.h>
+#include <wx/string.h>
 #include <wx/timer.h>
 
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <vector>
 
-#include "ui/panels/ConnectionPanel.h"
-#include "ui/panels/PlotPanel.h"
-#include "ui/viewmodels/MainViewModel.h"
-#include "ui/dialogs/ExportDialog.h"
+#include "core/protocol/ProtocolTypes.h"
+
+class wxAnimationCtrl;
+class wxButton;
+class wxChoice;
+class wxCommandEvent;
+class wxGauge;
+class wxPanel;
+class wxRadioButton;
+class wxSimplebook;
+class wxSplitterWindow;
+class wxStaticText;
+class wxTextCtrl;
+class wxTimerEvent;
+class wxWindow;
+
+namespace batview::ui::panels {
+class ConnectionPanel;
+class PlotPanel;
+} // namespace batview::ui::panels
+
+namespace batview::ui::viewmodels {
+class MainViewModel;
+} // namespace batview::ui::viewmodels
 
 namespace batview::ui::frames {
 
@@ -50,6 +65,7 @@ private:
     void OnBatteryProfileChanged(wxCommandEvent& event);
     void OnSaveBatteryProfile(wxCommandEvent& event);
     void OnChooseBatteryProfile(wxCommandEvent& event);
+    void OnClearBatteryProfiles(wxCommandEvent& event);
     void OnFunctionChanged(wxCommandEvent& event);
     void OnCycleModeChanged(wxCommandEvent& event);
     void OnBackStep(wxCommandEvent& event);
@@ -83,6 +99,7 @@ private:
     wxTextCtrl* batteryMaxCurrentCtrl_;
     wxButton* saveBatteryProfileButton_;
     wxButton* chooseBatteryProfileButton_;
+    wxButton* clearBatteryProfilesButton_;
     wxPanel* functionPanel_;
     wxRadioButton* chargeRadio_;
     wxRadioButton* dischargeRadio_;

@@ -1,15 +1,12 @@
 # batView
 
 Aplicación de escritorio en C++ para controlar pruebas de baterías sobre un ESP32 vía USB/UART.
-
 El proyecto combina wxWidgets para la interfaz, una capa de servicios para la lógica de protocolo y adaptadores de infraestructura para serial, logging y exportación.
 
 ## Resumen
-
 batView está orientado a ejecutar y supervisar pruebas de baterías desde una interfaz de escritorio, con telemetría recibida en tiempo real desde el ESP32 y exportación de los resultados en formatos útiles para análisis y trazabilidad.
 
 ## Características principales
-
 - Conexión serial real a ESP32 en macOS/Linux mediante backend POSIX.
 - Handshake de conexión con reintento automático para boards que reinician al abrir el puerto.
 - Flujo operativo guiado para conectar, seleccionar batería, elegir función, iniciar carga, descarga o ciclado y detener con `#STOP`.
@@ -22,7 +19,6 @@ batView está orientado a ejecutar y supervisar pruebas de baterías desde una i
 - Sketches de prueba para Arduino IDE y PlatformIO.
 
 ## Estructura del proyecto
-
 ```text
 batView/
 │
@@ -61,11 +57,10 @@ batView/
 │
 ├── docs/                             documentacion de uso, arquitectura e instalacion
 │   ├── ARCHITECTURE.md               decisiones de arquitectura
-│   ├── BUILD_INSTALLER.md            scripts por sistema operativo
-│   ├── DOWNLOAD_AND_INSTALL.md       centro de descarga/instalacion
-│   ├── DOWNLOAD_WINDOWS.md           guia de instalacion en Windows
-│   ├── DOWNLOAD_MACOS.md             guia de instalacion en macOS
-│   ├── DOWNLOAD_LINUX.md             guia de instalacion en Linux
+│   ├── BUILD_INSTALLER.md            indice de instalacion y limpieza
+│   ├── INSTALL_MACOS.md              instalacion en macOS
+│   ├── INSTALL_LINUX.md              instalacion en Linux
+│   ├── INSTALL_WINDOWS.md            instalacion en Windows
 │   └── PROJECT_DOCUMENTATION.md      documentacion tecnica general
 │
 ├── examples/                         firmware de prueba para ESP32
@@ -88,7 +83,6 @@ batView/
 ├── data/                             datos de sesion o salidas locales
 └── logs/                             registros locales
 ```
-
 ## Arquitectura del código
 
 - `src/app/`: punto de entrada y composición de la aplicación.
@@ -98,7 +92,6 @@ batView/
 - `src/ui/`: ventanas, paneles, diálogos y viewmodels.
 
 ## Protocolo soportado
-
 ### Comandos enviados por la aplicación
 
 - `#CONNECTION`
@@ -110,7 +103,6 @@ batView/
 - `#STOP`
 
 ### Respuestas esperadas del ESP32
-
 - `#ACK,CONNECTION` o `#ACK,CONECTION`
 - `#ACK,Battery`
 - `#ACK,CICLE`
@@ -123,7 +115,6 @@ batView/
 - `#DATA,<voltaje>,<corriente>,<timestamp>,<estado>,<ciclos>`
 
 ### Origen de los datos de telemetría
-
 Los datos que la aplicación grafica y exporta provienen del ESP32 a través de las tramas `#DATA`.
 
 - `voltaje`: valor enviado por el ESP32.
@@ -135,175 +126,149 @@ Los datos que la aplicación grafica y exporta provienen del ESP32 a través de 
 La aplicación no fabrica esos valores. Lo único que hace en la gráfica es convertir `timestamp` de milisegundos a segundos para mostrar un eje de tiempo más legible. El dato original almacenado sigue siendo el que envía el ESP32.
 
 ## Build y ejecución multiplataforma
+If you want to install batView, open the guide for your system:
 
-### Uso recomendado: un solo comando
+- [macOS install guide](docs/INSTALL_MACOS.md)
+- [Linux install guide](docs/INSTALL_LINUX.md)
+- [Windows install guide](docs/INSTALL_WINDOWS.md)
 
-Si lo que quieres es compilar la aplicación completa, dejarla lista para usarse como app normal y generar el paquete del sistema actual, usa este flujo.
+Each guide has two clear cases:
 
-El script hace automáticamente lo siguiente:
+- If nothing is installed yet.
+- If everything needed is already installed.
 
-- detecta el sistema operativo;
-- prepara un runtime local de Python embebido;
-- instala las dependencias de Python necesarias para `XLSX` y `PNG`;
-- configura y compila `batView`;
-- genera el paquete apropiado para el sistema actual;
-- abre la app al final, a menos que uses `--no-run`.
+Use only the guide for your own computer.
 
-#### Comando en macOS y Linux
+| Your computer | Script to run |
+|---|---|
+| Mac | `./install_macos.sh` |
+| Linux | `./install_linux.sh` |
+| Windows | `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` |
 
-```bash
-./build_app.sh
-```
+Do not run the other scripts. Each one is for a different operating system.
 
-#### Comando en Windows
+### What you need before installing
+If you are not sure what to install first, use this checklist.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\build_app.ps1
-```
+#### Mac
+Install these once if they are not already installed:
 
-#### Si no quieres abrir la app al terminar
+1. Apple command line tools.
+2. Homebrew.
+3. These Homebrew packages: `cmake`, `wxwidgets`, `python`, `pkg-config`.
 
-```bash
-./build_app.sh --no-run
-```
-
-### Instalación automática de herramientas y empaquetado
-
-Si quieres preparar una computadora desde cero y generar el paquete final como si fuera un instalador de app, usa los scripts por sistema operativo:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
-```
-
-```bash
-./install_macos.sh
-./install_linux.sh
-```
-
-La guía completa está en [docs/BUILD_INSTALLER.md](./docs/BUILD_INSTALLER.md).
-
-### Qué necesitas instalar antes
-
-El script automatiza la mayor parte del proceso, pero aun así necesitas tener algunas herramientas base instaladas en tu sistema.
-
-#### macOS
-
-Necesitas:
-
-- `Xcode Command Line Tools`
-- `CMake`
-- `wxWidgets`
-- `Python 3`
-
-Comandos sugeridos:
+Step by step:
 
 ```bash
 xcode-select --install
-brew install cmake wxwidgets python
 ```
 
-#### Ubuntu / Debian
+Then install Homebrew if needed:
 
-Necesitas:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
 
-- `cmake`
-- compilador `g++`
-- `make`
-- `pkg-config`
-- `libwxgtk3.2-dev`
-- `libgtk-3-dev`
-- `python3`
-- `python3-pip`
+Then install the required packages:
 
-Comandos sugeridos:
+```bash
+brew install cmake wxwidgets python pkg-config
+```
+
+#### Linux
+Install these packages:
+
+1. CMake.
+2. A C++ compiler and build tools.
+3. wxWidgets development files.
+4. GTK development files.
+5. Python 3, Python headers, and pip.
+
+Step by step on Ubuntu or Debian:
 
 ```bash
 sudo apt update
-sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-pip
+sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev python3 python3-dev python3-pip
 ```
 
-Si `wxWidgets` no aparece correctamente:
+Step by step on Fedora:
 
 ```bash
-sudo apt install -y wx3.2-headers wx-common
+sudo dnf install -y cmake gcc-c++ make pkgconf-pkg-config wxGTK-devel gtk3-devel python3 python3-devel python3-pip rpm-build zip
+```
+
+Step by step on Arch Linux:
+
+```bash
+sudo pacman -S --needed cmake gcc make pkgconf wxwidgets-gtk3 gtk3 python python-pip zip
 ```
 
 #### Windows
+Install these programs:
 
-Necesitas:
+1. Visual Studio 2022 with the `Desktop development with C++` workload.
+2. CMake.
+3. Python 3.
+4. wxWidgets compatible with your compiler.
+5. Git.
+6. NSIS if you want an installer package.
 
-- Visual Studio 2022 con `Desktop development with C++`
-- `CMake`
-- `Python 3`
-- `wxWidgets` compatible con tu toolchain
-
-Notas:
-
-- En Windows el script también detecta el OS y ejecuta el flujo completo, pero la disponibilidad del instalador nativo depende de las herramientas instaladas en la máquina.
-- Si no hay generador nativo disponible, el flujo cae a un paquete portable.
-
-### Qué no tienes que instalar manualmente
-
-El script instala automáticamente dentro del proyecto estas dependencias de Python:
-
-- `Pillow`
-- `openpyxl`
-
-Esas dependencias no se instalan globalmente en tu sistema. Se guardan en:
-
-- `python/runtime/`
-
-### ¿Se necesita internet?
-
-Sí, en la primera ejecución del comando único normalmente se necesita internet para descargar:
-
-- `Pillow`
-- `openpyxl`
-
-Después de que esas dependencias ya quedaron en `python/runtime/`, el flujo es mucho más directo y reutiliza lo ya preparado dentro del proyecto.
-
-### Qué genera al final
-
-Después de correr el comando:
-
-- la app compilada queda en `build-release/`;
-- el paquete final queda en `dist/`;
-- el runtime embebido usado por la app queda en `python/runtime/`.
-
-Formatos esperados:
-
-- macOS: `.app` y `.zip`
-- Linux: binario ejecutable y `.tar.gz` o `.deb` según herramientas disponibles
-- Windows: `.exe` y paquete portable o instalador según herramientas disponibles
-
-### Proceso recomendado paso a paso
-
-1. Entra a la carpeta `batView`.
-2. Instala las herramientas base de tu sistema una sola vez.
-3. Ejecuta el comando único.
-4. Espera a que termine la compilación.
-5. Abre la app generada o toma el paquete desde `dist/`.
-
-Ejemplo en macOS/Linux:
-
-```bash
-cd batView
-./build_app.sh
-```
-
-Ejemplo en Windows:
+Step by step:
 
 ```powershell
-cd batView
-powershell -ExecutionPolicy Bypass -File .\build_app.ps1
+winget --version
+winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --silent --accept-package-agreements --accept-source-agreements --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+winget install --id Kitware.CMake --exact --silent --accept-package-agreements --accept-source-agreements
+winget install --id Python.Python.3.13 --exact --silent --accept-package-agreements --accept-source-agreements
+winget install --id Git.Git --exact --silent --accept-package-agreements --accept-source-agreements
+winget install --id NSIS.NSIS --exact --silent --accept-package-agreements --accept-source-agreements
 ```
 
-### App wxWidgets
+Then run the project installer:
 
+```powershell
+cd C:\path\to\proyecto_electrico\batView
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+```
+
+### If the tools are already installed
+Use the same script, but add the skip-deps option.
+
+```bash
+./install_macos.sh --skip-deps
+./install_linux.sh --skip-deps
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps
+```
+
+### Limpiar artefactos generados
+Si quieres borrar lo que generan los scripts sin tocar el codigo fuente:
+
+```bash
+./build_app.sh --clean
+```
+
+En Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_app.ps1 --clean
+```
+
+Esto elimina `build-release/`, `dist/`, `python/runtime/` y la copia de `batView.app` en el Desktop.
+
+### Para dejar la app fuera del repo
+Después de compilar:
+
+- macOS: el script copia `batView.app` al `Desktop`.
+- Linux: el script crea un lanzador `batView.desktop` en el `Desktop`.
+- Windows: el script crea un acceso directo `batView.lnk` en el `Desktop`.
+
+### App wxWidgets
 Esta sección es la ruta manual avanzada. Solo úsala si quieres compilar paso a paso sin el script automático.
 
 #### macOS
-
 ```bash
 cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
@@ -311,7 +276,6 @@ open build-release/batView.app
 ```
 
 #### Linux
-
 ```bash
 cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
@@ -319,24 +283,20 @@ cmake --build build-release --config Release
 ```
 
 ##### Notas para Ubuntu
-
 Si clonas o copias el repo desde otro sistema operativo, no reutilices el mismo `build-release` entre máquinas (por ejemplo macOS -> Ubuntu), porque CMake guarda rutas absolutas en cache.
 
 Instala dependencias (Ubuntu 24.04):
-
 ```bash
 sudo apt update
 sudo apt install -y cmake g++ make pkg-config libwxgtk3.2-dev libgtk-3-dev
 ```
 
 Si `find_package(wxWidgets)` falla, también puedes instalar:
-
 ```bash
 sudo apt install -y wx3.2-headers wx-common
 ```
 
 Reconfigura desde cero en Ubuntu:
-
 ```bash
 rm -rf build-release
 cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
@@ -345,12 +305,10 @@ cmake --build build-release -j"$(nproc)"
 ```
 
 Errores comunes:
-
 - `CMakeCache.txt directory is different`: elimina `build-release` y vuelve a configurar.
 - `Could NOT find wxWidgets`: instala los paquetes de desarrollo de wxWidgets (`libwxgtk3.2-dev`).
 
 #### Windows
-
 ```powershell
 cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build-release --config Release
@@ -358,7 +316,6 @@ cmake --build build-release --config Release
 ```
 
 ### Empaquetado manual
-
 Comando recomendado para generar un paquete local portable:
 
 ```bash
@@ -367,26 +324,22 @@ cmake --build build-release --config Release --target package
 ```
 
 Esto genera artefactos dentro de `dist/` usando un formato portable y estable por plataforma:
-
 - macOS: `.zip`
 - Windows: `.zip`
 - Linux: `.tar.gz`
 
 Si necesitas un instalador nativo en vez del paquete portable, reconfigura con:
-
 ```bash
 cmake -S . -B build-release -DBATVIEW_ENABLE_WX=ON -DCMAKE_BUILD_TYPE=Release -DBATVIEW_PACKAGE_FORMAT=NATIVE
 cmake --build build-release --config Release --target package
 ```
 
 Notas:
-
 - En macOS, el formato nativo usa `DragNDrop` (`.dmg`) y puede fallar en algunos entornos locales.
 - En Linux, el formato nativo intenta generar un `.deb`.
 - En Windows, el formato nativo intenta generar un instalador `NSIS`.
 
 ### Suite de tests
-
 ```bash
 cmake -S . -B build-tests -DBATVIEW_BUILD_TESTS=ON
 cmake --build build-tests --config Release
@@ -394,36 +347,16 @@ ctest --test-dir build-tests --output-on-failure
 ```
 
 ## Artefactos
-
 - El paquete generado queda fuera del directorio de build, en `dist/`.
 
 ## Ejemplos para ESP32
-
 - [examples/arduino/esp32_batview_test](./examples/arduino/esp32_batview_test/README.md)
 - [examples/platformio/esp32_batview_test](./examples/platformio/esp32_batview_test/README.md)
 
 ## Documentación
-
 - [docs/PROJECT_DOCUMENTATION.md](./docs/PROJECT_DOCUMENTATION.md)
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
-- [docs/DOWNLOAD_AND_INSTALL.md](./docs/DOWNLOAD_AND_INSTALL.md)
-- [docs/DOWNLOAD_WINDOWS.md](./docs/DOWNLOAD_WINDOWS.md)
-- [docs/DOWNLOAD_MACOS.md](./docs/DOWNLOAD_MACOS.md)
-- [docs/DOWNLOAD_LINUX.md](./docs/DOWNLOAD_LINUX.md)
+- [docs/BUILD_INSTALLER.md](./docs/BUILD_INSTALLER.md)
 
 ## Estado del proyecto
-
 El proyecto ya cuenta con una base funcional sólida para pruebas reales con ESP32.
-
-Mejoras ya incorporadas:
-
-- Gráficas reales renderizadas desde la app.
-- Mayor cobertura de pruebas para exportación y plots.
-- Exportación de sesión y de gráficos a MAT/XLSX.
-- Empaquetado distribuible en `dist/` con artefactos por plataforma.
-
-Áreas que todavía pueden crecer:
-
-- Firma/certificación de instaladores por plataforma.
-- Detección y empaquetado automático del runtime Python embebido para XLSX en distribuciones finales.
-- Más pruebas de integración con hardware real.

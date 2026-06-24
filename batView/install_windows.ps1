@@ -76,6 +76,48 @@ function Install-VcpkgWxWidgets {
     $env:BATVIEW_CMAKE_TOOLCHAIN_FILE = Join-Path $vcpkgRoot "scripts\buildsystems\vcpkg.cmake"
 }
 
+function Get-PythonExecutable {
+    param(
+        [string]$Program,
+        [string[]]$Arguments = @()
+    )
+
+    try {
+        $pythonPath = & $Program @Arguments -c "import sys; print(sys.executable)" 2>$null
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($pythonPath)) {
+            return $pythonPath.Trim()
+        }
+    } catch {
+        return $null
+    }
+
+    return $null
+}
+
+function Get-EmbeddingPython {
+    $pythonPath = Get-PythonExecutable -Program "py" -Arguments @("-3.13")
+    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
+        return $pythonPath
+    }
+
+    $pythonPath = Get-PythonExecutable -Program "python"
+    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
+        return $pythonPath
+    }
+
+    $pythonPath = Get-PythonExecutable -Program "py" -Arguments @("-3.12")
+    if (-not [string]::IsNullOrWhiteSpace($pythonPath)) {
+        return $pythonPath
+    }
+
+    $localPython313 = Join-Path $env:LOCALAPPDATA "Programs\Python\Python313\python.exe"
+    if (Test-Path $localPython313) {
+        return $localPython313
+    }
+
+    throw "No se encontro Python para compilar. Verifica que `py -3.13` o `python` funcionen."
+}
+
 Write-Host "batView Windows setup"
 
 if (-not $SkipDeps) {
@@ -86,6 +128,11 @@ if (-not $SkipDeps) {
 }
 
 $buildArgs = @()
+$embeddingPython = Get-EmbeddingPython
+Write-Host "Python embebido: $embeddingPython"
+$buildArgs += "--python"
+$buildArgs += $embeddingPython
+
 if ($NoRun) {
     $buildArgs += "--no-run"
 }
