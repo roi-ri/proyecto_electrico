@@ -24,6 +24,35 @@ function Get-DefaultVcpkgTriplet {
     return "x64-windows"
 }
 
+function Get-VisualStudioInstallerPath {
+    $installerPath = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vs_installer.exe"
+    if (Test-Path $installerPath) {
+        return $installerPath
+    }
+
+    throw "Visual Studio Installer was not found. Reinstall Visual Studio 2022 Build Tools."
+}
+
+function Get-VisualStudioBuildToolsPath {
+    $vswherePath = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+    if (Test-Path $vswherePath) {
+        $installPath = & $vswherePath `
+            -products Microsoft.VisualStudio.Product.BuildTools `
+            -latest `
+            -property installationPath
+        if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($installPath)) {
+            return $installPath.Trim()
+        }
+    }
+
+    $defaultPath = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\2022\BuildTools"
+    if (Test-Path $defaultPath) {
+        return $defaultPath
+    }
+
+    throw "Visual Studio 2022 Build Tools was not found."
+}
+
 function Install-WingetPackage {
     param(
         [string]$Id,
@@ -59,18 +88,48 @@ function Install-WingetPackage {
 }
 
 function Install-Dependencies {
-    $vsOverrideArgs = "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
-    if ($script:BatViewVcpkgTriplet -eq "arm64-windows") {
-        $vsOverrideArgs += " --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
-    }
-
     Install-WingetPackage -Id "Git.Git" -Name "Git"
     Install-WingetPackage -Id "Kitware.CMake" -Name "CMake"
     Install-WingetPackage -Id "Python.Python.3.13" -Name "Python 3"
     Install-WingetPackage `
         -Id "Microsoft.VisualStudio.2022.BuildTools" `
         -Name "Visual Studio Build Tools" `
-        -ExtraArgs @("--override", $vsOverrideArgs)
+        -ExtraArgs @("--override", "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+
+    Ensure-VisualStudioBuildTools
+}
+
+function Ensure-VisualStudioBuildTools {
+    $components = @("Microsoft.VisualStudio.Workload.VCTools")
+    if ($script:BatViewVcpkgTriplet -eq "arm64-windows") {
+        $components += "Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+    }
+
+    $installerPath = Get-VisualStudioInstallerPath
+    $installPath = Get-VisualStudioBuildToolsPath
+    $modifyArgs = @(
+        "modify",
+        "--installPath", $installPath,
+        "--quiet",
+        "--wait",
+        "--norestart",
+        "--includeRecommended"
+    )
+
+    foreach ($component in $components) {
+        $modifyArgs += "--add"
+        $modifyArgs += $component
+    }
+
+    Write-Host "Ensuring Visual Studio Build Tools components for $script:BatViewVcpkgTriplet..."
+    & $installerPath @modifyArgs
+    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010) {
+        throw "Could not update Visual Studio Build Tools components. Open Visual Studio Installer and add Desktop development with C++ plus ARM64 build tools if needed."
+    }
+
+    if ($LASTEXITCODE -eq 3010) {
+        Write-Host "Visual Studio Build Tools requested a restart. Restart Windows if the next build step still cannot find the toolchain."
+    }
 }
 
 function Install-VcpkgWxWidgets {

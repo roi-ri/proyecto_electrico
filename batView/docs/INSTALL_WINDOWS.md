@@ -138,7 +138,9 @@ The script installs or prepares:
 7. batView itself.
 
 On ARM64 Windows, the installer uses `arm64-windows` instead of `x64-windows`
-and asks Visual Studio Build Tools for the ARM64 C++ tools.
+and asks Visual Studio Build Tools for the ARM64 C++ tools. If Visual Studio
+Build Tools is already installed, the script updates that installation instead
+of assuming it already has every required architecture component.
 
 This step can take a while the first time because Visual Studio Build Tools,
 wxWidgets, and the C++ build are large.
@@ -242,8 +244,10 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
 - `Unable to find a valid toolchain for requested target architecture arm64`:
   update the repo with `git pull`, remove the partial `tools` folder with
   `Remove-Item -Recurse -Force .\tools`, and run the installer again. The
-  current installer adds the Visual Studio ARM64 C++ tools and uses the
-  `arm64-windows` triplet automatically on ARM64 Windows.
+  current installer updates Visual Studio Build Tools with the ARM64 C++ tools
+  and uses the `arm64-windows` triplet automatically on ARM64 Windows.
+  If Visual Studio asks for a restart, restart Windows and run the installer
+  again.
 - `git` is not recognized after installing it: close PowerShell and open a new
   PowerShell window. If it still fails, add `C:\Program Files\Git\cmd` to your
   user `Path` environment variable, then reopen PowerShell.
