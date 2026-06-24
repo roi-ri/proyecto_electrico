@@ -18,7 +18,7 @@ function Test-Command {
 
 function Get-DefaultVcpkgTriplet {
     if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
-        return "arm64-windows"
+        return "x64-windows"
     }
 
     return "x64-windows"
@@ -233,6 +233,9 @@ if ([string]::IsNullOrWhiteSpace($script:BatViewVcpkgTriplet)) {
     $script:BatViewVcpkgTriplet = Get-DefaultVcpkgTriplet
 }
 Write-Host "vcpkg triplet: $script:BatViewVcpkgTriplet"
+if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64" -and $script:BatViewVcpkgTriplet -eq "x64-windows") {
+    Write-Host "ARM64 Windows detected. Building x64 by default because it runs under Windows emulation and is supported by standard Build Tools."
+}
 
 if ($Uninstall) {
     Uninstall-BatView

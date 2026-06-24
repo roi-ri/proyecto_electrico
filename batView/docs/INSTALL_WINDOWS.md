@@ -137,10 +137,10 @@ The script installs or prepares:
 6. `wxWidgets` for the detected Windows architecture through `vcpkg`.
 7. batView itself.
 
-On ARM64 Windows, the installer uses `arm64-windows` instead of `x64-windows`
-and asks Visual Studio Build Tools for the ARM64 C++ tools. If Visual Studio
-Build Tools is already installed, the script updates that installation instead
-of assuming it already has every required architecture component.
+On ARM64 Windows, the installer detects the ARM64 machine but uses
+`x64-windows` by default. Windows ARM can run x64 apps through emulation, and
+this avoids requiring a native ARM64 Visual Studio toolchain. If you explicitly
+need a native ARM64 build, use `-Triplet arm64-windows`.
 
 This step can take a while the first time because Visual Studio Build Tools,
 wxWidgets, and the C++ build are large.
@@ -200,7 +200,8 @@ To skip dependencies and also avoid opening the app:
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -SkipDeps -NoRun
 ```
 
-To force a specific vcpkg target architecture, use `-Triplet`:
+To force a specific vcpkg target architecture, use `-Triplet`. The default is
+`x64-windows`, including on Windows ARM:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install_windows.ps1 -Triplet arm64-windows
@@ -242,12 +243,10 @@ This does not remove Visual Studio Build Tools, CMake, Python, Git, or
   with `Remove-Item -Recurse -Force .\tools`, and run
   `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` again.
 - `Unable to find a valid toolchain for requested target architecture arm64`:
-  update the repo with `git pull`, remove the partial `tools` folder with
-  `Remove-Item -Recurse -Force .\tools`, and run the installer again. The
-  current installer updates Visual Studio Build Tools with the ARM64 C++ tools
-  and uses the `arm64-windows` triplet automatically on ARM64 Windows.
-  If Visual Studio asks for a restart, restart Windows and run the installer
-  again.
+  use the default `x64-windows` build instead of forcing `arm64-windows`.
+  Run `git pull`, remove the partial `tools` folder with
+  `Remove-Item -Recurse -Force .\tools`, and run
+  `powershell -ExecutionPolicy Bypass -File .\install_windows.ps1` again.
 - `git` is not recognized after installing it: close PowerShell and open a new
   PowerShell window. If it still fails, add `C:\Program Files\Git\cmd` to your
   user `Path` environment variable, then reopen PowerShell.
