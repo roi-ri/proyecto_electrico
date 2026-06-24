@@ -2,7 +2,9 @@ param(
     [switch]$NoRun,
     [switch]$SkipDeps,
     [switch]$NoVcpkg,
-    [switch]$Uninstall
+    [switch]$Uninstall,
+    [ValidateSet("x64-windows", "arm64-windows")]
+    [string]$Triplet
 )
 
 $ErrorActionPreference = "Stop"
@@ -12,6 +14,14 @@ $vcpkgRoot = Join-Path $scriptDir "tools\vcpkg"
 function Test-Command {
     param([string]$Name)
     return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
+}
+
+function Get-DefaultVcpkgTriplet {
+    if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+        return "arm64-windows"
+    }
+
+    return "x64-windows"
 }
 
 function Install-WingetPackage {
@@ -49,13 +59,18 @@ function Install-WingetPackage {
 }
 
 function Install-Dependencies {
+    $vsOverrideArgs = "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+    if ($script:BatViewVcpkgTriplet -eq "arm64-windows") {
+        $vsOverrideArgs += " --add Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+    }
+
     Install-WingetPackage -Id "Git.Git" -Name "Git"
     Install-WingetPackage -Id "Kitware.CMake" -Name "CMake"
     Install-WingetPackage -Id "Python.Python.3.13" -Name "Python 3"
     Install-WingetPackage `
         -Id "Microsoft.VisualStudio.2022.BuildTools" `
         -Name "Visual Studio Build Tools" `
-        -ExtraArgs @("--override", "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended")
+        -ExtraArgs @("--override", $vsOverrideArgs)
 }
 
 function Install-VcpkgWxWidgets {
@@ -81,12 +96,14 @@ function Install-VcpkgWxWidgets {
         throw "Could not bootstrap vcpkg."
     }
 
-    & (Join-Path $vcpkgRoot "vcpkg.exe") install wxwidgets:x64-windows
+    & (Join-Path $vcpkgRoot "vcpkg.exe") install "wxwidgets:$script:BatViewVcpkgTriplet"
     if ($LASTEXITCODE -ne 0) {
-        throw "Could not install wxWidgets with vcpkg. Make sure Visual Studio 2022 Build Tools with the C++ workload is installed."
+        throw "Could not install wxWidgets with vcpkg for $script:BatViewVcpkgTriplet. Make sure Visual Studio 2022 Build Tools has the C++ workload and the matching architecture tools installed."
     }
 
     $env:VCPKG_ROOT = $vcpkgRoot
+    $env:VCPKG_DEFAULT_TRIPLET = $script:BatViewVcpkgTriplet
+    $env:VCPKG_TARGET_TRIPLET = $script:BatViewVcpkgTriplet
     $env:BATVIEW_CMAKE_TOOLCHAIN_FILE = Join-Path $vcpkgRoot "scripts\buildsystems\vcpkg.cmake"
 }
 
@@ -151,6 +168,12 @@ function Uninstall-BatView {
 }
 
 Write-Host "batView Windows setup"
+
+$script:BatViewVcpkgTriplet = $Triplet
+if ([string]::IsNullOrWhiteSpace($script:BatViewVcpkgTriplet)) {
+    $script:BatViewVcpkgTriplet = Get-DefaultVcpkgTriplet
+}
+Write-Host "vcpkg triplet: $script:BatViewVcpkgTriplet"
 
 if ($Uninstall) {
     Uninstall-BatView
