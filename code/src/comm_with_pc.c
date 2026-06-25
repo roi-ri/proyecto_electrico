@@ -38,6 +38,7 @@ void inicializar_uart(uart_port_t uart_num, QueueHandle_t *uart_queue){
 void enviar_datos_pc(uart_port_t uart_num, const char *message) {
     
     uart_write_bytes(uart_num, message, strlen(message));
+    uart_wait_tx_done(uart_num, pdMS_TO_TICKS(1000));
 }
 
 int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, uint32_t timeout_ms)
@@ -49,16 +50,18 @@ int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, 
         return -1;
     }
 
-    TickType_t start = xTaskGetTickCount();
+    TickType_t last_activity = xTaskGetTickCount();
     TickType_t timeout_ticks = pdMS_TO_TICKS(timeout_ms);
 
-    while ((xTaskGetTickCount() - start) <= timeout_ticks) {
+    while ((xTaskGetTickCount() - last_activity) <= timeout_ticks) {
         uint8_t byte = 0;
         int length = uart_read_bytes(uart_num, &byte, 1, pdMS_TO_TICKS(20));
 
         if (length <= 0) {
             continue;
         }
+
+        last_activity = xTaskGetTickCount();
 
         if (byte == '\n') {
             size_t copy_len = pending_len;
@@ -77,6 +80,20 @@ int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, 
             continue;
         }
 
+        if (byte == '#' && pending_len > 0) {
+            size_t copy_len = pending_len;
+
+            if (copy_len >= buffer_size) {
+                copy_len = buffer_size - 1;
+            }
+
+            memcpy(buffer, pending, copy_len);
+            buffer[copy_len] = '\0';
+            pending[0] = byte;
+            pending_len = 1;
+            return (int)copy_len;
+        }
+
         if (pending_len < sizeof(pending) - 1) {
             pending[pending_len++] = byte;
         } else {
@@ -84,6 +101,19 @@ int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, 
             buffer[0] = '\0';
             return -1;
         }
+    }
+
+    if (pending_len > 0) {
+        size_t copy_len = pending_len;
+
+        if (copy_len >= buffer_size) {
+            copy_len = buffer_size - 1;
+        }
+
+        memcpy(buffer, pending, copy_len);
+        buffer[copy_len] = '\0';
+        pending_len = 0;
+        return (int)copy_len;
     }
 
     buffer[0] = '\0';
@@ -112,12 +142,17 @@ int dividir_trama(char *linea, char *campos[], int max_campos)
 //función para confirmar la conexión con la PC
 
 int connection_ready(uart_port_t uart_num, uint8_t data_receiv[128]) {
+    static int connection_ack_sent = 0;
 
     int length = recibir_linea_pc(uart_num, data_receiv, 128, 100);
 
     if (length > 0) {
         if (strcmp((char *)data_receiv, "#CONNECTION") == 0) {
-            enviar_datos_pc(uart_num, "#ACK,CONNECTION\n");
+            if (!connection_ack_sent) {
+                enviar_datos_pc(uart_num, "#ACK,CONNECTION\n");
+                connection_ack_sent = 1;
+            }
+
             memset(data_receiv, 0, 128);
             return 1;
         }
