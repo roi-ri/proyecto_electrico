@@ -16,6 +16,7 @@ void app_main(void)
     uint8_t data_receiv[128];
     char *datos[8] = {NULL};
     int conectado = 0;
+    TickType_t last_connection_ack = 0;
 
     esp_log_level_set("*", ESP_LOG_NONE);
     inicializar_uart(UART_NUM_0, &uart_queue);
@@ -32,15 +33,24 @@ void app_main(void)
             continue;
         }
 
-        int count = dividir_trama((char *)data_receiv, datos, 8);
+        if (strstr((char *)data_receiv, "#STOP") != NULL) {
+            stop_function(UART_NUM_0);
+        } else if (strstr((char *)data_receiv, "#CONNECTION") != NULL) {
+            TickType_t now = xTaskGetTickCount();
 
-        if (count > 0 && strcmp(datos[0], "#CONNECTION") == 0) {
-            conectado = 1;
+            if (!conectado ||
+                last_connection_ack == 0 ||
+                (now - last_connection_ack) >= pdMS_TO_TICKS(1000)) {
+                enviar_datos_pc(UART_NUM_0, "#ACK,CONNECTION\n");
+                last_connection_ack = now;
+            }
+
             xEventGroupClearBits(control_events, STOP_BIT | WORK_BIT);
-            enviar_datos_pc(UART_NUM_0, "#ACK,CONNECTION\n");
+            conectado = 1;
         } else if (!conectado) {
             enviar_datos_pc(UART_NUM_0, "#ERROR,NOT_READY,Conexion no establecida\n");
         } else {
+            int count = dividir_trama((char *)data_receiv, datos, 8);
             process_protocol_command(UART_NUM_0, datos, count);
         }
 
