@@ -1,13 +1,13 @@
 // Se incluyen los header files necesarios:
-#include "stop_charge.h"
+#include "stop_load.h"
 #include "driver/dac_oneshot.h"
 #include "esp_log.h"
 
 // Etiqueta para logging:
-static const char *TAG = "STOP_CHARGE";
+static const char *TAG = "STOP_LOAD";
 
 // Se implementa la función:
-void stop_charge(void)
+void stop_load(void)
 {
     // Handle del DAC:
     dac_oneshot_handle_t dac_handle;
