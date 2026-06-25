@@ -1,74 +1,51 @@
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
+
 #include "comm_with_pc.h"
-#include "esp_adc/adc_oneshot.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
-#include "hal/adc_types.h"
+#include "driver/uart.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/event_groups.h"
+#include "freertos/task.h"
 #include "hal/uart_types.h"
-#include "receive.h"
 #include "main_functions.h"
-#include "battery_controller.h"
 
 void app_main(void)
 {
     QueueHandle_t uart_queue;
+    uint8_t data_receiv[128];
+    char *datos[8] = {NULL};
+    int conectado = 0;
+
     esp_log_level_set("*", ESP_LOG_NONE);
     inicializar_uart(UART_NUM_0, &uart_queue);
-    uint8_t data_receiv[128];
-    char *datos[128] = {NULL};
-    int aprov = 0;
-    int conectado = 0;
+
     control_events = xEventGroupCreate();
     configASSERT(control_events != NULL);
+    xTaskCreate(stop_listener_task, "stop_listener", 2048, (void *)(intptr_t)UART_NUM_0, 5, NULL);
 
     while (1) {
+        int length = recibir_linea_pc(UART_NUM_0, data_receiv, sizeof(data_receiv), 100);
 
-        if (!conectado) {
-            if (connection_ready(UART_NUM_0, data_receiv) == 1) {
-                conectado = 1; 
-            }
-        }
-        else {
-            recibir_datos_pc(UART_NUM_0, 4, datos, data_receiv, "#ACK,DATA\n");
-
-            if (datos[0] != NULL &&
-                datos[1] != NULL &&
-                datos[2] != NULL &&
-                datos[3] != NULL) {
-
-                if (strcmp(datos[0], "#DATA") == 0) {
-
-                    int bateria_seleccionada = atoi(datos[1]);
-                    int tipo_bateria = atoi(datos[2]);
-                    int funcionalidad = atoi(datos[3]);
-                    datos[0] = NULL;
-                    datos[1] = NULL;
-                    datos[3] = NULL;
-                    datos[4] = NULL;
-
-                    if (bateria_seleccionada) {
-
-                        switch (funcionalidad) {
-                            case 1: load_function(UART_NUM_0, datos, data_receiv, 25); aprov = 1;   break;
-                            case 2: unload_function(UART_NUM_0, datos, data_receiv, 26); aprov = 1; break;
-                            case 3: cicle_function(UART_NUM_0, datos, data_receiv); aprov = 1; break;
-                            case 4: stop_function(UART_NUM_0, datos, data_receiv);  aprov = 1; break;
-                            default: enviar_datos_pc(UART_NUM_0, "Funcionalidad no válida\n"); break;
-                        }
-                    }
-                }
-            }
+        if (length <= 0) {
+            vTaskDelay(pdMS_TO_TICKS(50));
+            continue;
         }
 
-        if (aprov) {
-            enviar_datos_pc(UART_NUM_0, "#INFO: Prueba finalizada\n");
-            break;
+        int count = dividir_trama((char *)data_receiv, datos, 8);
+
+        if (count > 0 && strcmp(datos[0], "#CONNECTION") == 0) {
+            conectado = 1;
+            xEventGroupClearBits(control_events, STOP_BIT | WORK_BIT);
+            enviar_datos_pc(UART_NUM_0, "#ACK,CONNECTION\n");
+        } else if (!conectado) {
+            enviar_datos_pc(UART_NUM_0, "#ERROR,NOT_READY,Conexion no establecida\n");
+        } else {
+            process_protocol_command(UART_NUM_0, datos, count);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(100));
+        memset(data_receiv, 0, sizeof(data_receiv));
+        memset(datos, 0, sizeof(datos));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
