@@ -1,57 +1,86 @@
 #include "main_functions.h"
 #include "comm_with_pc.h"
 #include "battery_controller.h"
- 
-#include <stdio.h>
-#include <string.h>
+
+#include <stdbool.h>
 #include <stdlib.h>
- 
+#include <string.h>
+
+#include "driver/uart.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
-#include "driver/uart.h"
 
-/* 
- * Encargado de realizar tareas paralelas
- */
 EventGroupHandle_t control_events = NULL;
 
+typedef struct {
+    char name[32];
+    float vmax;
+    float vmin;
+    float amax;
+    bool configured;
+} battery_profile_t;
 
-/* Task que corre en paralelo escuchando únicamente #STOP */
+static battery_profile_t battery_profile = {0};
+
+static bool parse_int_range(const char *text, int min, int max, int *value)
+{
+    char *endptr = NULL;
+    long parsed = 0;
+
+    if (text == NULL || *text == '\0') {
+        return false;
+    }
+
+    parsed = strtol(text, &endptr, 10);
+    if (*endptr != '\0' || parsed < min || parsed > max) {
+        return false;
+    }
+
+    *value = (int)parsed;
+    return true;
+}
+
+static bool parse_positive_float(const char *text, float *value)
+{
+    char *endptr = NULL;
+    float parsed = 0.0f;
+
+    if (text == NULL || *text == '\0') {
+        return false;
+    }
+
+    parsed = strtof(text, &endptr);
+    if (*endptr != '\0' || parsed <= 0.0f) {
+        return false;
+    }
+
+    *value = parsed;
+    return true;
+}
+
+static void send_invalid_value(uart_port_t uart_num, const char *message)
+{
+    enviar_datos_pc(uart_num, "#ERROR,INVALID_VALUE,");
+    enviar_datos_pc(uart_num, message);
+    enviar_datos_pc(uart_num, "\n");
+}
+
 void stop_listener_task(void *pvParameters)
 {
     uart_port_t uart_num = (uart_port_t)(intptr_t)pvParameters;
     uint8_t buf[128];
 
     while (1) {
-
         EventBits_t bits = xEventGroupGetBits(control_events);
 
-        /*
-         * Solo escucha STOP si hay una operación activa.
-         * Esto evita que consuma datos del UART cuando no hay trabajo.
-         */
         if (bits & WORK_BIT) {
+            int len = recibir_linea_pc(uart_num, buf, sizeof(buf), 50);
 
-            int len = uart_read_bytes(
-                uart_num,
-                buf,
-                sizeof(buf) - 1,
-                pdMS_TO_TICKS(50)
-            );
-
-            if (len > 0) {
-                buf[len] = '\0';
-
-                /* Eliminar saltos de línea finales: \r o \n */
-                while (len > 0 &&
-                      (buf[len - 1] == '\n' || buf[len - 1] == '\r')) {
-                    buf[--len] = '\0';
-                }
-
-                if (strcmp((char *)buf, "#STOP") == 0) {
-                    xEventGroupSetBits(control_events, STOP_BIT);
-                }
+            if (len > 0 && strcmp((char *)buf, "#CONNECTION") == 0) {
+                enviar_datos_pc(uart_num, "#ACK,CONNECTION\n");
+            } else if (len > 0 && strcmp((char *)buf, "#STOP") == 0) {
+                xEventGroupSetBits(control_events, STOP_BIT);
             }
         }
 
@@ -59,219 +88,174 @@ void stop_listener_task(void *pvParameters)
     }
 }
 
-
 int check_stop_requested(uart_port_t uart_num)
 {
     EventBits_t bits = xEventGroupGetBits(control_events);
 
     if (bits & STOP_BIT) {
-
         enviar_datos_pc(uart_num, "#ACK,STOP\n");
-
-        /*
-         * Como load/unload/cicle hacen return al detectar STOP,
-         * se limpian ambos bits aquí.
-         */
+        enviar_datos_pc(uart_num, "#STATUS,STOPPED,USER_STOP\n");
         xEventGroupClearBits(control_events, STOP_BIT | WORK_BIT);
-
         return 1;
     }
 
     return 0;
 }
 
-/* 
- *  load_function se recibe #LOAD,<0-100>
- */
-void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num) {
- 
-    char message[128];
- 
-    recibir_datos_pc(uart_num, 2, datos, data_receiv, "#ACK,LOAD\n");
- 
-    if (datos[0] != NULL && datos[1] != NULL) {
- 
-        if (strcmp(datos[0], "#LOAD") == 0) {
- 
-            int carga = atoi(datos[1]);
+void battery_profile_function(uart_port_t uart_num, char *datos[], int count)
+{
+    float vmax = 0.0f;
+    float vmin = 0.0f;
+    float amax = 0.0f;
 
-            snprintf(message, sizeof(message),
-                     "Se desea cargar la batería a un: %d %%\n", carga);
-            enviar_datos_pc(uart_num, message);
-
-            /*
-             * Se habilita el listener de STOP.
-             */
-            xEventGroupClearBits(control_events, STOP_BIT);
-            xEventGroupSetBits(control_events, WORK_BIT);
-
-            //arreglar esto que vaya dentro del WHILE de las de battery_controller
-            /*
-                if(check_stop_requested(uart_num)) {
-                    //apagar todas las salidas
-                    return;
-                } */ 
-
-                battery_controller(25, carga, 0);
-                vTaskDelay(pdMS_TO_TICKS(100));
-            
- 
-            enviar_datos_pc(uart_num, "Carga completada\n");
- 
-        } else {
-            enviar_datos_pc(uart_num, "#ERROR: Se esperaba #LOAD\n");
-        }
- 
-    } else {
-        enviar_datos_pc(uart_num, "#ERROR: Datos LOAD incompletos\n");
-
+    if (count != 5) {
+        enviar_datos_pc(uart_num, "#ERROR,INVALID_VALUE,Datos Battery incompletos\n");
+        return;
     }
- 
+
+    if (strlen(datos[1]) == 0 || strlen(datos[1]) >= sizeof(battery_profile.name)) {
+        send_invalid_value(uart_num, "Nombre de bateria invalido");
+        return;
+    }
+
+    if (!parse_positive_float(datos[2], &vmax) ||
+        !parse_positive_float(datos[3], &vmin) ||
+        !parse_positive_float(datos[4], &amax) ||
+        vmin >= vmax) {
+        send_invalid_value(uart_num, "Perfil de bateria invalido");
+        return;
+    }
+
+    strncpy(battery_profile.name, datos[1], sizeof(battery_profile.name) - 1);
+    battery_profile.name[sizeof(battery_profile.name) - 1] = '\0';
+    battery_profile.vmax = vmax;
+    battery_profile.vmin = vmin;
+    battery_profile.amax = amax;
+    battery_profile.configured = true;
+
+    enviar_datos_pc(uart_num, "#ACK,Battery\n");
+}
+
+void load_function(uart_port_t uart_num, char *datos[], int count)
+{
+    int target_percent = 0;
+
+    if (count != 2 || !parse_int_range(datos[1], 0, 100, &target_percent)) {
+        send_invalid_value(uart_num, "Porcentaje fuera de rango");
+        return;
+    }
+
+    if (!battery_profile.configured) {
+        enviar_datos_pc(uart_num, "#ERROR,NOT_READY,Perfil de bateria no configurado\n");
+        return;
+    }
+
+    enviar_datos_pc(uart_num, "#ACK,LOAD\n");
+    enviar_datos_pc(uart_num, "#STATUS,CHARGING,PROCESS_ACTIVE\n");
+
+    xEventGroupClearBits(control_events, STOP_BIT);
+    xEventGroupSetBits(control_events, WORK_BIT);
+    int completed = battery_controller(uart_num, 25, target_percent, 0,
+                                       battery_profile.vmax, battery_profile.vmin,
+                                       battery_profile.amax);
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT);
-}
-/* 
- *  unload_function, se recibe #UNLOAD,<0-100>
- */
-void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num) {
- 
-    char message[128];
- 
-    recibir_datos_pc(uart_num, 2, datos, data_receiv, "#ACK,UNLOAD\n");
- 
-    if (datos[0] != NULL && datos[1] != NULL) {
- 
-        if (strcmp(datos[0], "#UNLOAD") == 0) {
- 
-            int descarga = atoi(datos[1]);
 
-            snprintf(message, sizeof(message),
-                     "Se desea descargar la bateria a un: %d %%\n", descarga);
-            enviar_datos_pc(uart_num, message);
-
-            /*
-             * Ya se recibieron los parámetros.
-             * Desde aquí puede escucharse #STOP en paralelo.
-             */
-            xEventGroupClearBits(control_events, STOP_BIT);
-            xEventGroupSetBits(control_events, WORK_BIT);
-            //colocar esto dentro del WHILE del battery_controller
-            /*
-                if(check_stop_requested(uart_num)) {
-                    //apagar todas las salidas
-                    return;
-                }
-                    */
- 
-                //lógica de descarga
-                battery_controller(26, descarga, 0);
- 
-                vTaskDelay(pdMS_TO_TICKS(100));
-            
- 
-            enviar_datos_pc(uart_num, "Descarga completada\n");
- 
-        } else {
-            enviar_datos_pc(uart_num, "#ERROR: Se esperaba #UNLOAD\n");
-        }
- 
-    } else {
-        enviar_datos_pc(uart_num, "#ERROR: Datos UNLOAD incompletos\n");
+    if (completed) {
+        enviar_datos_pc(uart_num, "#STATUS,FINISHED,LOAD_COMPLETE\n");
     }
- 
+}
+
+void unload_function(uart_port_t uart_num, char *datos[], int count)
+{
+    int target_percent = 0;
+
+    if (count != 2 || !parse_int_range(datos[1], 0, 100, &target_percent)) {
+        send_invalid_value(uart_num, "Porcentaje fuera de rango");
+        return;
+    }
+
+    if (!battery_profile.configured) {
+        enviar_datos_pc(uart_num, "#ERROR,NOT_READY,Perfil de bateria no configurado\n");
+        return;
+    }
+
+    enviar_datos_pc(uart_num, "#ACK,UNLOAD\n");
+    enviar_datos_pc(uart_num, "#STATUS,DISCHARGING,PROCESS_ACTIVE\n");
+
+    xEventGroupClearBits(control_events, STOP_BIT);
+    xEventGroupSetBits(control_events, WORK_BIT);
+    int completed = battery_controller(uart_num, 26, target_percent, 0,
+                                       battery_profile.vmax, battery_profile.vmin,
+                                       battery_profile.amax);
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT);
-}
- 
-/*
- *  cicle_function se recibe #CICLE,0,0  o  #CICLE,1,<n>
- */
-void cicle_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]) {
- 
-    char message[128];
- 
-    recibir_datos_pc(uart_num, 3, datos, data_receiv, "#ACK,CICLE\n");
- 
-    if (datos[0] != NULL && datos[1] != NULL && datos[2] != NULL) {
- 
-        if (strcmp(datos[0], "#CICLE") == 0) {
- 
-            int modo     = atoi(datos[1]);
-            int n_ciclos = atoi(datos[2]);
-            int ciclo    = 0;
- 
-            if (modo == 0) {
-                enviar_datos_pc(uart_num, "Ciclado infinito configurado\n");
-            } else {
-                snprintf(message, sizeof(message),
-                         "Ciclado finito configurado: %d ciclos\n", n_ciclos);
-                enviar_datos_pc(uart_num, message);
-            }
 
-            /*
-             * Ya se recibió #CICLE,modo,n_ciclos.
-             * Desde aquí empieza el trabajo real.
-             */
-            xEventGroupClearBits(control_events, STOP_BIT);
-            xEventGroupSetBits(control_events, WORK_BIT);
- 
-            while (modo == 0 || ciclo < n_ciclos) {
- 
-               if (check_stop_requested(uart_num)) {
-                
-                    //apagar todo
-                    return;
-                }
-
-                /*
-                * lógica de carga del ciclo
-                */
-
-                if (check_stop_requested(uart_num)) {
-                    //apagar todo
-                    return;
-                }
-
-                /*
-                * lógica de descarga del ciclo
-                */
-
-                ciclo++;
-
-                vTaskDelay(pdMS_TO_TICKS(100));
-            }
- 
-            enviar_datos_pc(uart_num, "Ciclado completado\n");
- 
-        } else {
-            enviar_datos_pc(uart_num, "#ERROR: Se esperaba #CICLE\n");
-        }
- 
-    } else {
-        enviar_datos_pc(uart_num, "#ERROR: Datos CICLE incompletos\n");
+    if (completed) {
+        enviar_datos_pc(uart_num, "#STATUS,FINISHED,UNLOAD_COMPLETE\n");
     }
- 
+}
+
+void cicle_function(uart_port_t uart_num, char *datos[], int count)
+{
+    int mode = 0;
+    int cycle_count = 0;
+
+    if (count != 3 ||
+        !parse_int_range(datos[1], 0, 1, &mode) ||
+        !parse_int_range(datos[2], 0, 1000000, &cycle_count) ||
+        (mode == 0 && cycle_count != 0) ||
+        (mode == 1 && cycle_count <= 0)) {
+        send_invalid_value(uart_num, "Parametros CICLE invalidos");
+        return;
+    }
+
+    if (!battery_profile.configured) {
+        enviar_datos_pc(uart_num, "#ERROR,NOT_READY,Perfil de bateria no configurado\n");
+        return;
+    }
+
+    enviar_datos_pc(uart_num, "#ACK,CICLE\n");
+    enviar_datos_pc(uart_num, "#STATUS,CYCLING,PROCESS_ACTIVE\n");
+
+    xEventGroupClearBits(control_events, STOP_BIT);
+    xEventGroupSetBits(control_events, WORK_BIT);
+    int completed = battery_controller(uart_num, 0, 100, mode == 0 ? -1 : cycle_count,
+                                       battery_profile.vmax, battery_profile.vmin,
+                                       battery_profile.amax);
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT);
-}
- 
-/* 
- *  stop_function se recibe #STOP
- *  Solo setea STOP_BIT. El ACK lo manda la
- *  función de trabajo al detectar el bit.
- */
-void stop_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]) {
- 
-    recibir_datos_pc(uart_num, 1, datos, data_receiv, NULL);
- 
-    if (datos[0] != NULL) {
- 
-        if (strcmp(datos[0], "#STOP") == 0) {
-            xEventGroupSetBits(control_events, STOP_BIT);
- 
-        } else {
-            enviar_datos_pc(uart_num, "#ERROR: Se esperaba #STOP\n");
-        }
- 
-    } else {
-        enviar_datos_pc(uart_num, "#ERROR: Datos STOP incompletos\n");
+
+    if (completed) {
+        enviar_datos_pc(uart_num, "#STATUS,FINISHED,CYCLE_COMPLETE\n");
     }
 }
 
+void stop_function(uart_port_t uart_num)
+{
+    xEventGroupSetBits(control_events, STOP_BIT);
+    check_stop_requested(uart_num);
+}
+
+void process_protocol_command(uart_port_t uart_num, char *datos[], int count)
+{
+    if (count <= 0 || datos[0] == NULL || datos[0][0] != '#') {
+        enviar_datos_pc(uart_num, "#ERROR,INVALID_FRAME,Trama invalida\n");
+        return;
+    }
+
+    if (strcmp(datos[0], "#Battery") == 0) {
+        battery_profile_function(uart_num, datos, count);
+    } else if (strcmp(datos[0], "#LOAD") == 0) {
+        load_function(uart_num, datos, count);
+    } else if (strcmp(datos[0], "#UNLOAD") == 0) {
+        unload_function(uart_num, datos, count);
+    } else if (strcmp(datos[0], "#CICLE") == 0) {
+        cicle_function(uart_num, datos, count);
+    } else if (strcmp(datos[0], "#STOP") == 0) {
+        if (count == 1) {
+            stop_function(uart_num);
+        } else {
+            send_invalid_value(uart_num, "STOP no acepta parametros");
+        }
+    } else {
+        enviar_datos_pc(uart_num, "#ERROR,INVALID_COMMAND,Comando no reconocido\n");
+    }
+}
