@@ -5,11 +5,9 @@
 #include "comm_with_pc.h"
 #include "driver/uart.h"
 #include "esp_err.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
+#include "freertos/task.h"
 #include "hal/uart_types.h"
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 // función para inicializar el puerto uart
@@ -42,34 +40,91 @@ void enviar_datos_pc(uart_port_t uart_num, const char *message) {
     uart_write_bytes(uart_num, message, strlen(message));
 }
 
-//función para confirmar la conexión con la PC 
+int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, uint32_t timeout_ms)
+{
+    static uint8_t pending[128];
+    static size_t pending_len = 0;
 
-int connection_ready(uart_port_t uart_num, uint8_t data_receiv[128]) {
-    
-    size_t available = 0;
-    uart_get_buffered_data_len(uart_num, &available);
+    if (buffer == NULL || buffer_size == 0) {
+        return -1;
+    }
 
-    if (available == 0) {
+    TickType_t start = xTaskGetTickCount();
+    TickType_t timeout_ticks = pdMS_TO_TICKS(timeout_ms);
+
+    while ((xTaskGetTickCount() - start) <= timeout_ticks) {
+        uint8_t byte = 0;
+        int length = uart_read_bytes(uart_num, &byte, 1, pdMS_TO_TICKS(20));
+
+        if (length <= 0) {
+            continue;
+        }
+
+        if (byte == '\n') {
+            size_t copy_len = pending_len;
+
+            if (copy_len >= buffer_size) {
+                copy_len = buffer_size - 1;
+            }
+
+            memcpy(buffer, pending, copy_len);
+            buffer[copy_len] = '\0';
+            pending_len = 0;
+            return (int)copy_len;
+        }
+
+        if (byte == '\r') {
+            continue;
+        }
+
+        if (pending_len < sizeof(pending) - 1) {
+            pending[pending_len++] = byte;
+        } else {
+            pending_len = 0;
+            buffer[0] = '\0';
+            return -1;
+        }
+    }
+
+    buffer[0] = '\0';
+    return 0;
+}
+
+int dividir_trama(char *linea, char *campos[], int max_campos)
+{
+    int count = 0;
+    char *saveptr = NULL;
+    char *token = NULL;
+
+    if (linea == NULL || campos == NULL || max_campos <= 0) {
         return 0;
     }
 
-    int length = uart_read_bytes(uart_num, data_receiv, 127, pdMS_TO_TICKS(100)); //espera 100 milisegundos para recibir datos
+    token = strtok_r(linea, ",", &saveptr);
+    while (token != NULL && count < max_campos) {
+        campos[count++] = token;
+        token = strtok_r(NULL, ",", &saveptr);
+    }
+
+    return count;
+}
+
+//función para confirmar la conexión con la PC
+
+int connection_ready(uart_port_t uart_num, uint8_t data_receiv[128]) {
+
+    int length = recibir_linea_pc(uart_num, data_receiv, 128, 100);
 
     if (length > 0) {
-        data_receiv[length] = '\0';
-
-        if (length > 0 && (data_receiv[length - 1] == '\n' || data_receiv[length - 1] == '\r')) {
-            data_receiv[length - 1] = '\0';
-            length--;
-        }
         if (strcmp((char *)data_receiv, "#CONNECTION") == 0) {
             enviar_datos_pc(uart_num, "#ACK,CONNECTION\n");
             memset(data_receiv, 0, 128);
             return 1;
-        } else {
-            enviar_datos_pc(uart_num, "#ERROR:CODIGO INVALIDO\n");
         }
+
+        enviar_datos_pc(uart_num, "#ERROR,INVALID_COMMAND,Comando no reconocido\n");
     }
+
     memset(data_receiv, 0, 128);
     return 0;
 }
@@ -119,19 +174,15 @@ void recibir_datos_pc(uart_port_t uart_num, int SIZE, char *datos[128], uint8_t 
                 datos[4] = strtok(NULL, ","); // en caso de recibir más de lo esperado, guardar la basura aquí
                 break;
             default:
-                enviar_datos_pc(uart_num, "#ERROR: Caso no disponible\n");
+                enviar_datos_pc(uart_num, "#ERROR,INVALID_COMMAND,Caso no disponible\n");
                 return;
         }
 
-        // ACK solo si hay datos válidos y message no es NULL
-        if (message != NULL && datos[0] != NULL) {
-            vTaskDelay(pdMS_TO_TICKS(10)); // pequeño delay para que el TX esté listo
-            enviar_datos_pc(uart_num, message);
-        }
+        (void)message;
 
     } else if (length > 0) {
         // Llegaron datos pero sin terminador (\n o \r)
         uart_flush_input(uart_num);
-        enviar_datos_pc(uart_num, "#ERROR: Mensaje incompleto\n");
+        enviar_datos_pc(uart_num, "#ERROR,INVALID_FRAME,Mensaje incompleto\n");
     }
 }
