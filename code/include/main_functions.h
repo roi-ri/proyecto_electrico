@@ -10,6 +10,7 @@
 /* ── Bits del EventGroup ── */
 #define STOP_BIT  ( 1 << 0 )   /* Señal de parada        */
 #define WORK_BIT  ( 1 << 1 )   /* Tarea en progreso       */
+#define STOP_ACK_BIT  ( 1 << 2 )   /* Respuesta de parada ya manejada */
 
 /* ── Handle global ── */
 extern EventGroupHandle_t control_events;
