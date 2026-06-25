@@ -21,23 +21,33 @@ void stop_listener_task(void *pvParameters);
 int check_stop_requested(uart_port_t uart_num);
 
 /**
+ * @brief Maneja el perfil de batería recibido desde batView.
+ */
+void battery_profile_function(uart_port_t uart_num, char *datos[], int count);
+
+/**
  * @brief Maneja la carga de la batería.
  */
-void load_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num);
+void load_function(uart_port_t uart_num, char *datos[], int count);
  
 /**
  * @brief Maneja la descarga de la batería.
  */
-void unload_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128], int gpio_num);
+void unload_function(uart_port_t uart_num, char *datos[], int count);
  
 /**
  * @brief Configura el ciclado de la batería.
  */
-void cicle_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]);
+void cicle_function(uart_port_t uart_num, char *datos[], int count);
  
 /**
  * @brief Detiene la operación activa.
  */
-void stop_function(uart_port_t uart_num, char *datos[], uint8_t data_receiv[128]);
+void stop_function(uart_port_t uart_num);
+
+/**
+ * @brief Procesa una trama completa recibida desde batView.
+ */
+void process_protocol_command(uart_port_t uart_num, char *datos[], int count);
 
 #endif
