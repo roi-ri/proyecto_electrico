@@ -32,6 +32,7 @@ public:
     bool SendBatteryProfile(const batview::core::protocol::BatteryProfile& profile);
     bool SendCycleConfiguration(bool indefiniteMode, int cycleCount);
     bool SendStopCommand();
+    bool DisconnectFromDevice();
     bool SendLoadTarget(int targetPercent);
     bool SendUnloadTarget(int targetPercent);
     std::string GetLastCommunicationError() const;

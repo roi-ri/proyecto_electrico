@@ -15,11 +15,13 @@ public:
     void RefreshPorts();
     void SetDisconnected();
     void SetConnecting();
+    void SetDisconnecting();
     void SetConnected();
     void SetConnectionError(const std::string& detail);
     void SetConnectionLost();
     std::string GetPortName() const;
     wxButton* GetConnectButton() const;
+    wxButton* GetDisconnectButton() const;
 
 private:
     void ApplyStatusStyle(const wxColour& color);
@@ -28,6 +30,7 @@ private:
     wxStaticText* statusText_;
     wxComboBox* portCtrl_;
     wxButton* connectButton_;
+    wxButton* disconnectButton_;
 };
 
 } // namespace batview::ui::panels

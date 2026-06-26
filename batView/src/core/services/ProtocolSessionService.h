@@ -23,6 +23,7 @@ public:
     bool SendCycleConfiguration(bool indefiniteMode, int cycleCount,
                                 std::chrono::milliseconds timeout);
     bool SendStop(std::chrono::milliseconds timeout);
+    bool SendDisconnect(std::chrono::milliseconds timeout);
     bool SendLoadTarget(int targetPercent, std::chrono::milliseconds timeout);
     bool SendUnloadTarget(int targetPercent, std::chrono::milliseconds timeout);
     void SetTrafficObserver(TrafficObserver observer);

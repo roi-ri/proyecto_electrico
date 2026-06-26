@@ -67,14 +67,14 @@ La app reintenta el handshake automáticamente para tolerar ESP32 que reinician 
 
 Se soportan dos variantes:
 
-- `#DATA,<voltaje>,<corriente>,<timestamp>`
-- `#DATA,<voltaje>,<corriente>,<timestamp>,<estado>,<ciclos>`
+- `#DATA,<tension>,<corriente>,<timestamp>`
+- `#DATA,<tension>,<corriente>,<timestamp>,<estado>,<ciclos>`
 
 #### Origen y uso de los campos
 
 Todos los campos de telemetría usados por la aplicación provienen del ESP32:
 
-- `voltaje`
+- `tension`
 - `corriente`
 - `timestamp`
 - `estado`

@@ -88,6 +88,8 @@ ConnectionPanel::ConnectionPanel(wxWindow* parent)
 
     connectButton_ = new wxButton(this, wxID_ANY, "Conectar");
     connectButton_->SetMinSize(wxSize(180, 52));
+    disconnectButton_ = new wxButton(this, wxID_ANY, "Desconectar");
+    disconnectButton_->SetMinSize(wxSize(180, 52));
 
     RefreshPorts();
 
@@ -96,7 +98,10 @@ ConnectionPanel::ConnectionPanel(wxWindow* parent)
     sizer->Add(statusText_, 0, wxLEFT | wxTOP | wxBOTTOM, 4);
     sizer->Add(portLabel, 0, wxLEFT | wxTOP, 4);
     sizer->Add(portCtrl_, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 6);
-    sizer->Add(connectButton_, 0, wxTOP | wxBOTTOM, 8);
+    auto* buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+    buttonSizer->Add(connectButton_, 0, wxRIGHT, 8);
+    buttonSizer->Add(disconnectButton_, 0);
+    sizer->Add(buttonSizer, 0, wxTOP | wxBOTTOM, 8);
     SetSizer(sizer);
     Layout();
     SetMinSize(GetBestSize());
@@ -105,11 +110,12 @@ ConnectionPanel::ConnectionPanel(wxWindow* parent)
 }
 
 void ConnectionPanel::ApplyStatusStyle(const wxColour& color) {
-    wxFont statusFont = statusText_->GetFont();
+    wxFont statusFont = GetFont();
     statusFont.SetPointSize(statusFont.GetPointSize() + 1);
     statusFont.SetWeight(wxFONTWEIGHT_BOLD);
     statusText_->SetFont(statusFont);
     statusText_->SetForegroundColour(color);
+    Layout();
 }
 
 void ConnectionPanel::RefreshPorts() {
@@ -161,7 +167,10 @@ void ConnectionPanel::SetDisconnected() {
     ApplyStatusStyle(wxColour(150, 65, 65));
     connectButton_->SetLabel("Conectar");
     connectButton_->Enable(true);
+    disconnectButton_->Show(false);
+    disconnectButton_->Enable(false);
     portCtrl_->Enable(true);
+    Layout();
 }
 
 void ConnectionPanel::SetConnecting() {
@@ -169,7 +178,21 @@ void ConnectionPanel::SetConnecting() {
     ApplyStatusStyle(wxColour(242, 242, 17));
     connectButton_->SetLabel("Conectando...");
     connectButton_->Enable(false);
+    disconnectButton_->Show(false);
+    disconnectButton_->Enable(false);
     portCtrl_->Enable(false);
+    Layout();
+}
+
+void ConnectionPanel::SetDisconnecting() {
+    SetStatusText("desconectando...");
+    ApplyStatusStyle(wxColour(242, 242, 17));
+    connectButton_->SetLabel("Desconectando...");
+    connectButton_->Enable(false);
+    disconnectButton_->Show(false);
+    disconnectButton_->Enable(false);
+    portCtrl_->Enable(false);
+    Layout();
 }
 
 void ConnectionPanel::SetConnected() {
@@ -177,7 +200,10 @@ void ConnectionPanel::SetConnected() {
     ApplyStatusStyle(wxColour(37, 245, 24));
     connectButton_->SetLabel("Reconectar");
     connectButton_->Enable(true);
+    disconnectButton_->Show(true);
+    disconnectButton_->Enable(true);
     portCtrl_->Enable(true);
+    Layout();
 }
 
 void ConnectionPanel::SetConnectionError(const std::string& detail) {
@@ -185,7 +211,10 @@ void ConnectionPanel::SetConnectionError(const std::string& detail) {
     ApplyStatusStyle(wxColour(219, 38, 9));
     connectButton_->SetLabel("Reconectar");
     connectButton_->Enable(true);
+    disconnectButton_->Show(false);
+    disconnectButton_->Enable(false);
     portCtrl_->Enable(true);
+    Layout();
 }
 
 void ConnectionPanel::SetConnectionLost() {
@@ -193,7 +222,10 @@ void ConnectionPanel::SetConnectionLost() {
     ApplyStatusStyle(wxColour(219, 38, 9));
     connectButton_->SetLabel("Reconectar");
     connectButton_->Enable(true);
+    disconnectButton_->Show(false);
+    disconnectButton_->Enable(false);
     portCtrl_->Enable(true);
+    Layout();
 }
 
 std::string ConnectionPanel::GetPortName() const {
@@ -223,6 +255,10 @@ std::string ConnectionPanel::GetPortName() const {
 
 wxButton* ConnectionPanel::GetConnectButton() const {
     return connectButton_;
+}
+
+wxButton* ConnectionPanel::GetDisconnectButton() const {
+    return disconnectButton_;
 }
 
 } // namespace batview::ui::panels

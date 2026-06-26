@@ -9,6 +9,7 @@ public:
     std::string BuildBatteryProfileCommand(const BatteryProfile& profile) const override;
     std::string BuildCycleCommand(bool indefiniteMode, int cycleCount) const override;
     std::string BuildStopCommand() const override;
+    std::string BuildDisconnectCommand() const override;
     std::string BuildLoadCommand(int targetPercent) const override;
     std::string BuildUnloadCommand(int targetPercent) const override;
 

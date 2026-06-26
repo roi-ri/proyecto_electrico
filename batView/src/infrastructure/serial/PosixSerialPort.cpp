@@ -36,7 +36,8 @@ PosixSerialPort::~PosixSerialPort() {
 }
 
 bool PosixSerialPort::Open(const std::string& portName, int baudRate) {
-    Close();
+    std::lock_guard<std::mutex> lock(mutex_);
+    CloseUnlocked();
     lastError_.clear();
     portName_ = portName;
 
@@ -47,7 +48,7 @@ bool PosixSerialPort::Open(const std::string& portName, int baudRate) {
     }
 
     if (!ConfigurePort(baudRate)) {
-        Close();
+        CloseUnlocked();
         return false;
     }
 
@@ -56,6 +57,11 @@ bool PosixSerialPort::Open(const std::string& portName, int baudRate) {
 }
 
 void PosixSerialPort::Close() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    CloseUnlocked();
+}
+
+void PosixSerialPort::CloseUnlocked() {
     if (fd_ >= 0) {
         close(fd_);
         fd_ = -1;
@@ -65,11 +71,13 @@ void PosixSerialPort::Close() {
 }
 
 bool PosixSerialPort::IsOpen() const {
+    std::lock_guard<std::mutex> lock(mutex_);
     return fd_ >= 0;
 }
 
 bool PosixSerialPort::WriteLine(const std::string& line) {
-    if (!IsOpen()) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (fd_ < 0) {
         SetLastError("write failed: serial port is not open.");
         return false;
     }
@@ -113,7 +121,8 @@ bool PosixSerialPort::WriteLine(const std::string& line) {
 }
 
 bool PosixSerialPort::ReadLine(std::string& outLine, int timeoutMs) {
-    if (!IsOpen()) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (fd_ < 0) {
         SetLastError("read failed: serial port is not open.");
         return false;
     }
@@ -161,7 +170,7 @@ bool PosixSerialPort::ConfigurePort(int baudRate) {
 }
 
 bool PosixSerialPort::ReadAvailableIntoBuffer(int timeoutMs) {
-    if (!IsOpen()) {
+    if (fd_ < 0) {
         return false;
     }
 

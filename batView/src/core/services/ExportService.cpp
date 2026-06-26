@@ -130,7 +130,7 @@ bool ExportService::ExportToMat(const std::string& filePath,
     }
 
     if (!WriteMatV4Vector(file, "timestamp_ms", ExtractTimestampSeries(data), outError) ||
-        !WriteMatV4Vector(file, "voltage", ExtractVoltageSeries(data), outError) ||
+        !WriteMatV4Vector(file, "tension", ExtractVoltageSeries(data), outError) ||
         !WriteMatV4Vector(file, "current", ExtractCurrentSeries(data), outError) ||
         !WriteMatV4Vector(file, "state", ExtractStateSeries(data), outError) ||
         !WriteMatV4Vector(file, "completed_cycles", ExtractCompletedCyclesSeries(data), outError)) {

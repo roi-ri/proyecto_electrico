@@ -247,7 +247,7 @@ def batview_export_measurements_xlsx(file_path, measurements):
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = 'measurements'
-    sheet.append(['TimestampMs', 'Voltage', 'Current', 'State', 'CompletedCycles'])
+    sheet.append(['TimestampMs', 'Tensión', 'Current', 'State', 'CompletedCycles'])
     for row in measurements:
         sheet.append(row)
     workbook.save(file_path)

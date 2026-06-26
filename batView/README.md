@@ -111,13 +111,13 @@ batView/
 - `#ACK,STOP`
 - `#STATUS,<modo>,<detalle>`
 - `#ERROR,<codigo>,<mensaje>`
-- `#DATA,<voltaje>,<corriente>,<timestamp>`
-- `#DATA,<voltaje>,<corriente>,<timestamp>,<estado>,<ciclos>`
+- `#DATA,<tension>,<corriente>,<timestamp>`
+- `#DATA,<tension>,<corriente>,<timestamp>,<estado>,<ciclos>`
 
 ### Origen de los datos de telemetría
 Los datos que la aplicación grafica y exporta provienen del ESP32 a través de las tramas `#DATA`.
 
-- `voltaje`: valor enviado por el ESP32.
+- `tension`: valor enviado por el ESP32.
 - `corriente`: valor enviado por el ESP32.
 - `timestamp`: valor enviado por el ESP32 en milisegundos.
 - `estado`: valor enviado por el ESP32 cuando se usa la variante larga.

@@ -18,6 +18,7 @@ class wxCommandEvent;
 class wxGauge;
 class wxPanel;
 class wxRadioButton;
+class wxScrolledWindow;
 class wxSimplebook;
 class wxSplitterWindow;
 class wxStaticText;
@@ -57,11 +58,14 @@ private:
     void ShowCommunicationFailure(const std::string& fallbackMessage);
     void AppendTraffic(bool outgoing, const std::string& message);
     void RefreshBatteryProfileChoices();
+    void LoadStoredBatteryProfiles();
+    void SaveStoredBatteryProfiles() const;
     bool ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& outProfile,
                                 wxString& outError) const;
     void LoadBatteryProfileForm(std::size_t index);
     void OnSplashTimer(wxTimerEvent& event);
     void OnConnectButton(wxCommandEvent& event);
+    void OnDisconnectButton(wxCommandEvent& event);
     void OnBatteryProfileChanged(wxCommandEvent& event);
     void OnSaveBatteryProfile(wxCommandEvent& event);
     void OnChooseBatteryProfile(wxCommandEvent& event);
@@ -89,7 +93,7 @@ private:
     wxAnimationCtrl* splashAnimation_;
     wxTimer splashTimer_;
 
-    wxPanel* flowPanel_;
+    wxScrolledWindow* flowPanel_;
     batview::ui::panels::ConnectionPanel* connectionPanel_;
     wxPanel* batteryPanel_;
     wxChoice* batteryProfileChoice_;

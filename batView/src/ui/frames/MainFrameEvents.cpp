@@ -81,6 +81,55 @@ void MainFrame::OnConnectButton(wxCommandEvent& event) {
     }).detach();
 }
 
+void MainFrame::OnDisconnectButton(wxCommandEvent& event) {
+    (void)event;
+    if (!viewModel_) {
+        return;
+    }
+
+    if (!isConnected_) {
+        connectionPanel_->SetDisconnected();
+        return;
+    }
+
+    if (connectionInProgress_) {
+        AppendTraffic(true, "Espere a que termine la conexion en progreso antes de desconectar.");
+        return;
+    }
+
+    AppendTraffic(true, "Solicitando desconexion del ESP32...");
+    connectionInProgress_ = true;
+    connectionPanel_->SetDisconnecting();
+
+    auto viewModel = viewModel_;
+    std::thread([this, viewModel]() {
+        const bool disconnectedCleanly = viewModel->DisconnectFromDevice();
+        const std::string errorDetail = viewModel->GetLastCommunicationError();
+
+        CallAfter([this, disconnectedCleanly, errorDetail]() {
+            connectionInProgress_ = false;
+            isConnected_ = false;
+            operationActive_ = false;
+            isInfiniteRunning_ = false;
+            wizardStep_ = 0;
+            ResetWorkflowState();
+            connectionPanel_->SetDisconnected();
+            connectionPanel_->RefreshPorts();
+
+            if (disconnectedCleanly) {
+                AppendTraffic(true, "Desconexion completada; puerto serial liberado.");
+            } else {
+                AppendTraffic(true, errorDetail.empty()
+                    ? "No llego #ACK,DISCONECT; el puerto serial se cerro localmente."
+                    : "Desconexion sin ACK: " + errorDetail + " | puerto serial cerrado localmente.");
+            }
+
+            UpdateFlowVisibility();
+            UpdateFunctionOptions();
+        });
+    }).detach();
+}
+
 void MainFrame::OnBatteryProfileChanged(wxCommandEvent& event) {
     (void)event;
     batteryChosen_ = false;
@@ -116,6 +165,7 @@ void MainFrame::OnSaveBatteryProfile(wxCommandEvent& event) {
     }
 
     RefreshBatteryProfileChoices();
+    SaveStoredBatteryProfiles();
     const auto selected = std::find_if(batteryProfiles_.begin(), batteryProfiles_.end(),
                                        [&profile](const auto& candidate) {
                                            return candidate.nameId == profile.nameId;
@@ -159,6 +209,7 @@ void MainFrame::OnChooseBatteryProfile(wxCommandEvent& event) {
     batteryProfiles_[static_cast<std::size_t>(selection)] = profile;
     RefreshBatteryProfileChoices();
     batteryProfileChoice_->SetSelection(selection);
+    SaveStoredBatteryProfiles();
 
     if (!viewModel_->SendBatteryProfile(profile)) {
         ShowCommunicationFailure("No se recibio confirmacion del ESP32 para el perfil de bateria.");
@@ -178,6 +229,7 @@ void MainFrame::OnClearBatteryProfiles(wxCommandEvent& event) {
     (void)event;
 
     batteryProfiles_.clear();
+    SaveStoredBatteryProfiles();
     if (batteryProfileChoice_) {
         batteryProfileChoice_->Clear();
     }
@@ -306,12 +358,13 @@ void MainFrame::OnStopOperation(wxCommandEvent& event) {
         return;
     }
 
+    viewModel_->StopAcquisition();
+
     if (!viewModel_->SendStopCommand()) {
         MarkConnectionLost();
         return;
     }
 
-    viewModel_->StopAcquisition();
     operationActive_ = false;
     isInfiniteRunning_ = false;
     AppendTraffic(true, "Operacion detenida por el usuario.");

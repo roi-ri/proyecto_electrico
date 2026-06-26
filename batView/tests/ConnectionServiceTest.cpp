@@ -113,6 +113,30 @@ TEST(ConnectionServiceTest, RetriesHandshakeAfterReadyStatus) {
     EXPECT_TRUE(connectionService.GetLastError().empty());
 }
 
+TEST(ConnectionServiceTest, AcceptsDataAckDuringReconnectHandshake) {
+    TestSerialPort serialPort;
+    TestLogger logger;
+    ConnectionService connectionService(serialPort, logger);
+
+    serialPort.QueueIncomingFrame("#ACK,DATA");
+
+    EXPECT_TRUE(connectionService.Connect("/dev/ttyUSB0", 115200));
+    EXPECT_TRUE(serialPort.IsOpen());
+    EXPECT_TRUE(connectionService.GetLastError().empty());
+}
+
+TEST(ConnectionServiceTest, AcceptsTrimmedCaseInsensitiveConnectionAck) {
+    TestSerialPort serialPort;
+    TestLogger logger;
+    ConnectionService connectionService(serialPort, logger);
+
+    serialPort.QueueIncomingFrame("  #ack,connection\r");
+
+    EXPECT_TRUE(connectionService.Connect("/dev/ttyUSB0", 115200));
+    EXPECT_TRUE(serialPort.IsOpen());
+    EXPECT_TRUE(connectionService.GetLastError().empty());
+}
+
 TEST(ConnectionServiceTest, ConnectFailure) {
     TestSerialPort serialPort;
     TestLogger logger;

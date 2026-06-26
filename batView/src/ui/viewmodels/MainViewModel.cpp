@@ -103,6 +103,24 @@ bool MainViewModel::SendStopCommand() {
     return ok;
 }
 
+bool MainViewModel::DisconnectFromDevice() {
+    if (acquisitionService_) {
+        acquisitionService_->StopAcquisition();
+    }
+
+    bool ok = true;
+    if (protocolSessionService_ && connected_) {
+        ok = protocolSessionService_->SendDisconnect(std::chrono::milliseconds(1500));
+    }
+
+    if (connectionService_) {
+        connectionService_->Disconnect();
+    }
+
+    connected_ = false;
+    return ok;
+}
+
 bool MainViewModel::SendLoadTarget(int targetPercent) {
     if (!protocolSessionService_) {
         connected_ = false;

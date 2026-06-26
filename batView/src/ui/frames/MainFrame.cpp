@@ -22,6 +22,7 @@ MainFrame::MainFrame(const wxString& title)
       trafficLogCtrl_(nullptr) {
     detail::SetAppIcon(*this);
     BuildLayout();
+    LoadStoredBatteryProfiles();
     ConfigureBrandStyle();
     BindEvents();
 }

@@ -38,7 +38,7 @@ TEST(PlotServiceTest, ExportPlotCsvUsesSelectedAxes) {
 
     std::string header;
     std::getline(file, header);
-    EXPECT_EQ(header, "TimeS,Voltage");
+    EXPECT_EQ(header, "TimeS,Tensión");
 
     std::string row;
     std::getline(file, row);

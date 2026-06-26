@@ -190,7 +190,7 @@ std::string PlotService::AxisLabel(PlotAxis axis) {
     case PlotAxis::TimestampMs:
         return "TimeS";
     case PlotAxis::Voltage:
-        return "Voltage";
+        return "Tensión";
     case PlotAxis::Current:
         return "Current";
     case PlotAxis::State:

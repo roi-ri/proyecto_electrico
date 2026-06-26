@@ -3,6 +3,7 @@
 #ifdef BATVIEW_ENABLE_WX
 
 #include <wx/button.h>
+#include <wx/gdicmn.h>
 #include <wx/panel.h>
 #include <wx/timer.h>
 
@@ -12,6 +13,8 @@
 
 #include "core/services/PlotService.h"
 #include "ui/viewmodels/MainViewModel.h"
+
+class wxSplitterWindow;
 
 namespace batview::ui::panels {
 
@@ -28,15 +31,22 @@ private:
                               batview::core::services::PlotAxis xAxis,
                               batview::core::services::PlotAxis yAxis,
                               const wxSize& size,
+                              double zoomScale,
+                              double panX,
+                              double panY,
                               const std::string& title,
                               std::string& outError,
                               std::size_t& outPointCount) const;
-    void BuildPlotCard(wxWindow* parent,
-                       wxSizer* parentSizer,
-                       const std::string& title,
-                       int index);
+    wxPanel* BuildPlotCard(wxWindow* parent,
+                           const std::string& title,
+                           int index);
     void RefreshPlots();
     void RefreshPlot(int index);
+    void SetPlotZoom(int index, double zoomScale);
+    void ResetPlotView(int index);
+    void BeginPlotPan(int index, const wxPoint& position);
+    void ContinuePlotPan(int index, const wxPoint& position);
+    void EndPlotPan(int index);
     void ExportPlot(int index);
     bool ExportPlotImage(const std::string& filePath, int index, std::string& outError) const;
     void ClearPlots();
@@ -47,6 +57,7 @@ private:
     std::unique_ptr<PlotWidgets> primaryPlot_;
     std::unique_ptr<PlotWidgets> secondaryPlot_;
     wxButton* clearPlotsButton_;
+    wxSplitterWindow* plotsSplitter_;
     wxTimer refreshTimer_;
 };
 

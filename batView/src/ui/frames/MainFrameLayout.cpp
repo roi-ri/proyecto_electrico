@@ -9,6 +9,7 @@
 #include <wx/gauge.h>
 #include <wx/panel.h>
 #include <wx/radiobut.h>
+#include <wx/scrolwin.h>
 #include <wx/sizer.h>
 #include <wx/simplebook.h>
 #include <wx/statline.h>
@@ -114,7 +115,10 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     workflowSplitter_->SetMinimumPaneSize(160);
     workflowSplitter_->SetSashGravity(0.62);
 
-    flowPanel_ = new wxPanel(workflowSplitter_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE);
+    flowPanel_ = new wxScrolledWindow(workflowSplitter_, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+                                      wxBORDER_NONE | wxVSCROLL);
+    flowPanel_->SetScrollRate(0, 12);
+    flowPanel_->SetMinSize(wxSize(-1, 180));
     detail::PrepareFlatPanel(flowPanel_);
 
     connectionPanel_ = new batview::ui::panels::ConnectionPanel(flowPanel_);
@@ -132,9 +136,9 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     batteryNameCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
     batteryNameCtrl_->SetHint("Profile name");
     batteryVoltageMaxCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryVoltageMaxCtrl_->SetHint("V at max charge");
+    batteryVoltageMaxCtrl_->SetHint("Tensión en carga máxima");
     batteryVoltageMinCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryVoltageMinCtrl_->SetHint("V at min charge");
+    batteryVoltageMinCtrl_->SetHint("Tensión en carga mínima");
     batteryMaxCurrentCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
     batteryMaxCurrentCtrl_->SetHint("Max current");
     saveBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Add / update profile");
@@ -145,9 +149,9 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     batteryGrid->AddGrowableCol(1, 1);
     batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Profile name"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryNameCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V at min charge"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Tensión en carga mínima"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryVoltageMinCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "V at max charge"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Tensión en carga máxima"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryVoltageMaxCtrl_, 1, wxEXPAND);
     batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Max current"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryMaxCurrentCtrl_, 1, wxEXPAND);
@@ -238,6 +242,7 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     flowSizer->Add(functionPanel_, 0, wxEXPAND | wxBOTTOM, 10);
     flowSizer->Add(optionsPanel_, 0, wxEXPAND | wxBOTTOM, 10);
     flowPanel_->SetSizer(flowSizer);
+    flowPanel_->FitInside();
 
     auto* trafficPane = new wxPanel(workflowSplitter_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
     detail::PrepareFlatPanel(trafficPane);
@@ -266,6 +271,7 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
 void MainFrame::BindEvents() {
     Bind(wxEVT_TIMER, &MainFrame::OnSplashTimer, this);
     connectionPanel_->GetConnectButton()->Bind(wxEVT_BUTTON, &MainFrame::OnConnectButton, this);
+    connectionPanel_->GetDisconnectButton()->Bind(wxEVT_BUTTON, &MainFrame::OnDisconnectButton, this);
     batteryProfileChoice_->Bind(wxEVT_CHOICE, &MainFrame::OnBatteryProfileChanged, this);
     saveBatteryProfileButton_->Bind(wxEVT_BUTTON, &MainFrame::OnSaveBatteryProfile, this);
     chooseBatteryProfileButton_->Bind(wxEVT_BUTTON, &MainFrame::OnChooseBatteryProfile, this);

@@ -68,13 +68,13 @@ std::string TextProtocolCodec::BuildBatteryProfileCommand(const BatteryProfile& 
         throw std::invalid_argument("battery profile name/id must not contain commas");
     }
     if (profile.voltageAtMax <= 0.0) {
-        throw std::invalid_argument("V@max must be > 0");
+        throw std::invalid_argument("tension maxima must be > 0");
     }
     if (profile.voltageAtMin <= 0.0) {
-        throw std::invalid_argument("V@min must be > 0");
+        throw std::invalid_argument("tension minima must be > 0");
     }
     if (profile.voltageAtMin >= profile.voltageAtMax) {
-        throw std::invalid_argument("V@min must be lower than V@max");
+        throw std::invalid_argument("tension minima must be lower than tension maxima");
     }
     if (profile.maxCurrent <= 0.0) {
         throw std::invalid_argument("Amax must be > 0");
@@ -98,6 +98,10 @@ std::string TextProtocolCodec::BuildCycleCommand(bool indefiniteMode, int cycleC
 
 std::string TextProtocolCodec::BuildStopCommand() const {
     return "#STOP";
+}
+
+std::string TextProtocolCodec::BuildDisconnectCommand() const {
+    return "#DISCONNECT";
 }
 
 std::string TextProtocolCodec::BuildLoadCommand(int targetPercent) const {

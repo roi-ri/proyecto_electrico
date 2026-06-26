@@ -1,6 +1,9 @@
 #include "ui/frames/MainFrame.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
 
 #include <wx/button.h>
 #include <wx/choice.h>
@@ -8,8 +11,10 @@
 #include <wx/msgdlg.h>
 #include <wx/panel.h>
 #include <wx/radiobut.h>
+#include <wx/scrolwin.h>
 #include <wx/simplebook.h>
 #include <wx/splitter.h>
+#include <wx/stdpaths.h>
 #include <wx/textctrl.h>
 
 #include "ui/frames/MainFrameSupport.h"
@@ -17,6 +22,24 @@
 #include "ui/viewmodels/MainViewModel.h"
 
 namespace batview::ui::frames {
+
+namespace {
+
+std::filesystem::path GetBatteryProfilesPath() {
+    const wxStandardPaths& standardPaths = wxStandardPaths::Get();
+    std::filesystem::path dataDir(standardPaths.GetUserDataDir().ToStdString());
+    if (dataDir.empty()) {
+        std::error_code error;
+        dataDir = std::filesystem::current_path(error);
+        if (error) {
+            dataDir = ".";
+        }
+    }
+
+    return dataDir / "battery_profiles.txt";
+}
+
+} // namespace
 
 void MainFrame::UpdateFlowVisibility() {
     const bool showBattery = isConnected_ && wizardStep_ >= 1;
@@ -27,6 +50,7 @@ void MainFrame::UpdateFlowVisibility() {
     functionPanel_->Show(showFunction);
     optionsPanel_->Show(showOptions);
     UpdateWizardNavigation();
+    flowPanel_->FitInside();
     flowPanel_->Layout();
     if (workflowSplitter_) {
         workflowSplitter_->Layout();
@@ -75,6 +99,7 @@ void MainFrame::UpdateFunctionOptions() {
 
     stopButton_->Show(operationActive_);
     startButton_->Enable(isConnected_ && batteryChosen_ && functionChosen_ && !operationActive_);
+    flowPanel_->FitInside();
     optionsPanel_->Layout();
     flowPanel_->Layout();
 }
@@ -135,6 +160,58 @@ void MainFrame::RefreshBatteryProfileChoices() {
     }
 }
 
+void MainFrame::LoadStoredBatteryProfiles() {
+    batteryProfiles_.clear();
+
+    const std::filesystem::path profilesPath = GetBatteryProfilesPath();
+    std::ifstream file(profilesPath);
+    if (!file.is_open()) {
+        RefreshBatteryProfileChoices();
+        return;
+    }
+
+    while (file.good()) {
+        batview::core::protocol::BatteryProfile profile;
+        file >> std::quoted(profile.nameId)
+             >> profile.voltageAtMax
+             >> profile.voltageAtMin
+             >> profile.maxCurrent;
+
+        if (!file) {
+            break;
+        }
+
+        if (!profile.nameId.empty() &&
+            profile.voltageAtMax > 0.0 &&
+            profile.voltageAtMin > 0.0 &&
+            profile.voltageAtMin < profile.voltageAtMax &&
+            profile.maxCurrent > 0.0) {
+            batteryProfiles_.push_back(profile);
+        }
+    }
+
+    RefreshBatteryProfileChoices();
+}
+
+void MainFrame::SaveStoredBatteryProfiles() const {
+    const std::filesystem::path profilesPath = GetBatteryProfilesPath();
+    std::error_code error;
+    std::filesystem::create_directories(profilesPath.parent_path(), error);
+
+    std::ofstream file(profilesPath, std::ios::trunc);
+    if (!file.is_open()) {
+        return;
+    }
+
+    file << std::setprecision(17);
+    for (const auto& profile : batteryProfiles_) {
+        file << std::quoted(profile.nameId) << ' '
+             << profile.voltageAtMax << ' '
+             << profile.voltageAtMin << ' '
+             << profile.maxCurrent << '\n';
+    }
+}
+
 bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& outProfile,
                                        wxString& outError) const {
     if (!batteryNameCtrl_ || !batteryVoltageMaxCtrl_ || !batteryVoltageMinCtrl_ || !batteryMaxCurrentCtrl_) {
@@ -153,11 +230,11 @@ bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& 
     }
 
     if (!batteryVoltageMaxCtrl_->GetValue().ToDouble(&outProfile.voltageAtMax)) {
-        outError = "Enter a numeric V at max charge.";
+        outError = "Ingrese una tensión numérica en carga máxima.";
         return false;
     }
     if (!batteryVoltageMinCtrl_->GetValue().ToDouble(&outProfile.voltageAtMin)) {
-        outError = "Enter a numeric V at min charge.";
+        outError = "Ingrese una tensión numérica en carga mínima.";
         return false;
     }
     if (!batteryMaxCurrentCtrl_->GetValue().ToDouble(&outProfile.maxCurrent)) {
@@ -165,11 +242,11 @@ bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& 
         return false;
     }
     if (outProfile.voltageAtMax <= 0.0 || outProfile.voltageAtMin <= 0.0 || outProfile.maxCurrent <= 0.0) {
-        outError = "V at max charge, V at min charge, and Max current must be greater than zero.";
+        outError = "La tensión en carga máxima, la tensión en carga mínima y la corriente máxima deben ser mayores que cero.";
         return false;
     }
     if (outProfile.voltageAtMin >= outProfile.voltageAtMax) {
-        outError = "V at min charge must be lower than V at max charge.";
+        outError = "La tensión en carga mínima debe ser menor que la tensión en carga máxima.";
         return false;
     }
 

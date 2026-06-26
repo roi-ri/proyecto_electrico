@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <string>
 
 #include "core/services/ISerialPort.h"
@@ -18,12 +19,14 @@ public:
     const std::string& GetLastError() const override;
 
 private:
+    void CloseUnlocked();
     bool ConfigurePort(int baudRate);
     bool ReadAvailableIntoBuffer(int timeoutMs);
     bool ExtractLineFromBuffer(std::string& outLine);
     void SetLastError(const std::string& message);
     void SetLastErrorFromErrno(const std::string& operation, const std::string& portName = std::string());
 
+    mutable std::mutex mutex_;
     int fd_ = -1;
     std::string portName_;
     std::string readBuffer_;

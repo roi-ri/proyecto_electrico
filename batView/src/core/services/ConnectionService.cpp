@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
+#include <utility>
 
 namespace batview::core::services {
 
@@ -11,7 +12,17 @@ namespace {
 constexpr auto kConnectionTimeout = std::chrono::milliseconds(6000);
 constexpr auto kHandshakeRetry = std::chrono::milliseconds(1200);
 
+std::string TrimAscii(std::string value) {
+    auto notSpace = [](unsigned char ch) {
+        return !std::isspace(ch);
+    };
+    value.erase(value.begin(), std::find_if(value.begin(), value.end(), notSpace));
+    value.erase(std::find_if(value.rbegin(), value.rend(), notSpace).base(), value.end());
+    return value;
+}
+
 std::string ToUpperAscii(std::string value) {
+    value = TrimAscii(std::move(value));
     std::transform(value.begin(), value.end(), value.begin(), [](unsigned char c) {
         return static_cast<char>(std::toupper(c));
     });
@@ -19,21 +30,24 @@ std::string ToUpperAscii(std::string value) {
 }
 
 bool IsConnectionAck(const std::string& line) {
-    if (line.rfind("#ACK,", 0) != 0) {
+    const auto normalized = ToUpperAscii(line);
+    if (normalized.rfind("#ACK,", 0) != 0) {
         return false;
     }
 
-    const auto token = ToUpperAscii(line.substr(5));
-    return token.find("CONNECTION") != std::string::npos || token.find("CONECTION") != std::string::npos;
+    const auto token = normalized.substr(5);
+    return token.find("CONNECTION") != std::string::npos ||
+           token.find("CONECTION") != std::string::npos ||
+           token.find("DATA") != std::string::npos;
 }
 
 bool IsReadyStatus(const std::string& line) {
-    if (line.rfind("#STATUS,", 0) != 0) {
+    const auto normalized = ToUpperAscii(line);
+    if (normalized.rfind("#STATUS,", 0) != 0) {
         return false;
     }
 
-    const auto token = ToUpperAscii(line);
-    return token.find("ESP32_READY") != std::string::npos || token.find("CONNECTED") != std::string::npos;
+    return normalized.find("ESP32_READY") != std::string::npos || normalized.find("CONNECTED") != std::string::npos;
 }
 
 } // namespace

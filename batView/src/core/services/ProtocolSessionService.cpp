@@ -41,6 +41,10 @@ bool ProtocolSessionService::SendStop(std::chrono::milliseconds timeout) {
     return SendCommandAndAwaitAck(protocolCodec_.BuildStopCommand(), "STOP", timeout);
 }
 
+bool ProtocolSessionService::SendDisconnect(std::chrono::milliseconds timeout) {
+    return SendCommandAndAwaitAck(protocolCodec_.BuildDisconnectCommand(), "DISCONECT", timeout);
+}
+
 bool ProtocolSessionService::SendLoadTarget(int targetPercent, std::chrono::milliseconds timeout) {
     try {
         return SendCommandAndAwaitAck(protocolCodec_.BuildLoadCommand(targetPercent),
