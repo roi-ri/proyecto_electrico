@@ -1,653 +1,360 @@
-````markdown
+
 # PCB del ciclador de baterías
 
 ## Descripción general
 
-Este directorio contiene el diseño de la placa de circuito impreso del
-ciclador de baterías. La PCB integra la etapa de control, las etapas de carga
-y descarga, el acondicionamiento de señales y las conexiones necesarias para
-interactuar con la batería y con los dispositivos externos del sistema.
+En este directorio se encuentran los archivos de diseño de la PCB utilizada
+para implementar el circuito ciclador de baterías.
 
-El diseño fue realizado en KiCad y está planteado como una PCB de cuatro capas.
-Las capas externas contienen gran parte del enrutamiento de las señales y de
-las trayectorias de potencia, mientras que las capas internas pueden utilizarse
-como planos de referencia y alimentación, de acuerdo con la asignación de redes
-definida en el proyecto.
+La placa integra las etapas de carga y descarga, el acondicionamiento de las
+señales de control, las conexiones para los sensores, el ESP32 y las terminales
+necesarias para conectar la alimentación y la batería.
 
-El sistema permite conectar los siguientes elementos:
+La PCB fue diseñada en KiCad y utiliza cuatro capas de cobre:
 
-- Una fuente para la etapa de carga.
-- Una carga o fuente externa para la etapa de descarga.
-- La batería que será sometida al proceso de ciclado.
-- El ESP32 encargado del sistema de control.
-- Las etapas de amplificación de las señales de control.
-- Los sensores utilizados para medir corriente y tensión.
+- `F.Cu`: capa superior.
+- `In1.Cu`: primera capa interna.
+- `In2.Cu`: segunda capa interna.
+- `B.Cu`: capa inferior.
 
-## Contenido del directorio
-
-La estructura principal del proyecto es la siguiente:
-
-```text
-PCB/
-├── Imagenes/
-│   ├── vista_superior.png
-│   ├── vista_inferior.png
-│   ├── f_cu.jpeg
-│   ├── b_cu.jpeg
-│   ├── in1_cu.jpeg
-│   └── in2_cu.jpeg
-├── 3dmodels/
-├── footprints/
-├── outputs/
-├── symbols/
-├── Proyecto.kicad_pro
-├── Proyecto.kicad_sch
-├── Proyecto.kicad_pcb
-└── README.md
-```
-
-### Archivos principales
+Los archivos principales del proyecto son:
 
 - `Proyecto.kicad_pro`: archivo principal del proyecto de KiCad.
-- `Proyecto.kicad_sch`: contiene el esquemático eléctrico del circuito.
-- `Proyecto.kicad_pcb`: contiene el diseño físico de la PCB.
-- `symbols/`: contiene los símbolos personalizados utilizados en el
-  esquemático.
-- `footprints/`: contiene las huellas personalizadas utilizadas en la PCB.
-- `3dmodels/`: contiene los modelos tridimensionales de los componentes.
-- `outputs/`: puede utilizarse para almacenar los archivos Gerber, archivos de
-  perforación, listas de materiales y demás archivos de fabricación.
-- `Imagenes/`: contiene las vistas de la PCB y de sus diferentes capas.
+- `Proyecto.kicad_sch`: esquemático eléctrico.
+- `Proyecto.kicad_pcb`: diseño físico de la PCB.
+- `symbols/`: símbolos personalizados.
+- `footprints/`: huellas personalizadas.
+- `3dmodels/`: modelos tridimensionales utilizados.
+- `Imagenes/`: imágenes de las capas y vistas tridimensionales de la PCB.
 
-## Distribución general de la PCB
-
-La PCB se divide en varias secciones funcionales. En el lado izquierdo se
-encuentran las conexiones de alimentación, las señales de control y el módulo
-ESP32. En la parte inferior se ubican las etapas de acondicionamiento de las
-señales. En el lado derecho se encuentran los transistores de potencia, los
-inductores y las terminales asociadas con la carga, la descarga y la batería.
+## Distribución de la PCB
 
 ### Vista superior
 
-La siguiente imagen muestra la distribución de los componentes sobre la cara
-superior de la PCB.
+![Vista superior de la PCB](Imagenes/Vista%20superior%20.png)
 
-![Vista superior de la PCB](Imagenes/vista_superior.png)
+*Figura 1. Vista superior del prototipo de la PCB.*
 
-*Figura 1. Vista superior tridimensional de la PCB.*
+En la vista superior se observa la distribución de los componentes que forman
+el circuito ciclador.
 
-En esta vista se pueden identificar los siguientes elementos:
+En el centro de la placa se encuentra el ESP32, encargado de ejecutar el
+algoritmo de control y generar las señales correspondientes a los procesos de
+carga y descarga.
 
-- El módulo ESP32, encargado de ejecutar el sistema de control.
-- Los transistores de potencia `Q1` y `Q2`.
-- Los disipadores de calor de los transistores.
-- Los inductores `L1` y `L2`.
-- Los circuitos integrados `IC1` e `IC2`.
-- Las resistencias asociadas con las etapas de amplificación.
-- Las terminales de entrada y salida.
-- La terminal de conexión de la batería.
-- Los puntos de prueba para las señales de carga y descarga.
-- Los agujeros de montaje ubicados en las esquinas de la PCB.
+En la parte superior derecha se encuentran los transistores de potencia `Q1` y
+`Q2`. Cada transistor posee un disipador de calor, debido a que estos
+componentes controlan la corriente del circuito y pueden producir pérdidas de
+potencia durante su funcionamiento.
 
-Los transistores se colocaron cerca del borde superior para facilitar la
-instalación de los disipadores y mejorar la evacuación del calor. Los
-inductores y las terminales de potencia se encuentran próximos a los
-transistores para reducir la longitud de las trayectorias por las que circulan
-corrientes elevadas.
+Los transistores tienen las siguientes funciones:
 
-El ESP32 se ubica separado de la etapa de potencia para disminuir la
-interferencia eléctrica sobre las señales de control y medición.
+- `Q1`: controla una de las etapas del ciclador.
+- `Q2`: controla la etapa complementaria.
+
+Debajo de los transistores se encuentran los inductores `L1` y `L2`. Estos
+componentes permiten limitar las variaciones bruscas de corriente y forman
+parte de las trayectorias de carga y descarga de la batería.
+
+En la parte inferior de la PCB se encuentran los circuitos integrados `IC1` e
+`IC2`, junto con las resistencias `R1`, `R2`, `R3` y `R4`. Estos componentes
+forman las etapas de amplificación de las señales de control provenientes del
+ESP32.
+
+Las señales de control del ESP32 se pueden medir en los puntos:
+
+- `S.Carga`: señal de control para la etapa de carga.
+- `S.Descarga`: señal de control para la etapa de descarga.
+
+Las señales después de las etapas de amplificación pueden medirse en:
+
+- `Out_C.Ampli`: salida amplificada de la etapa de carga.
+- `Out_D.Ampli`: salida amplificada de la etapa de descarga.
+
+También se dispone de puntos de prueba identificados como `V+` y `GND`, los
+cuales permiten comprobar las tensiones de alimentación con respecto a la
+referencia común del circuito.
 
 ### Vista inferior
 
-La vista inferior permite observar las conexiones, terminales y puntos de
-soldadura accesibles desde la parte posterior de la placa.
+![Vista inferior de la PCB](Imagenes/Vista%20inferior.png)
 
-![Vista inferior de la PCB](Imagenes/vista_inferior.png)
+*Figura 2. Vista inferior del prototipo de la PCB.*
 
-*Figura 2. Vista inferior tridimensional de la PCB.*
+La vista inferior permite observar los puntos de soldadura de los conectores,
+los sensores, el ESP32, los transistores y los demás componentes instalados en
+la placa.
 
-En esta cara se observan principalmente:
+En esta cara también se pueden verificar las conexiones entre los módulos
+externos y la PCB. Esta vista resulta útil durante el ensamblaje para revisar la
+orientación de los pines y comprobar que no existan uniones o cortocircuitos
+entre puntos cercanos.
 
-- Los pines de conexión del ESP32.
-- Las terminales de los transistores.
-- Las conexiones de los inductores.
-- Los puntos de soldadura de las borneras.
-- Las conexiones de las entradas y salidas.
-- Los agujeros de montaje de la placa.
+## Conexiones del prototipo
 
-Esta vista debe revisarse antes del ensamblaje para confirmar la orientación de
-los conectores y evitar inversiones de polaridad durante la soldadura.
+### Alimentación principal
 
-## Secciones principales del circuito
+La alimentación completa de la PCB se conecta mediante el conector negro
+ubicado en la esquina superior izquierda.
 
-### ESP32 y sistema de control
+Este conector suministra la tensión principal utilizada por las etapas de
+potencia y por los demás circuitos de la placa.
 
-El ESP32 se conecta a la PCB mediante dos hileras de pines. Este
-microcontrolador recibe las señales simuladas por los sensores, ejecuta el
-algoritmo de control y genera las señales necesarias para regular las etapas de
-carga y descarga.
+Antes de conectar la alimentación se debe verificar:
 
-Las señales identificadas como `S.Carga` y `S.Descarga` corresponden a las
-señales de control utilizadas para accionar cada etapa del ciclador.
+- La tensión de la fuente.
+- La polaridad del conector.
+- La referencia común de tierra.
+- Que no existan cortocircuitos entre alimentación y `GND`.
 
-Antes de conectar el ESP32 se debe verificar:
+### Convertidor de 15 V a 5 V
 
-- Que los pines coincidan con la distribución definida en el esquemático.
-- Que las señales no superen el rango permitido por sus entradas analógicas.
-- Que exista una referencia de tierra común.
-- Que las salidas de control tengan el escalamiento correcto.
-- Que la alimentación del módulo tenga la polaridad adecuada.
+En el lado izquierdo de la placa se encuentran dos conectores verdes pequeños
+destinados a conectar un convertidor externo de tensión de `15 V` a `5 V`.
 
-### Etapas de amplificación
+La conexión se realiza de la siguiente forma:
 
-Los circuitos integrados `IC1` e `IC2`, junto con las resistencias `R1`, `R2`,
-`R3` y `R4`, forman las etapas de acondicionamiento o amplificación de las
-señales provenientes del ESP32.
+1. La salida de `15 V` de la PCB se conecta a la entrada del convertidor.
+2. El convertidor reduce la tensión de `15 V` a `5 V`.
+3. La salida de `5 V` del convertidor se conecta nuevamente a la PCB.
+4. Esta tensión de `5 V` se utiliza para alimentar los sensores.
 
-Estas etapas adaptan las señales de control de bajo nivel a los valores
-requeridos por los transistores de potencia.
+Los conectores están identificados mediante las etiquetas:
 
-Los puntos identificados como `Out_C.Ampli` y `Out_D.Ampli` permiten medir las
-salidas de las etapas de amplificación de carga y descarga, respectivamente.
+- `Out 15V`
+- `IN DC/DC`
 
-Estos puntos pueden utilizarse durante las pruebas para comprobar:
+Se debe respetar la polaridad positiva y negativa indicada en la serigrafía de
+la placa.
 
-- El valor máximo de la señal amplificada.
-- La linealidad de la etapa.
-- La ausencia de saturación del amplificador.
-- La respuesta ante cambios en la señal de control.
-- La correcta referencia respecto a tierra.
-
-### Transistores de potencia
-
-Los componentes `Q1` y `Q2` controlan el paso de corriente en las etapas de
-carga y descarga.
-
-Cada transistor dispone de un disipador de calor debido a las pérdidas de
-potencia que pueden presentarse durante la operación. Antes de utilizar el
-circuito se debe verificar que:
-
-- El encapsulado coincida con la huella de la PCB.
-- La distribución de terminales sea correcta.
-- El disipador no produzca cortocircuitos.
-- La corriente máxima permanezca dentro de los límites del transistor.
-- La temperatura de operación sea segura.
-- El transistor cuente con el aislamiento requerido respecto al disipador.
-
-### Inductores
-
-Los inductores `L1` y `L2` forman parte de las etapas de potencia y limitan las
-variaciones rápidas de corriente.
-
-Uno de los inductores corresponde a la trayectoria de carga y el otro a la
-trayectoria de descarga. Su ubicación cercana a los transistores y conectores
-de potencia reduce la longitud de los lazos de corriente.
-
-Los inductores seleccionados deben soportar:
-
-- La corriente máxima del sistema.
-- La corriente de saturación.
-- Las pérdidas en el núcleo.
-- El calentamiento producido durante los ciclos.
-- La frecuencia de operación del sistema de control.
+El convertidor no debe conectarse de forma inversa, ya que una tensión de
+`15 V` aplicada directamente a los sensores podría dañarlos.
 
 ### Conexión de la batería
 
-La batería se conecta mediante la terminal identificada como `J4`.
+La batería se conecta en la terminal verde identificada como `J4`, ubicada en
+la parte inferior derecha de la placa.
 
-La serigrafía indica la polaridad mediante las marcas:
+La polaridad se encuentra marcada sobre la PCB:
 
-```text
+
 + Batería -
-```
 
-Antes de conectar una batería física se debe confirmar la polaridad con un
-multímetro. Una inversión de polaridad puede dañar los transistores, los
-sensores, el ESP32 o las pistas de la PCB.
 
-### Entradas y salidas de potencia
+El terminal positivo de la batería debe conectarse al punto marcado con `+` y
+el terminal negativo al punto marcado con `-`.
 
-La placa incluye terminales para conectar las fuentes y los elementos externos
-del circuito. Entre las etiquetas visibles se encuentran:
+Antes de realizar esta conexión se recomienda comprobar la polaridad con un
+multímetro.
 
-- `IN DC/DC`
-- `Out 15V`
-- `Batería`
-- `V+`
-- `GND`
+### Sensores de corriente
 
-La función exacta de cada terminal debe verificarse con el esquemático antes de
-energizar la PCB.
+Los sensores de corriente se conectan en serie con la trayectoria que se desea
+medir.
 
-No se debe asumir la polaridad únicamente por la posición física del conector.
-Siempre debe revisarse la serigrafía y realizarse una prueba de continuidad.
+Para realizar esta conexión se debe abrir el conductor por el que circula la
+corriente e insertar el sensor entre los dos extremos del circuito. De esta
+forma, toda la corriente de carga o descarga atraviesa el sensor.
 
-## Capas de la PCB
+Las terminales negras ubicadas en la parte superior de cada módulo permiten
+realizar esta conexión de potencia.
 
-El diseño utiliza cuatro capas de cobre:
+De manera general, la conexión es:
 
-1. `F.Cu`: capa de cobre superior.
-2. `In1.Cu`: primera capa interna.
-3. `In2.Cu`: segunda capa interna.
-4. `B.Cu`: capa de cobre inferior.
 
-### Capa superior — F.Cu
+Salida de la etapa → Sensor de corriente → Batería o carga
 
-![Capa superior de cobre](Imagenes/f_cu.jpeg)
 
-*Figura 3. Enrutamiento de la capa superior de cobre.*
+Cada sensor también dispone de conexiones para:
 
-La capa `F.Cu` contiene conexiones entre los componentes ubicados en la cara
-superior de la placa.
+* Alimentación de `5 V`.
+* Tierra o `GND`.
+* Señal analógica de salida.
 
-En esta capa se pueden observar:
+La señal analógica generada por el sensor se envía al ESP32 para que el sistema
+de control pueda conocer la corriente real del circuito.
 
-- Las conexiones de los transistores.
-- Las trayectorias hacia los inductores.
-- Las conexiones del ESP32.
-- Las pistas de las etapas de amplificación.
-- Las conexiones hacia las borneras.
-- Las trayectorias de corriente de carga y descarga.
+Se utilizan sensores independientes para medir las corrientes asociadas con
+las etapas de carga y descarga.
 
-Las pistas asociadas con la etapa de potencia deben ser suficientemente anchas
-para soportar la corriente máxima prevista. Las pistas de medición y control
-pueden utilizar anchos menores, ya que transportan corrientes reducidas.
+### Sensor de tensión
 
-### Primera capa interna — In1.Cu
+El sensor de tensión se conecta directamente en paralelo con la batería.
 
-![Primera capa interna](Imagenes/in1_cu.jpeg)
+La conexión se realiza de la siguiente forma:
 
-*Figura 4. Primera capa interna de la PCB.*
 
-La capa `In1.Cu` puede utilizarse como plano de referencia o como plano de
-alimentación, dependiendo de la asignación de redes realizada en KiCad.
+Positivo del sensor → Positivo de la batería
+Negativo del sensor → Negativo de la batería
 
-El uso de una capa interna continua permite:
 
-- Reducir la impedancia de retorno.
-- Mejorar la distribución de corriente.
-- Disminuir el ruido eléctrico.
-- Facilitar la conexión a tierra de diferentes secciones.
-- Reducir el área de los lazos de corriente.
+A diferencia del sensor de corriente, el sensor de tensión no requiere abrir la
+trayectoria de potencia, debido a que mide la diferencia de potencial entre los
+terminales de la batería.
 
-La red asignada a esta capa debe comprobarse directamente en el archivo
-`Proyecto.kicad_pcb`.
+La salida analógica del sensor debe conectarse a la entrada correspondiente del
+ESP32.
 
-### Segunda capa interna — In2.Cu
+La tensión entregada al ESP32 debe mantenerse dentro de su rango permitido de
+entrada, por lo que el sensor debe proporcionar una señal escalada entre
+`0 V` y `3.3 V`.
 
-![Segunda capa interna](Imagenes/in2_cu.jpeg)
+## Conexión general del sistema
 
-*Figura 5. Segunda capa interna de la PCB.*
+La conexión final del prototipo se puede resumir de la siguiente manera:
 
-La segunda capa interna complementa la distribución de alimentación y retorno
-del circuito.
 
-Antes de fabricar la placa se debe verificar que las zonas de cobre estén
-actualizadas y que no existan islas de cobre sin conexión.
+Fuente principal
+       |
+       v
+Conector negro de alimentación
+       |
+       +----------------------+
+       |                      |
+       v                      v
+Etapas de potencia     Salida de 15 V
+                              |
+                              v
+                    Convertidor de 15 V a 5 V
+                              |
+                              v
+                    Alimentación de sensores
 
-En KiCad, las zonas pueden actualizarse presionando la tecla:
+ESP32
+  |
+  +--> Señal de carga --> Amplificador --> Transistor de carga
+  |
+  +--> Señal de descarga --> Amplificador --> Transistor de descarga
 
-```text
-B
-```
+Etapa de carga o descarga
+  |
+  v
+Sensor de corriente
+  |
+  v
+Batería
 
-### Capa inferior — B.Cu
+Sensor de tensión
+  |
+  +--> Conectado directamente a los terminales de la batería
 
-![Capa inferior de cobre](Imagenes/b_cu.jpeg)
 
-*Figura 6. Enrutamiento de la capa inferior de cobre.*
+El ESP32 recibe las señales de los sensores de corriente y tensión. Con estas
+mediciones calcula la acción de control y genera las señales `S.Carga` y
+`S.Descarga`.
 
-La capa `B.Cu` completa las conexiones que no pueden realizarse en la capa
-superior y permite distribuir las señales entre las diferentes secciones de la
-PCB.
+Estas señales pasan por las etapas de amplificación y posteriormente controlan
+los transistores de potencia.
 
-En esta capa se observan pistas que conectan:
+## Capa superior de cobre
 
-- El ESP32 con las etapas de control.
-- Las etapas de amplificación con los transistores.
-- Los inductores con las terminales externas.
-- La conexión de la batería.
-- Las referencias de alimentación y tierra.
+![Capa superior F.Cu](Imagenes/F.Cu.jpeg)
 
-## Descarga del proyecto
+*Figura 3. Capa superior de cobre `F.Cu`.*
 
-### Opción 1: descargar desde GitHub
+La capa `F.Cu` contiene una parte importante de las conexiones entre el ESP32,
+las etapas de amplificación, los transistores, los inductores y los conectores
+externos.
 
-Para descargar el proyecto completo desde la página de GitHub:
+En esta imagen se observan pistas más anchas en las trayectorias asociadas con
+la corriente de carga y descarga. Estas pistas deben soportar una corriente
+mayor que las señales de control.
 
-1. Ingresar al repositorio.
-2. Presionar el botón `Code`.
-3. Seleccionar `Download ZIP`.
-4. Descomprimir el archivo descargado.
-5. Ingresar al directorio:
+También se observan pistas más delgadas utilizadas para las señales del ESP32,
+los sensores y los amplificadores operacionales.
 
-```text
-propuesta/ciclador/PCB
-```
+## Primera capa interna
 
-Es importante descargar el repositorio completo y no únicamente los archivos
-`.kicad_pcb` o `.kicad_sch`, debido a que el proyecto utiliza carpetas
-adicionales para símbolos, huellas y modelos 3D.
+![Primera capa interna In1.Cu](Imagenes/In1.Cu.jpeg)
 
-### Opción 2: clonar el repositorio
+*Figura 4. Primera capa interna `In1.Cu`.*
 
-Desde una terminal se puede ejecutar:
+La primera capa interna contiene una zona de cobre que ayuda a distribuir una
+de las referencias eléctricas de la placa.
 
-```bash
-git clone <URL_DEL_REPOSITORIO>
-cd proyecto_electrico/propuesta/ciclador/PCB
-```
+El uso de una capa interna permite reducir la longitud de las conexiones,
+mejorar los caminos de retorno y disminuir el ruido producido por la etapa de
+potencia.
 
-Para descargar cambios posteriores:
+## Segunda capa interna
 
-```bash
-git pull
-```
+![Segunda capa interna In2.Cu](Imagenes/In2.Cu.jpeg)
 
-## Edición del proyecto
+*Figura 5. Segunda capa interna `In2.Cu`.*
 
-### Requisitos
+La segunda capa interna complementa la distribución de alimentación y tierra
+de la PCB.
 
-Para abrir y editar el diseño se necesita KiCad. Se recomienda utilizar una
-versión compatible con la empleada para crear el proyecto.
+Las capas internas permiten mantener una referencia más uniforme para el ESP32,
+los sensores y las etapas de acondicionamiento de señal.
 
-### Abrir el proyecto en macOS
+## Capa inferior de cobre
 
-Desde la carpeta `PCB`:
+![Capa inferior B.Cu](Imagenes/B.Cu.jpeg)
 
-```bash
-open Proyecto.kicad_pro
-```
+*Figura 6. Capa inferior de cobre `B.Cu`.*
 
-También se puede abrir KiCad y seleccionar manualmente:
+La capa `B.Cu` completa las conexiones que no pudieron realizarse en la capa
+superior.
 
-```text
-Archivo → Abrir proyecto existente
-```
+En esta imagen se observan las conexiones inferiores entre:
 
-Luego se debe elegir:
+* El ESP32.
+* Los circuitos integrados.
+* Los transistores.
+* Los inductores.
+* Los sensores.
+* La batería.
+* Los conectores de alimentación.
 
-```text
+La combinación de las cuatro capas permite separar las señales de control de
+las trayectorias de potencia y facilita la distribución de las conexiones en
+toda la placa.
+
+## Secuencia recomendada de conexión
+
+Para conectar el prototipo se recomienda seguir este orden:
+
+1. Mantener desconectada la batería.
+2. Conectar el convertidor externo de `15 V` a `5 V`.
+3. Verificar que la salida del convertidor sea realmente de `5 V`.
+4. Conectar los sensores de corriente en serie con sus respectivas
+   trayectorias.
+5. Conectar el sensor de tensión directamente a la batería.
+6. Conectar las señales de salida de los sensores al ESP32.
+7. Instalar el ESP32 sobre la PCB.
+8. Conectar la fuente principal al conector negro.
+9. Verificar las tensiones en `V+`, `5 V` y `GND`.
+10. Verificar las señales `S.Carga`, `S.Descarga`, `Out_C.Ampli` y
+    `Out_D.Ampli`.
+11. Conectar la batería respetando su polaridad.
+12. Iniciar las pruebas con una corriente limitada.
+
+## Uso de los archivos
+
+Para abrir o modificar el proyecto se debe utilizar el archivo:
+
+
 Proyecto.kicad_pro
-```
 
-### Archivos que deben editarse
 
-Para modificar el esquemático:
+Este archivo abre el proyecto completo dentro de KiCad.
 
-```text
+El esquemático puede modificarse desde:
+
+
 Proyecto.kicad_sch
-```
 
-Para modificar la distribución y el enrutamiento de la PCB:
 
-```text
+La distribución de componentes y pistas puede modificarse desde:
+
+
 Proyecto.kicad_pcb
-```
 
-Se recomienda abrir siempre `Proyecto.kicad_pro`, ya que este archivo carga la
-configuración completa del proyecto.
 
-### Bibliotecas personalizadas
+También deben mantenerse las carpetas `symbols`, `footprints` y `3dmodels`,
+debido a que contienen elementos utilizados por el proyecto.
 
-Si KiCad indica que no encuentra símbolos o huellas, se deben configurar las
-bibliotecas incluidas en el repositorio.
 
-Para los símbolos:
 
-```text
-Preferencias → Administrar bibliotecas de símbolos
-```
-
-Se debe agregar la biblioteca correspondiente ubicada dentro de:
-
-```text
-symbols/
-```
-
-Para las huellas:
-
-```text
-Preferencias → Administrar bibliotecas de huellas
-```
-
-Se debe agregar la carpeta correspondiente ubicada dentro de:
-
-```text
-footprints/
-```
-
-Se recomienda utilizar rutas relativas al proyecto mediante:
-
-```text
-${KIPRJMOD}
-```
-
-Por ejemplo:
-
-```text
-${KIPRJMOD}/footprints
-${KIPRJMOD}/symbols
-${KIPRJMOD}/3dmodels
-```
-
-Esto permite que el proyecto pueda abrirse en otras computadoras sin tener que
-modificar rutas absolutas.
-
-## Verificaciones antes de fabricar
-
-Antes de generar los archivos de fabricación se deben realizar las siguientes
-comprobaciones:
-
-### Revisión del esquemático
-
-En el editor de esquemáticos se debe ejecutar la comprobación de reglas
-eléctricas:
-
-```text
-Inspeccionar → Comprobador de reglas eléctricas
-```
-
-Se deben revisar especialmente:
-
-- Pines sin conexión.
-- Salidas conectadas entre sí.
-- Entradas flotantes.
-- Pines de alimentación no reconocidos.
-- Conexiones sin referencia de tierra.
-- Numeración y valores de los componentes.
-
-### Revisión de la PCB
-
-En el editor de PCB se debe ejecutar:
-
-```text
-Inspeccionar → Comprobador de reglas de diseño
-```
-
-Se deben corregir errores relacionados con:
-
-- Pistas sin conectar.
-- Separaciones insuficientes.
-- Vías demasiado cercanas.
-- Pistas fuera del borde de la placa.
-- Taladros superpuestos.
-- Componentes fuera de la PCB.
-- Errores entre zonas de cobre.
-- Incompatibilidad entre huellas y encapsulados.
-
-También se debe comprobar:
-
-- El ancho de las pistas de potencia.
-- La capacidad de corriente de las vías.
-- La separación entre potencia y control.
-- La orientación de los conectores.
-- La polaridad de la batería.
-- La orientación de los circuitos integrados.
-- La distribución de terminales de los transistores.
-- La posición de los disipadores.
-- La distancia entre componentes y agujeros de montaje.
-
-## Generación de archivos de fabricación
-
-Para fabricar la PCB se deben generar los archivos Gerber y los archivos de
-perforación.
-
-### Archivos Gerber
-
-Desde el editor de PCB:
-
-```text
-Archivo → Trazar
-```
-
-Para una PCB de cuatro capas se deben seleccionar, como mínimo:
-
-```text
-F.Cu
-In1.Cu
-In2.Cu
-B.Cu
-F.Mask
-B.Mask
-F.SilkS
-B.SilkS
-Edge.Cuts
-```
-
-Las capas de pasta:
-
-```text
-F.Paste
-B.Paste
-```
-
-solamente son necesarias cuando se solicitará una plantilla para aplicar pasta
-de soldadura.
-
-Los archivos pueden guardarse en:
-
-```text
-outputs/gerbers/
-```
-
-### Archivos de perforación
-
-Dentro de la misma ventana se debe seleccionar:
-
-```text
-Generar archivos de taladrado
-```
-
-Se recomienda utilizar el formato Excellon, que es aceptado por la mayoría de
-los fabricantes.
-
-Los archivos de perforación también deben colocarse en:
-
-```text
-outputs/gerbers/
-```
-
-### Verificación de los Gerber
-
-Antes de enviar los archivos al fabricante se deben abrir en el visor Gerber de
-KiCad:
-
-```text
-KiCad → Visor Gerber
-```
-
-Se debe verificar que:
-
-- El borde de la placa esté cerrado.
-- Las cuatro capas de cobre estén presentes.
-- Los agujeros estén correctamente ubicados.
-- La máscara de soldadura no cubra los pads.
-- La serigrafía no se encuentre sobre pads expuestos.
-- Los textos tengan una orientación correcta.
-- Las zonas de cobre estén rellenas.
-- No existan pistas cortadas.
-- Las dimensiones de la placa sean las esperadas.
-
-## Preparación para fabricación
-
-Una vez verificados los archivos, el contenido de la carpeta de Gerbers debe
-comprimirse:
-
-```bash
-cd outputs
-zip -r pcb_ciclador_gerbers.zip gerbers
-```
-
-El archivo generado puede cargarse en la página del fabricante seleccionado.
-
-Al configurar el pedido se debe indicar que la PCB utiliza cuatro capas. Los
-demás parámetros deben definirse de acuerdo con los requerimientos eléctricos
-y mecánicos del proyecto.
-
-Entre los parámetros que deben revisarse se encuentran:
-
-- Número de capas.
-- Espesor de la PCB.
-- Espesor de cobre.
-- Material de la placa.
-- Acabado superficial.
-- Color de la máscara de soldadura.
-- Color de la serigrafía.
-- Diámetro mínimo de perforación.
-- Ancho y separación mínima de pistas.
-- Dimensiones de la PCB.
-- Cantidad de unidades.
-- Necesidad de plantilla de soldadura.
-
-No se deben seleccionar automáticamente los valores más económicos sin
-comprobar que soporten las corrientes del circuito.
-
-## Ensamblaje inicial
-
-Antes de soldar todos los componentes se recomienda seguir este orden:
-
-1. Revisar visualmente la PCB recibida.
-2. Realizar pruebas de continuidad.
-3. Verificar que no existan cortocircuitos entre alimentación y tierra.
-4. Soldar primero los componentes pequeños.
-5. Soldar los circuitos integrados.
-6. Soldar las resistencias y conectores.
-7. Soldar los inductores.
-8. Instalar los transistores.
-9. Instalar los disipadores.
-10. Conectar el ESP32 únicamente después de verificar las tensiones.
-11. Probar las fuentes sin conectar una batería.
-12. Realizar la primera prueba con una fuente limitada en corriente.
-
-## Pruebas recomendadas
-
-Antes de conectar una batería real se recomienda verificar:
-
-- Continuidad de todas las conexiones de potencia.
-- Ausencia de cortocircuitos.
-- Tensión de alimentación del ESP32.
-- Tensión de salida de las etapas de amplificación.
-- Señales de carga y descarga.
-- Funcionamiento de los sensores.
-- Polaridad de los conectores.
-- Respuesta de los transistores.
-- Temperatura de los componentes de potencia.
-- Corriente máxima del circuito.
-- Comunicación entre el ESP32 y los demás dispositivos.
-
-Las primeras pruebas deben realizarse con una fuente de laboratorio limitada en
-corriente. La batería solamente debe conectarse después de comprobar que las
-etapas de control, medición y potencia funcionan correctamente.
-
-## Advertencia
-
-Este diseño corresponde a un prototipo académico. Antes de utilizarlo con una
-batería real se deben verificar todas las conexiones, límites de tensión,
-límites de corriente, temperaturas y mecanismos de protección.
-
-Una conexión incorrecta o un error en el sistema de control puede provocar
-daños en la PCB, en el ESP32, en los componentes de potencia o en la batería.
-````
 
