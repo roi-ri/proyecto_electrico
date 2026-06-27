@@ -4,13 +4,14 @@
 ## Descripción general
 
 En este directorio se encuentran los archivos de diseño de la PCB utilizada
-para implementar el circuito ciclador de baterías.
+para implementar el prototipo del ciclador de baterías.
 
-La placa integra las etapas de carga y descarga, el acondicionamiento de las
-señales de control, las conexiones para los sensores, el ESP32 y las terminales
-necesarias para conectar la alimentación y la batería.
+La placa integra las etapas principales necesarias para realizar los procesos
+de carga y descarga de la batería. Además, permite conectar el ESP32, los
+sensores de corriente, el sensor de tensión, el convertidor de tensión externo,
+la alimentación principal y la batería.
 
-La PCB fue diseñada en KiCad y utiliza cuatro capas de cobre:
+El diseño fue realizado en KiCad y utiliza cuatro capas de cobre:
 
 - `F.Cu`: capa superior.
 - `In1.Cu`: primera capa interna.
@@ -20,340 +21,379 @@ La PCB fue diseñada en KiCad y utiliza cuatro capas de cobre:
 Los archivos principales del proyecto son:
 
 - `Proyecto.kicad_pro`: archivo principal del proyecto de KiCad.
-- `Proyecto.kicad_sch`: esquemático eléctrico.
+- `Proyecto.kicad_sch`: esquemático eléctrico del circuito.
 - `Proyecto.kicad_pcb`: diseño físico de la PCB.
-- `symbols/`: símbolos personalizados.
-- `footprints/`: huellas personalizadas.
-- `3dmodels/`: modelos tridimensionales utilizados.
+- `symbols/`: símbolos personalizados utilizados en el esquemático.
+- `footprints/`: huellas personalizadas utilizadas en la PCB.
+- `3dmodels/`: modelos tridimensionales de los componentes.
 - `Imagenes/`: imágenes de las capas y vistas tridimensionales de la PCB.
 
-## Distribución de la PCB
+## Distribución general de la PCB
 
-### Vista superior
+La PCB está organizada para separar las etapas de control, medición y potencia.
+
+En la parte central de la placa se ubica el ESP32, el cual se encarga de
+ejecutar el sistema de control. En el lado derecho se encuentran los
+transistores de potencia, los disipadores, los inductores y las terminales
+relacionadas con la batería y los sensores. En el lado izquierdo se ubican las
+entradas de alimentación, las señales de control y las conexiones asociadas al
+convertidor externo de tensión.
+
+## Vista superior de la PCB
 
 ![Vista superior de la PCB](Imagenes/Vista%20superior%20.png)
 
 *Figura 1. Vista superior del prototipo de la PCB.*
 
-En la vista superior se observa la distribución de los componentes que forman
-el circuito ciclador.
+En la vista superior se observa la distribución física de los componentes
+principales del prototipo.
 
-En el centro de la placa se encuentra el ESP32, encargado de ejecutar el
-algoritmo de control y generar las señales correspondientes a los procesos de
-carga y descarga.
+En el centro de la placa se encuentra el módulo ESP32. Este microcontrolador
+recibe las señales de los sensores, ejecuta el algoritmo de control y genera
+las señales necesarias para activar las etapas de carga y descarga.
 
 En la parte superior derecha se encuentran los transistores de potencia `Q1` y
-`Q2`. Cada transistor posee un disipador de calor, debido a que estos
-componentes controlan la corriente del circuito y pueden producir pérdidas de
-potencia durante su funcionamiento.
-
-Los transistores tienen las siguientes funciones:
-
-- `Q1`: controla una de las etapas del ciclador.
-- `Q2`: controla la etapa complementaria.
+`Q2`. Estos transistores controlan el paso de corriente durante los procesos de
+carga y descarga de la batería. Debido a que pueden disipar potencia durante su
+funcionamiento, cada uno cuenta con un disipador de calor.
 
 Debajo de los transistores se encuentran los inductores `L1` y `L2`. Estos
-componentes permiten limitar las variaciones bruscas de corriente y forman
-parte de las trayectorias de carga y descarga de la batería.
+elementos forman parte de las trayectorias de potencia y permiten limitar las
+variaciones bruscas de corriente.
 
-En la parte inferior de la PCB se encuentran los circuitos integrados `IC1` e
+En la parte inferior de la placa se observan los circuitos integrados `IC1` e
 `IC2`, junto con las resistencias `R1`, `R2`, `R3` y `R4`. Estos componentes
-forman las etapas de amplificación de las señales de control provenientes del
-ESP32.
+forman las etapas de acondicionamiento y amplificación de las señales de
+control provenientes del ESP32.
 
-Las señales de control del ESP32 se pueden medir en los puntos:
+También se encuentran puntos de prueba para verificar señales importantes del
+sistema:
 
 - `S.Carga`: señal de control para la etapa de carga.
 - `S.Descarga`: señal de control para la etapa de descarga.
-
-Las señales después de las etapas de amplificación pueden medirse en:
-
 - `Out_C.Ampli`: salida amplificada de la etapa de carga.
 - `Out_D.Ampli`: salida amplificada de la etapa de descarga.
+- `V+`: punto de medición de tensión positiva.
+- `GND`: referencia común del circuito.
 
-También se dispone de puntos de prueba identificados como `V+` y `GND`, los
-cuales permiten comprobar las tensiones de alimentación con respecto a la
-referencia común del circuito.
-
-### Vista inferior
+## Vista inferior de la PCB
 
 ![Vista inferior de la PCB](Imagenes/Vista%20inferior.png)
 
 *Figura 2. Vista inferior del prototipo de la PCB.*
 
-La vista inferior permite observar los puntos de soldadura de los conectores,
-los sensores, el ESP32, los transistores y los demás componentes instalados en
-la placa.
+La vista inferior permite observar la parte posterior de la placa, donde se
+aprecian las conexiones de los pines, los puntos de soldadura y las rutas que
+comunican los diferentes bloques del circuito.
 
-En esta cara también se pueden verificar las conexiones entre los módulos
-externos y la PCB. Esta vista resulta útil durante el ensamblaje para revisar la
-orientación de los pines y comprobar que no existan uniones o cortocircuitos
-entre puntos cercanos.
+Esta vista es útil durante el ensamblaje porque permite revisar la orientación
+de los conectores, verificar los puntos de soldadura y comprobar que no existan
+cortocircuitos entre terminales cercanas.
 
-## Conexiones del prototipo
+También permite observar cómo se conectan físicamente los módulos externos a la
+PCB, como el ESP32, los conectores de sensores, la alimentación y la batería.
 
-### Alimentación principal
+## Conectores principales de la PCB
 
-La alimentación completa de la PCB se conecta mediante el conector negro
-ubicado en la esquina superior izquierda.
+La placa cuenta con varios conectores que permiten integrar el prototipo final.
 
-Este conector suministra la tensión principal utilizada por las etapas de
-potencia y por los demás circuitos de la placa.
+### Conector negro de alimentación principal
 
-Antes de conectar la alimentación se debe verificar:
+El conector negro ubicado en la esquina superior izquierda corresponde a la
+alimentación principal de la PCB.
 
-- La tensión de la fuente.
-- La polaridad del conector.
-- La referencia común de tierra.
-- Que no existan cortocircuitos entre alimentación y `GND`.
+En este conector se conecta la fuente que alimenta el circuito completo. Esta
+alimentación se utiliza para las etapas principales de potencia y para generar
+las tensiones necesarias en el resto del sistema.
 
-### Convertidor de 15 V a 5 V
+Antes de energizar la PCB se debe verificar la polaridad del conector y
+confirmar con un multímetro que no exista cortocircuito entre la alimentación y
+`GND`.
 
-En el lado izquierdo de la placa se encuentran dos conectores verdes pequeños
-destinados a conectar un convertidor externo de tensión de `15 V` a `5 V`.
+### Conectores verdes pequeños para el convertidor de 15 V a 5 V
 
-La conexión se realiza de la siguiente forma:
+En el lado izquierdo de la PCB se tienen dos conectores verdes pequeños. Estos
+se utilizan para conectar un convertidor externo de tensión de `15 V` a `5 V`.
 
-1. La salida de `15 V` de la PCB se conecta a la entrada del convertidor.
-2. El convertidor reduce la tensión de `15 V` a `5 V`.
-3. La salida de `5 V` del convertidor se conecta nuevamente a la PCB.
-4. Esta tensión de `5 V` se utiliza para alimentar los sensores.
+La idea es que la PCB entregue una tensión de `15 V` hacia el convertidor y que
+el convertidor devuelva una tensión regulada de `5 V`. Esta tensión de `5 V` se
+utiliza para alimentar los sensores del sistema.
 
-Los conectores están identificados mediante las etiquetas:
+Las conexiones se identifican como:
 
-- `Out 15V`
-- `IN DC/DC`
+- `Out 15V`: salida de `15 V` desde la PCB hacia el convertidor.
+- `IN DC/DC`: entrada de `5 V` desde el convertidor hacia la PCB.
 
-Se debe respetar la polaridad positiva y negativa indicada en la serigrafía de
-la placa.
+La conexión general es la siguiente:
 
-El convertidor no debe conectarse de forma inversa, ya que una tensión de
-`15 V` aplicada directamente a los sensores podría dañarlos.
 
-### Conexión de la batería
+flowchart LR
+    A["PCB<br/>Out 15 V"] -->|"15 V"| B["Convertidor externo<br/>15 V a 5 V"]
+    B -->|"5 V"| C["PCB<br/>IN DC/DC"]
+    C --> D["Alimentación de sensores"]
+    G["GND común"] --- B
+    G --- D
+
+
+*Figura 3. Conexión del convertidor externo de 15 V a 5 V.*
+
+Es importante respetar la polaridad marcada en la PCB. Si el convertidor se
+conecta de forma incorrecta, se pueden dañar los sensores o el ESP32.
+
+### Terminal verde para la batería
 
 La batería se conecta en la terminal verde identificada como `J4`, ubicada en
-la parte inferior derecha de la placa.
+la parte inferior derecha de la PCB.
 
-La polaridad se encuentra marcada sobre la PCB:
+La polaridad está indicada en la serigrafía de la placa:
 
 
 + Batería -
 
 
-El terminal positivo de la batería debe conectarse al punto marcado con `+` y
-el terminal negativo al punto marcado con `-`.
+El terminal positivo de la batería debe conectarse al lado marcado con `+` y el
+terminal negativo debe conectarse al lado marcado con `-`.
 
-Antes de realizar esta conexión se recomienda comprobar la polaridad con un
+Antes de conectar una batería real se recomienda comprobar la polaridad con un
 multímetro.
+
+## Sensores del sistema
+
+El prototipo utiliza sensores de corriente y un sensor de tensión. Estos
+sensores permiten que el ESP32 conozca el estado eléctrico del circuito y pueda
+calcular la acción de control correspondiente.
 
 ### Sensores de corriente
 
-Los sensores de corriente se conectan en serie con la trayectoria que se desea
-medir.
+Los sensores de corriente se conectan abriendo la trayectoria de potencia. Para
+esto se utilizan las terminales negras ubicadas en la parte superior de los
+módulos de sensor.
 
-Para realizar esta conexión se debe abrir el conductor por el que circula la
-corriente e insertar el sensor entre los dos extremos del circuito. De esta
-forma, toda la corriente de carga o descarga atraviesa el sensor.
+La corriente que se desea medir debe pasar a través del sensor. Por eso, el
+sensor de corriente se conecta en serie con la trayectoria de carga o descarga.
 
-Las terminales negras ubicadas en la parte superior de cada módulo permiten
-realizar esta conexión de potencia.
-
-De manera general, la conexión es:
+La conexión general es:
 
 
-Salida de la etapa → Sensor de corriente → Batería o carga
+flowchart LR
+    A["Etapa de carga<br/>o descarga"] --> B["Terminal negra<br/>entrada del sensor"]
+    B --> C["Sensor de corriente"]
+    C --> D["Terminal negra<br/>salida del sensor"]
+    D --> E["Batería o carga"]
+
+    F["5 V"] --> C
+    G["GND"] --> C
+    C -->|"Señal analógica"| H["ADC del ESP32"]
 
 
-Cada sensor también dispone de conexiones para:
+*Figura 4. Conexión del sensor de corriente en serie con el circuito.*
 
-* Alimentación de `5 V`.
-* Tierra o `GND`.
-* Señal analógica de salida.
+Cada sensor de corriente requiere:
 
-La señal analógica generada por el sensor se envía al ESP32 para que el sistema
-de control pueda conocer la corriente real del circuito.
+- Alimentación de `5 V`.
+- Conexión a `GND`.
+- Conexión de la señal analógica hacia el ESP32.
+- Conexión en serie con la trayectoria de corriente que se desea medir.
 
-Se utilizan sensores independientes para medir las corrientes asociadas con
-las etapas de carga y descarga.
+En el prototipo se utilizan sensores independientes para medir la corriente de
+carga y la corriente de descarga.
 
 ### Sensor de tensión
 
-El sensor de tensión se conecta directamente en paralelo con la batería.
+El sensor de tensión se conecta directamente en paralelo con la batería. A
+diferencia del sensor de corriente, no es necesario abrir la trayectoria de
+potencia.
 
-La conexión se realiza de la siguiente forma:
-
-
-Positivo del sensor → Positivo de la batería
-Negativo del sensor → Negativo de la batería
+La conexión general es:
 
 
-A diferencia del sensor de corriente, el sensor de tensión no requiere abrir la
-trayectoria de potencia, debido a que mide la diferencia de potencial entre los
-terminales de la batería.
+flowchart LR
+    A["Positivo de batería"] --> B["Entrada positiva<br/>del sensor de tensión"]
+    C["Negativo de batería"] --> D["Entrada negativa<br/>del sensor de tensión"]
 
-La salida analógica del sensor debe conectarse a la entrada correspondiente del
-ESP32.
+    B --> E["Sensor de tensión"]
+    D --> E
 
-La tensión entregada al ESP32 debe mantenerse dentro de su rango permitido de
-entrada, por lo que el sensor debe proporcionar una señal escalada entre
-`0 V` y `3.3 V`.
-
-## Conexión general del sistema
-
-La conexión final del prototipo se puede resumir de la siguiente manera:
+    F["5 V"] --> E
+    G["GND"] --> E
+    E -->|"Señal proporcional<br/>0 V a 3.3 V"| H["ADC del ESP32"]
 
 
-Fuente principal
-       |
-       v
-Conector negro de alimentación
-       |
-       +----------------------+
-       |                      |
-       v                      v
-Etapas de potencia     Salida de 15 V
-                              |
-                              v
-                    Convertidor de 15 V a 5 V
-                              |
-                              v
-                    Alimentación de sensores
+*Figura 5. Conexión del sensor de tensión en paralelo con la batería.*
 
-ESP32
-  |
-  +--> Señal de carga --> Amplificador --> Transistor de carga
-  |
-  +--> Señal de descarga --> Amplificador --> Transistor de descarga
+El sensor de tensión mide la diferencia de potencial entre los terminales de la
+batería y entrega una señal proporcional al ESP32.
 
-Etapa de carga o descarga
-  |
-  v
-Sensor de corriente
-  |
-  v
-Batería
+La salida del sensor debe mantenerse dentro del rango permitido por el ESP32,
+es decir, entre `0 V` y `3.3 V`.
 
-Sensor de tensión
-  |
-  +--> Conectado directamente a los terminales de la batería
+## Conexión general del prototipo final
+
+La conexión completa del prototipo se resume en el siguiente diagrama:
 
 
-El ESP32 recibe las señales de los sensores de corriente y tensión. Con estas
-mediciones calcula la acción de control y genera las señales `S.Carga` y
-`S.Descarga`.
+flowchart TB
+    A["Fuente principal"] --> B["Conector negro<br/>de alimentación"]
+    B --> C["PCB del ciclador"]
 
-Estas señales pasan por las etapas de amplificación y posteriormente controlan
-los transistores de potencia.
+    C -->|"15 V"| D["Convertidor externo<br/>15 V a 5 V"]
+    D -->|"5 V"| E["Sensores"]
+
+    F["ESP32"] -->|"S.Carga"| G["Amplificador<br/>de carga"]
+    F -->|"S.Descarga"| H["Amplificador<br/>de descarga"]
+
+    G --> I["Transistor<br/>de carga"]
+    H --> J["Transistor<br/>de descarga"]
+
+    I --> K["Inductor<br/>de carga"]
+    J --> L["Inductor<br/>de descarga"]
+
+    K --> M["Sensor de corriente<br/>de carga"]
+    L --> N["Sensor de corriente<br/>de descarga"]
+
+    M --> O["Batería<br/>J4"]
+    O --> N
+
+    O --- P["Sensor de tensión"]
+
+    M -->|"Corriente de carga medida"| F
+    N -->|"Corriente de descarga medida"| F
+    P -->|"Tensión de batería medida"| F
+
+    E --> M
+    E --> N
+    E --> P
+
+
+*Figura 6. Conexión general del prototipo final.*
+
+El funcionamiento general del sistema es el siguiente:
+
+1. La fuente principal alimenta la PCB mediante el conector negro.
+2. La PCB entrega `15 V` hacia el convertidor externo.
+3. El convertidor genera `5 V` para alimentar los sensores.
+4. El ESP32 genera las señales `S.Carga` y `S.Descarga`.
+5. Las señales del ESP32 pasan por las etapas de amplificación.
+6. Las etapas amplificadas accionan los transistores de potencia.
+7. Los inductores limitan las variaciones bruscas de corriente.
+8. Los sensores de corriente miden la corriente de carga y descarga.
+9. El sensor de tensión mide la tensión directamente en la batería.
+10. Las señales medidas regresan al ESP32 para cerrar el lazo de control.
 
 ## Capa superior de cobre
 
-![Capa superior F.Cu](Imagenes/F.Cu.jpeg)
+![Capa superior de cobre](Imagenes/F.Cu.jpeg)
 
-*Figura 3. Capa superior de cobre `F.Cu`.*
+*Figura 7. Capa superior de cobre `F.Cu`.*
 
-La capa `F.Cu` contiene una parte importante de las conexiones entre el ESP32,
-las etapas de amplificación, los transistores, los inductores y los conectores
-externos.
+La capa superior contiene parte del enrutamiento principal de la PCB.
 
-En esta imagen se observan pistas más anchas en las trayectorias asociadas con
-la corriente de carga y descarga. Estas pistas deben soportar una corriente
-mayor que las señales de control.
+En esta imagen se observan las pistas que conectan el ESP32 con las etapas de
+control, las etapas de amplificación con los transistores y las trayectorias de
+potencia hacia los inductores y conectores externos.
 
-También se observan pistas más delgadas utilizadas para las señales del ESP32,
-los sensores y los amplificadores operacionales.
+Las pistas de mayor ancho corresponden a trayectorias donde puede circular una
+corriente más alta. Las pistas más delgadas corresponden principalmente a
+señales de control, medición y comunicación entre bloques.
 
 ## Primera capa interna
 
-![Primera capa interna In1.Cu](Imagenes/In1.Cu.jpeg)
+![Primera capa interna](Imagenes/In1.Cu.jpeg)
 
-*Figura 4. Primera capa interna `In1.Cu`.*
+*Figura 8. Primera capa interna `In1.Cu`.*
 
-La primera capa interna contiene una zona de cobre que ayuda a distribuir una
-de las referencias eléctricas de la placa.
+La primera capa interna corresponde a una zona de cobre utilizada para mejorar
+la distribución eléctrica dentro de la PCB.
 
-El uso de una capa interna permite reducir la longitud de las conexiones,
-mejorar los caminos de retorno y disminuir el ruido producido por la etapa de
+Esta capa ayuda a reducir la impedancia de las conexiones internas y permite
+tener una referencia más uniforme para diferentes secciones del circuito.
+
+También contribuye a separar las señales de control de las trayectorias de
 potencia.
 
 ## Segunda capa interna
 
-![Segunda capa interna In2.Cu](Imagenes/In2.Cu.jpeg)
+![Segunda capa interna](Imagenes/In2.Cu.jpeg)
 
-*Figura 5. Segunda capa interna `In2.Cu`.*
+*Figura 9. Segunda capa interna `In2.Cu`.*
 
-La segunda capa interna complementa la distribución de alimentación y tierra
-de la PCB.
+La segunda capa interna complementa la distribución de la alimentación y de las
+referencias eléctricas del circuito.
 
-Las capas internas permiten mantener una referencia más uniforme para el ESP32,
-los sensores y las etapas de acondicionamiento de señal.
+Al utilizar una PCB de cuatro capas, se facilita la conexión entre los
+componentes y se mejora la organización de las rutas internas. Esto permite
+tener un diseño más limpio y con menor interferencia entre las señales de
+potencia y las señales del ESP32.
 
 ## Capa inferior de cobre
 
-![Capa inferior B.Cu](Imagenes/B.Cu.jpeg)
+![Capa inferior de cobre](Imagenes/B.Cu.jpeg)
 
-*Figura 6. Capa inferior de cobre `B.Cu`.*
+*Figura 10. Capa inferior de cobre `B.Cu`.*
 
-La capa `B.Cu` completa las conexiones que no pudieron realizarse en la capa
+La capa inferior completa las conexiones que no se realizan en la capa
 superior.
 
-En esta imagen se observan las conexiones inferiores entre:
+En esta imagen se observan rutas entre el ESP32, los circuitos integrados, los
+transistores, los inductores, los conectores de sensores y la terminal de la
+batería.
 
-* El ESP32.
-* Los circuitos integrados.
-* Los transistores.
-* Los inductores.
-* Los sensores.
-* La batería.
-* Los conectores de alimentación.
-
-La combinación de las cuatro capas permite separar las señales de control de
-las trayectorias de potencia y facilita la distribución de las conexiones en
-toda la placa.
+La combinación de las cuatro capas permite distribuir mejor las conexiones,
+mantener referencias eléctricas más estables y separar de mejor manera las
+señales de control de las trayectorias de corriente.
 
 ## Secuencia recomendada de conexión
 
-Para conectar el prototipo se recomienda seguir este orden:
+Para conectar el prototipo se recomienda seguir el siguiente orden:
 
-1. Mantener desconectada la batería.
-2. Conectar el convertidor externo de `15 V` a `5 V`.
-3. Verificar que la salida del convertidor sea realmente de `5 V`.
-4. Conectar los sensores de corriente en serie con sus respectivas
-   trayectorias.
-5. Conectar el sensor de tensión directamente a la batería.
-6. Conectar las señales de salida de los sensores al ESP32.
-7. Instalar el ESP32 sobre la PCB.
-8. Conectar la fuente principal al conector negro.
-9. Verificar las tensiones en `V+`, `5 V` y `GND`.
-10. Verificar las señales `S.Carga`, `S.Descarga`, `Out_C.Ampli` y
-    `Out_D.Ampli`.
-11. Conectar la batería respetando su polaridad.
-12. Iniciar las pruebas con una corriente limitada.
+1. Mantener la batería desconectada.
+2. Conectar la fuente principal al conector negro de alimentación.
+3. Verificar la tensión de entrada y la polaridad.
+4. Conectar el convertidor externo de `15 V` a `5 V`.
+5. Verificar que la salida del convertidor sea de `5 V`.
+6. Conectar la alimentación de los sensores.
+7. Conectar los sensores de corriente en serie usando las terminales negras.
+8. Conectar el sensor de tensión directamente a los terminales de la batería.
+9. Instalar el ESP32 en la PCB.
+10. Verificar las señales `S.Carga` y `S.Descarga`.
+11. Verificar las salidas `Out_C.Ampli` y `Out_D.Ampli`.
+12. Conectar la batería respetando la polaridad indicada en `J4`.
+13. Iniciar las pruebas con corriente limitada.
 
-## Uso de los archivos
+## Uso de los archivos de KiCad
 
-Para abrir o modificar el proyecto se debe utilizar el archivo:
+Para abrir el proyecto completo se debe utilizar el archivo:
 
 
 Proyecto.kicad_pro
 
 
-Este archivo abre el proyecto completo dentro de KiCad.
+Este archivo permite abrir el diseño completo en KiCad.
 
-El esquemático puede modificarse desde:
+El esquemático eléctrico se encuentra en:
 
 
 Proyecto.kicad_sch
 
 
-La distribución de componentes y pistas puede modificarse desde:
+El diseño físico de la PCB se encuentra en:
 
 
 Proyecto.kicad_pcb
 
 
-También deben mantenerse las carpetas `symbols`, `footprints` y `3dmodels`,
-debido a que contienen elementos utilizados por el proyecto.
+Las carpetas `symbols`, `footprints` y `3dmodels` deben mantenerse junto con el
+proyecto, ya que contienen elementos utilizados por el diseño.
+
+## Advertencia
+
+Este diseño corresponde a un prototipo académico. Antes de conectar una batería
+real se deben revisar cuidadosamente las conexiones, la polaridad, los niveles
+de tensión, las corrientes máximas y el funcionamiento del sistema de control.
+
+Una conexión incorrecta puede dañar la PCB, el ESP32, los sensores, los
+transistores o la batería.
+
 
 
 
