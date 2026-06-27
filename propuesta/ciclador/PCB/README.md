@@ -124,21 +124,7 @@ Las conexiones se identifican como:
 - `Out 15V`: salida de `15 V` desde la PCB hacia el convertidor.
 - `IN DC/DC`: entrada de `5 V` desde el convertidor hacia la PCB.
 
-La conexión general es la siguiente:
 
-```mermaid
-flowchart LR
-    A["PCB<br/>Out 15 V"] -->|"15 V"| B["Convertidor externo<br/>15 V a 5 V"]
-    B -->|"5 V"| C["PCB<br/>IN DC/DC"]
-    C --> D["Alimentación de sensores"]
-    G["GND común"] --- B
-    G --- D
-```
-
-*Figura 3. Conexión del convertidor externo de 15 V a 5 V.*
-
-Es importante respetar la polaridad marcada en la PCB. Si el convertidor se
-conecta de forma incorrecta, se pueden dañar los sensores o el ESP32.
 
 ### Terminal verde para la batería
 
@@ -172,21 +158,7 @@ módulos de sensor.
 La corriente que se desea medir debe pasar a través del sensor. Por eso, el
 sensor de corriente se conecta en serie con la trayectoria de carga o descarga.
 
-La conexión general es:
 
-```mermaid
-flowchart LR
-    A["Etapa de carga<br/>o descarga"] --> B["Terminal negra<br/>entrada del sensor"]
-    B --> C["Sensor de corriente"]
-    C --> D["Terminal negra<br/>salida del sensor"]
-    D --> E["Batería o carga"]
-
-    F["5 V"] --> C
-    G["GND"] --> C
-    C -->|"Señal analógica"| H["ADC del ESP32"]
-```
-
-*Figura 4. Conexión del sensor de corriente en serie con el circuito.*
 
 Cada sensor de corriente requiere:
 
@@ -204,22 +176,7 @@ El sensor de tensión se conecta directamente en paralelo con la batería. A
 diferencia del sensor de corriente, no es necesario abrir la trayectoria de
 potencia.
 
-La conexión general es:
 
-```mermaid
-flowchart LR
-    A["Positivo de batería"] --> B["Entrada positiva<br/>del sensor de tensión"]
-    C["Negativo de batería"] --> D["Entrada negativa<br/>del sensor de tensión"]
-
-    B --> E["Sensor de tensión"]
-    D --> E
-
-    F["5 V"] --> E
-    G["GND"] --> E
-    E -->|"Señal proporcional<br/>0 V a 3.3 V"| H["ADC del ESP32"]
-```
-
-*Figura 5. Conexión del sensor de tensión en paralelo con la batería.*
 
 El sensor de tensión mide la diferencia de potencial entre los terminales de la
 batería y entrega una señal proporcional al ESP32.
@@ -229,43 +186,7 @@ es decir, entre `0 V` y `3.3 V`.
 
 ## Conexión general del prototipo final
 
-La conexión completa del prototipo se resume en el siguiente diagrama:
 
-```mermaid
-flowchart TB
-    A["Fuente principal"] --> B["Conector negro<br/>de alimentación"]
-    B --> C["PCB del ciclador"]
-
-    C -->|"15 V"| D["Convertidor externo<br/>15 V a 5 V"]
-    D -->|"5 V"| E["Sensores"]
-
-    F["ESP32"] -->|"S.Carga"| G["Amplificador<br/>de carga"]
-    F -->|"S.Descarga"| H["Amplificador<br/>de descarga"]
-
-    G --> I["Transistor<br/>de carga"]
-    H --> J["Transistor<br/>de descarga"]
-
-    I --> K["Inductor<br/>de carga"]
-    J --> L["Inductor<br/>de descarga"]
-
-    K --> M["Sensor de corriente<br/>de carga"]
-    L --> N["Sensor de corriente<br/>de descarga"]
-
-    M --> O["Batería<br/>J4"]
-    O --> N
-
-    O --- P["Sensor de tensión"]
-
-    M -->|"Corriente de carga medida"| F
-    N -->|"Corriente de descarga medida"| F
-    P -->|"Tensión de batería medida"| F
-
-    E --> M
-    E --> N
-    E --> P
-```
-
-*Figura 6. Conexión general del prototipo final.*
 
 El funcionamiento general del sistema es el siguiente:
 
