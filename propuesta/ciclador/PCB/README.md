@@ -127,13 +127,14 @@ Las conexiones se identifican como:
 La conexión general es la siguiente:
 
 
+```mermaid
 flowchart LR
     A["PCB<br/>Out 15 V"] -->|"15 V"| B["Convertidor externo<br/>15 V a 5 V"]
     B -->|"5 V"| C["PCB<br/>IN DC/DC"]
     C --> D["Alimentación de sensores"]
     G["GND común"] --- B
     G --- D
-
+```
 
 *Figura 3. Conexión del convertidor externo de 15 V a 5 V.*
 
@@ -148,7 +149,9 @@ la parte inferior derecha de la PCB.
 La polaridad está indicada en la serigrafía de la placa:
 
 
-+ Batería -
+```text 
++ Batería - 
+```
 
 
 El terminal positivo de la batería debe conectarse al lado marcado con `+` y el
@@ -175,15 +178,9 @@ sensor de corriente se conecta en serie con la trayectoria de carga o descarga.
 La conexión general es:
 
 
-flowchart LR
-    A["Etapa de carga<br/>o descarga"] --> B["Terminal negra<br/>entrada del sensor"]
-    B --> C["Sensor de corriente"]
-    C --> D["Terminal negra<br/>salida del sensor"]
-    D --> E["Batería o carga"]
-
-    F["5 V"] --> C
-    G["GND"] --> C
-    C -->|"Señal analógica"| H["ADC del ESP32"]
+```mermaid 
+flowchart LR A["Etapa de carga<br/>o descarga"] --> B["Terminal negra<br/>entrada del sensor"] B --> C["Sensor de corriente"] C --> D["Terminal negra<br/>salida del sensor"] D --> E["Batería o carga"] F["5 V"] --> C G["GND"] --> C C -->|"Señal analógica"| H["ADC del ESP32"] 
+```
 
 
 *Figura 4. Conexión del sensor de corriente en serie con el circuito.*
@@ -207,16 +204,9 @@ potencia.
 La conexión general es:
 
 
-flowchart LR
-    A["Positivo de batería"] --> B["Entrada positiva<br/>del sensor de tensión"]
-    C["Negativo de batería"] --> D["Entrada negativa<br/>del sensor de tensión"]
-
-    B --> E["Sensor de tensión"]
-    D --> E
-
-    F["5 V"] --> E
-    G["GND"] --> E
-    E -->|"Señal proporcional<br/>0 V a 3.3 V"| H["ADC del ESP32"]
+```mermaid 
+flowchart LR A["Positivo de batería"] --> B["Entrada positiva<br/>del sensor de tensión"] C["Negativo de batería"] --> D["Entrada negativa<br/>del sensor de tensión"] B --> E["Sensor de tensión"] D --> E F["5 V"] --> E G["GND"] --> E E -->|"Señal proporcional<br/>0 V a 3.3 V"| H["ADC del ESP32"] 
+```
 
 
 *Figura 5. Conexión del sensor de tensión en paralelo con la batería.*
@@ -232,37 +222,9 @@ es decir, entre `0 V` y `3.3 V`.
 La conexión completa del prototipo se resume en el siguiente diagrama:
 
 
-flowchart TB
-    A["Fuente principal"] --> B["Conector negro<br/>de alimentación"]
-    B --> C["PCB del ciclador"]
-
-    C -->|"15 V"| D["Convertidor externo<br/>15 V a 5 V"]
-    D -->|"5 V"| E["Sensores"]
-
-    F["ESP32"] -->|"S.Carga"| G["Amplificador<br/>de carga"]
-    F -->|"S.Descarga"| H["Amplificador<br/>de descarga"]
-
-    G --> I["Transistor<br/>de carga"]
-    H --> J["Transistor<br/>de descarga"]
-
-    I --> K["Inductor<br/>de carga"]
-    J --> L["Inductor<br/>de descarga"]
-
-    K --> M["Sensor de corriente<br/>de carga"]
-    L --> N["Sensor de corriente<br/>de descarga"]
-
-    M --> O["Batería<br/>J4"]
-    O --> N
-
-    O --- P["Sensor de tensión"]
-
-    M -->|"Corriente de carga medida"| F
-    N -->|"Corriente de descarga medida"| F
-    P -->|"Tensión de batería medida"| F
-
-    E --> M
-    E --> N
-    E --> P
+```mermaid 
+flowchart TB A["Fuente principal"] --> B["Conector negro<br/>de alimentación"] B --> C["PCB del ciclador"] C -->|"15 V"| D["Convertidor externo<br/>15 V a 5 V"] D -->|"5 V"| E["Sensores"] F["ESP32"] -->|"S.Carga"| G["Amplificador<br/>de carga"] F -->|"S.Descarga"| H["Amplificador<br/>de descarga"] G --> I["Transistor<br/>de carga"] H --> J["Transistor<br/>de descarga"] I --> K["Inductor<br/>de carga"] J --> L["Inductor<br/>de descarga"] K --> M["Sensor de corriente<br/>de carga"] L --> N["Sensor de corriente<br/>de descarga"] M --> O["Batería<br/>J4"] O --> N O --- P["Sensor de tensión"] M -->|"Corriente de carga medida"| F N -->|"Corriente de descarga medida"| F P -->|"Tensión de batería medida"| F E --> M E --> N E --> P 
+```
 
 
 *Figura 6. Conexión general del prototipo final.*
