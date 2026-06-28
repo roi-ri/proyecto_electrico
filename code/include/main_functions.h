@@ -11,6 +11,7 @@
 #define STOP_BIT  ( 1 << 0 )   /* Señal de parada        */
 #define WORK_BIT  ( 1 << 1 )   /* Tarea en progreso       */
 #define STOP_ACK_BIT  ( 1 << 2 )   /* Respuesta de parada ya manejada */
+#define DISCONECT_BIT  ( 1 << 3 )   /* Desconexion solicitada */
 
 /* ── Handle global ── */
 extern EventGroupHandle_t control_events;
@@ -45,6 +46,16 @@ void cicle_function(uart_port_t uart_num, char *datos[], int count);
  * @brief Detiene la operación activa.
  */
 void stop_function(uart_port_t uart_num);
+
+/**
+ * @brief Desconecta el protocolo y detiene cualquier operación activa.
+ */
+void disconect_function(uart_port_t uart_num);
+
+/**
+ * @brief Envía dos veces el mismo ACK con una pausa corta entre ambos.
+ */
+void send_ack_response(uart_port_t uart_num, const char *ack);
 
 /**
  * @brief Procesa una trama completa recibida desde batView.
