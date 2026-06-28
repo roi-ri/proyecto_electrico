@@ -14,4 +14,7 @@ void configurar_entrada(adc_oneshot_unit_handle_t handle, adc_channel_t channel)
 
 // función encargada de que se lea los datos provenientes del sensor 
 void leer_datos(adc_oneshot_unit_handle_t handle, adc_channel_t channel, float *value);
+
+// Lee el ADC y lo convierte como si 3.3 V en el pin equivalieran a 12 V externos.
+void leer_datos_12v(adc_oneshot_unit_handle_t handle, adc_channel_t channel, float *value);
 #endif

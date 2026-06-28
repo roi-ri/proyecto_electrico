@@ -6,12 +6,14 @@
         - gpio_value: Es el porcentaje al que se quiere cargar la batería (tiene que ver 
           con el valor que se quiere poner en ese pin, este depende del protocolo, y las 
           tensiones y corrientes máximas que necesita la batería, de igual forma).
-        - batTery: Corresponde a la batería con que se está trabajando.
+        - battery: Corresponde a la batería con que se está trabajando.
+        - maximum_voltage: Tensión máxima recibida desde el perfil de la interfaz.
+        - minimum_voltage: Tensión mínima recibida desde el perfil de la interfaz.
 */
 
 #ifndef MAX_VOLTAGE_H
 #define MAX_VOLTAGE_H
 
-float max_voltage (int gpio_value, int battery);
+float max_voltage(int gpio_value, int battery, float maximum_voltage, float minimum_voltage);
 
 #endif
