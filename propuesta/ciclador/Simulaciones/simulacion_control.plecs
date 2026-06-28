@@ -1,5 +1,5 @@
 Plecs {
-  Name          base64 "U2ltdWxhY2lvzIFuIGNvbnRyb2wg"
+  Name          "simulacion_control"
   Version       "4.9"
   CircuitModel  "DiscStateSpace"
   StartTime     "0.0"
@@ -108,21 +108,17 @@ Plecs {
   AlgebraicLoopTolerance "1e-6"
   ScriptsDialogGeometry ""
   ScriptsDialogSplitterPos "0"
-  Terminal {
-    Type          Output
-    Index         "1"
-  }
   Schematic {
     Location      [297, 61; 1453, 838]
     ZoomFactor    1.14694
-    SliderPosition [0, 20]
+    SliderPosition [0, 0]
     ShowBrowser   off
     BrowserWidth  100
     Component {
       Type          VoltageSource
       Name          "V1"
       Show          on
-      Position      [470, 585]
+      Position      [410, 540]
       Direction     left
       Flipped       on
       LabelPosition south
@@ -141,7 +137,7 @@ Plecs {
       Type          Inductor
       Name          "L2"
       Show          on
-      Position      [555, 585]
+      Position      [495, 540]
       Direction     left
       Flipped       off
       LabelPosition north
@@ -160,7 +156,7 @@ Plecs {
       Type          Ammeter
       Name          "Am2"
       Show          on
-      Position      [660, 585]
+      Position      [600, 540]
       Direction     left
       Flipped       off
       LabelPosition south
@@ -169,7 +165,7 @@ Plecs {
       Type          DCVoltageSource
       Name          "Vbat"
       Show          on
-      Position      [710, 635]
+      Position      [650, 590]
       Direction     down
       Flipped       on
       LabelPosition west
@@ -183,7 +179,7 @@ Plecs {
       Type          Gain
       Name          "Gain2"
       Show          on
-      Position      [470, 515]
+      Position      [410, 470]
       Direction     down
       Flipped       off
       LabelPosition west
@@ -217,7 +213,7 @@ Plecs {
       Type          Gain
       Name          "Gain3"
       Show          on
-      Position      [660, 530]
+      Position      [600, 485]
       Direction     up
       Flipped       off
       LabelPosition east
@@ -251,7 +247,7 @@ Plecs {
       Type          Sum
       Name          "Sum"
       Show          off
-      Position      [395, 190]
+      Position      [350, 170]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -280,7 +276,7 @@ Plecs {
       Type          Goto
       Name          "Goto"
       Show          off
-      Position      [915, 190]
+      Position      [870, 170]
       Direction     right
       Flipped       off
       LabelPosition south
@@ -304,7 +300,7 @@ Plecs {
       Type          From
       Name          "From2"
       Show          off
-      Position      [395, 375]
+      Position      [350, 355]
       Direction     up
       Flipped       off
       LabelPosition east
@@ -328,7 +324,7 @@ Plecs {
       Type          From
       Name          "From6"
       Show          off
-      Position      [470, 475]
+      Position      [410, 430]
       Direction     down
       Flipped       off
       LabelPosition west
@@ -352,7 +348,7 @@ Plecs {
       Type          Goto
       Name          "Goto2"
       Show          off
-      Position      [660, 450]
+      Position      [600, 405]
       Direction     up
       Flipped       off
       LabelPosition east
@@ -376,7 +372,7 @@ Plecs {
       Type          Scope
       Name          "Scope2"
       Show          on
-      Position      [330, 360]
+      Position      [285, 340]
       Direction     down
       Flipped       off
       LabelPosition north
@@ -433,7 +429,7 @@ Plecs {
       Type          Scope
       Name          "Scope4"
       Show          on
-      Position      [555, 440]
+      Position      [495, 395]
       Direction     left
       Flipped       off
       LabelPosition east
@@ -512,7 +508,7 @@ Plecs {
       Type          Scope
       Name          "Scope5"
       Show          on
-      Position      [530, 115]
+      Position      [485, 95]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -569,7 +565,7 @@ Plecs {
       Type          Scope
       Name          "Scope6"
       Show          on
-      Position      [690, 115]
+      Position      [645, 95]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -626,7 +622,7 @@ Plecs {
       Type          Resistor
       Name          "R1"
       Show          on
-      Position      [605, 585]
+      Position      [545, 540]
       Direction     right
       Flipped       off
       LabelPosition south
@@ -640,7 +636,7 @@ Plecs {
       Type          Scope
       Name          "Scope7"
       Show          on
-      Position      [790, 90]
+      Position      [745, 70]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -719,7 +715,7 @@ Plecs {
       Type          Scope
       Name          "Scope"
       Show          on
-      Position      [305, 125]
+      Position      [260, 105]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -776,7 +772,7 @@ Plecs {
       Type          Constant
       Name          "Constant"
       Show          on
-      Position      [710, 490]
+      Position      [650, 445]
       Direction     left
       Flipped       off
       LabelPosition north
@@ -796,7 +792,7 @@ Plecs {
       Type          Sum
       Name          "Sum1"
       Show          off
-      Position      [660, 490]
+      Position      [600, 445]
       Direction     left
       Flipped       off
       LabelPosition east
@@ -825,7 +821,7 @@ Plecs {
       Type          Scope
       Name          "Scope1"
       Show          on
-      Position      [895, 245]
+      Position      [850, 225]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -882,7 +878,7 @@ Plecs {
       Type          Gain
       Name          "Gain4"
       Show          on
-      Position      [395, 285]
+      Position      [350, 265]
       Direction     up
       Flipped       off
       LabelPosition east
@@ -916,7 +912,7 @@ Plecs {
       Type          Constant
       Name          "Constant1"
       Show          on
-      Position      [445, 330]
+      Position      [400, 310]
       Direction     left
       Flipped       off
       LabelPosition north
@@ -936,7 +932,7 @@ Plecs {
       Type          Sum
       Name          "Sum3"
       Show          off
-      Position      [395, 330]
+      Position      [350, 310]
       Direction     left
       Flipped       off
       LabelPosition east
@@ -965,7 +961,7 @@ Plecs {
       Type          Scope
       Name          "Scope3"
       Show          on
-      Position      [330, 255]
+      Position      [285, 235]
       Direction     down
       Flipped       off
       LabelPosition north
@@ -1023,7 +1019,7 @@ Plecs {
       SrcComponent  "Components/Control/Continuous/Continuous PID\\nController"
       Name          "Continuous PID\nController"
       Show          on
-      Position      [560, 190]
+      Position      [515, 170]
       Direction     up
       Flipped       off
       LabelPosition south
@@ -1168,7 +1164,7 @@ Plecs {
       Type          SignalMux
       Name          "Mux"
       Show          off
-      Position      [450, 85]
+      Position      [405, 65]
       Direction     right
       Flipped       off
       LabelPosition south
@@ -1179,56 +1175,10 @@ Plecs {
       }
     }
     Component {
-      Type          Reference
-      SrcComponent  "TIC2000_Lib/DAC"
-      Name          "DAC"
-      Show          on
-      Position      [750, 565]
-      Direction     up
-      Flipped       off
-      LabelPosition south
-      Frame         [-25, -20; 25, 20]
-      Parameter {
-        Variable      "DacUnit"
-        Value         "1"
-        Show          off
-      }
-      Parameter {
-        Variable      "Scale"
-        Value         "0.1"
-        Show          off
-      }
-      Parameter {
-        Variable      "Offset"
-        Value         "2.5"
-        Show          off
-      }
-      Parameter {
-        Variable      "MinOutput"
-        Value         "0.3"
-        Show          off
-      }
-      Parameter {
-        Variable      "MaxOutput"
-        Value         "3.0"
-        Show          off
-      }
-      Parameter {
-        Variable      "TargetPortIndices"
-        Value         "1"
-        Show          off
-      }
-      Terminal {
-        Type          Input
-        Position      [-25, 0]
-        Direction     left
-      }
-    }
-    Component {
       Type          Constant
       Name          "Constant2"
       Show          on
-      Position      [200, 190]
+      Position      [155, 170]
       Direction     right
       Flipped       off
       LabelPosition south
@@ -1304,26 +1254,22 @@ Plecs {
       Type          Signal
       SrcComponent  "Am2"
       SrcTerminal   3
-      Points        [660, 565]
+      Points        [600, 520]
       Branch {
         DstComponent  "Gain3"
         DstTerminal   1
       }
       Branch {
-        Points        [560, 565]
+        Points        [500, 520]
         DstComponent  "Scope4"
         DstTerminal   2
-      }
-      Branch {
-        DstComponent  "DAC"
-        DstTerminal   1
       }
     }
     Connection {
       Type          Signal
       SrcComponent  "From2"
       SrcTerminal   1
-      Points        [395, 360]
+      Points        [350, 340]
       Branch {
         DstComponent  "Sum3"
         DstTerminal   2
@@ -1337,9 +1283,9 @@ Plecs {
       Type          Signal
       SrcComponent  "Sum"
       SrcTerminal   1
-      Points        [485, 190]
+      Points        [440, 170]
       Branch {
-        Points        [485, 115]
+        Points        [440, 95]
         DstComponent  "Scope5"
         DstTerminal   1
       }
@@ -1352,22 +1298,22 @@ Plecs {
       Type          Signal
       SrcComponent  "Continuous PID\nController"
       SrcTerminal   2
-      Points        [660, 190]
+      Points        [615, 170]
       Branch {
-        Points        [755, 190]
+        Points        [710, 170]
         Branch {
-          Points        [755, 95]
+          Points        [710, 75]
           DstComponent  "Scope7"
           DstTerminal   2
         }
         Branch {
-          Points        [855, 190]
+          Points        [810, 170]
           Branch {
             DstComponent  "Goto"
             DstTerminal   1
           }
           Branch {
-            Points        [855, 245]
+            Points        [810, 225]
             DstComponent  "Scope1"
             DstTerminal   1
           }
@@ -1382,19 +1328,19 @@ Plecs {
       Type          Signal
       SrcComponent  "Gain4"
       SrcTerminal   2
-      Points        [395, 255]
+      Points        [350, 235]
       Branch {
         DstComponent  "Scope3"
         DstTerminal   1
       }
       Branch {
-        Points        [395, 215]
+        Points        [350, 195]
         Branch {
           DstComponent  "Sum"
           DstTerminal   3
         }
         Branch {
-          Points        [425, 215; 425, 90]
+          Points        [380, 195; 380, 70]
           DstComponent  "Mux"
           DstTerminal   3
         }
@@ -1404,15 +1350,15 @@ Plecs {
       Type          Signal
       SrcComponent  "Constant2"
       SrcTerminal   1
-      Points        [275, 190]
+      Points        [230, 170]
       Branch {
-        Points        [355, 190]
+        Points        [310, 170]
         Branch {
           DstComponent  "Sum"
           DstTerminal   2
         }
         Branch {
-          Points        [355, 80]
+          Points        [310, 60]
           DstComponent  "Mux"
           DstTerminal   2
         }
@@ -1440,13 +1386,13 @@ Plecs {
       Type          Signal
       SrcComponent  "Gain2"
       SrcTerminal   2
-      Points        [470, 560]
+      Points        [410, 515]
       Branch {
         DstComponent  "V1"
         DstTerminal   3
       }
       Branch {
-        Points        [550, 560]
+        Points        [490, 515]
         DstComponent  "Scope4"
         DstTerminal   1
       }
@@ -1455,7 +1401,7 @@ Plecs {
       Type          Wire
       SrcComponent  "Vbat"
       SrcTerminal   1
-      Points        [710, 585]
+      Points        [650, 540]
       DstComponent  "Am2"
       DstTerminal   2
     }
@@ -1463,13 +1409,13 @@ Plecs {
       Type          Wire
       SrcComponent  "Vbat"
       SrcTerminal   2
-      Points        [710, 690; 450, 690]
+      Points        [650, 645; 390, 645]
       DstComponent  "V1"
       DstTerminal   2
     }
     Annotation {
       Name          "<html><body>\n<p>13.2V</p></body></html>"
-      Position      [470, 620]
+      Position      [410, 575]
     } 
   }
 }
