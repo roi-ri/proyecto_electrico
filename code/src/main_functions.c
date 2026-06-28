@@ -67,55 +67,31 @@ static void send_invalid_value(uart_port_t uart_num, const char *message)
     enviar_datos_pc(uart_num, "\n");
 }
 
-static void send_target_status(uart_port_t uart_num, const char *operation, int target_percent)
+void send_ack_response(uart_port_t uart_num, const char *ack)
 {
-    char message[64];
-
-    snprintf(message, sizeof(message), "#STATUS,REQUEST,%s_HASTA_%d_PERCENT\n",
-             operation, target_percent);
-    enviar_datos_pc(uart_num, message);
-}
-
-static void send_cycle_status(uart_port_t uart_num, int mode, int cycle_count)
-{
-    char message[64];
-
-    if (mode == 0) {
-        enviar_datos_pc(uart_num, "#STATUS,REQUEST,CICLADO_INFINITO\n");
-        return;
-    }
-
-    snprintf(message, sizeof(message), "#STATUS,REQUEST,CICLAR_%d_CICLOS\n",
-             cycle_count);
-    enviar_datos_pc(uart_num, message);
-}
-
-static void send_command_received_status(uart_port_t uart_num, const char *command)
-{
-    char message[48];
-
-    snprintf(message, sizeof(message), "#STATUS,RECEIVED,%s\n", command);
-    enviar_datos_pc(uart_num, message);
-}
-
-static void send_limited_ack(uart_port_t uart_num, const char *ack, TickType_t *last_ack)
-{
-    TickType_t now = xTaskGetTickCount();
-
-    if (*last_ack == 0 || (now - *last_ack) >= pdMS_TO_TICKS(1000)) {
-        enviar_datos_pc(uart_num, ack);
-        *last_ack = now;
-    }
+    enviar_datos_pc(uart_num, ack);
+    vTaskDelay(pdMS_TO_TICKS(30));
+    enviar_datos_pc(uart_num, ack);
 }
 
 static void send_stop_response(uart_port_t uart_num)
 {
-    enviar_datos_pc(uart_num, "#ACK,STOP\n");
+    send_ack_response(uart_num, "#ACK,STOP\n");
+}
+
+static bool is_disconect_command(const char *text)
+{
+    return strstr(text, "#DISCONECT") != NULL || strstr(text, "#DISCONNECT") != NULL;
+}
+
+static void send_disconect_response(uart_port_t uart_num, const char *text)
+{
+    (void)text;
+    send_ack_response(uart_num, "#ACK,DISCONECT\n");
 }
 
 static void poll_control_commands(uart_port_t uart_num)
 {
-    static TickType_t last_connection_ack = 0;
     uint8_t buf[128];
     int len = 0;
 
@@ -131,26 +107,28 @@ static void poll_control_commands(uart_port_t uart_num)
                 send_stop_response(uart_num);
             }
             xEventGroupClearBits(control_events, WORK_BIT);
-        } else if (len > 0 && strstr((char *)buf, "#CONNECTION") != NULL) {
-            send_limited_ack(uart_num, "#ACK,CONNECTION\n", &last_connection_ack);
-            xEventGroupSetBits(control_events, STOP_BIT | STOP_ACK_BIT);
+        } else if (len > 0 && is_disconect_command((char *)buf)) {
+            xEventGroupSetBits(control_events, STOP_BIT | STOP_ACK_BIT | DISCONECT_BIT);
+            send_disconect_response(uart_num, (char *)buf);
             xEventGroupClearBits(control_events, WORK_BIT);
+            memset(&battery_profile, 0, sizeof(battery_profile));
         }
     } while (len > 0);
 }
 
-static int wait_for_serial_message(uart_port_t uart_num)
+static int wait_after_operation_ack(uart_port_t uart_num)
 {
-    (void)uart_num;
-    vTaskDelay(pdMS_TO_TICKS(250));
+    const TickType_t total_delay = pdMS_TO_TICKS(150);
+    const TickType_t step = pdMS_TO_TICKS(10);
+    TickType_t start = xTaskGetTickCount();
 
-    return 0;
-}
+    while ((xTaskGetTickCount() - start) < total_delay) {
+        if (check_stop_requested(uart_num)) {
+            return 1;
+        }
 
-static int wait_after_command_ack(uart_port_t uart_num)
-{
-    (void)uart_num;
-    vTaskDelay(pdMS_TO_TICKS(800));
+        vTaskDelay(step);
+    }
 
     return 0;
 }
@@ -213,7 +191,7 @@ void battery_profile_function(uart_port_t uart_num, char *datos[], int count)
     battery_profile.amax = amax;
     battery_profile.configured = true;
 
-    enviar_datos_pc(uart_num, "#ACK,Battery\n");
+    send_ack_response(uart_num, "#ACK,Battery\n");
 }
 
 void load_function(uart_port_t uart_num, char *datos[], int count)
@@ -231,32 +209,17 @@ void load_function(uart_port_t uart_num, char *datos[], int count)
     }
 
     xEventGroupClearBits(control_events, STOP_BIT | STOP_ACK_BIT);
-    enviar_datos_pc(uart_num, "#ACK,LOAD\n");
-    if (wait_after_command_ack(uart_num)) {
-        return;
-    }
-    send_command_received_status(uart_num, "LOAD");
-    if (wait_for_serial_message(uart_num)) {
-        return;
-    }
-    enviar_datos_pc(uart_num, "#STATUS,CHARGING,PROCESS_ACTIVE\n");
-    if (wait_for_serial_message(uart_num)) {
+    send_ack_response(uart_num, "#ACK,LOAD\n");
+    if (wait_after_operation_ack(uart_num)) {
         return;
     }
 
     xEventGroupSetBits(control_events, WORK_BIT);
-    send_target_status(uart_num, "CARGAR", target_percent);
-    if (wait_for_serial_message(uart_num)) {
-        return;
-    }
     int completed = battery_controller(uart_num, 25, target_percent, 0,
                                        battery_profile.vmax, battery_profile.vmin,
                                        battery_profile.amax);
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT | STOP_ACK_BIT);
-
-    if (completed) {
-        enviar_datos_pc(uart_num, "#STATUS,FINISHED,LOAD_COMPLETE\n");
-    }
+    (void)completed;
 }
 
 void unload_function(uart_port_t uart_num, char *datos[], int count)
@@ -274,32 +237,17 @@ void unload_function(uart_port_t uart_num, char *datos[], int count)
     }
 
     xEventGroupClearBits(control_events, STOP_BIT | STOP_ACK_BIT);
-    enviar_datos_pc(uart_num, "#ACK,UNLOAD\n");
-    if (wait_after_command_ack(uart_num)) {
-        return;
-    }
-    send_command_received_status(uart_num, "UNLOAD");
-    if (wait_for_serial_message(uart_num)) {
-        return;
-    }
-    enviar_datos_pc(uart_num, "#STATUS,DISCHARGING,PROCESS_ACTIVE\n");
-    if (wait_for_serial_message(uart_num)) {
+    send_ack_response(uart_num, "#ACK,UNLOAD\n");
+    if (wait_after_operation_ack(uart_num)) {
         return;
     }
 
     xEventGroupSetBits(control_events, WORK_BIT);
-    send_target_status(uart_num, "DESCARGAR", target_percent);
-    if (wait_for_serial_message(uart_num)) {
-        return;
-    }
     int completed = battery_controller(uart_num, 26, target_percent, 0,
                                        battery_profile.vmax, battery_profile.vmin,
                                        battery_profile.amax);
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT | STOP_ACK_BIT);
-
-    if (completed) {
-        enviar_datos_pc(uart_num, "#STATUS,FINISHED,UNLOAD_COMPLETE\n");
-    }
+    (void)completed;
 }
 
 void cicle_function(uart_port_t uart_num, char *datos[], int count)
@@ -322,32 +270,17 @@ void cicle_function(uart_port_t uart_num, char *datos[], int count)
     }
 
     xEventGroupClearBits(control_events, STOP_BIT | STOP_ACK_BIT);
-    enviar_datos_pc(uart_num, "#ACK,CICLE\n");
-    if (wait_after_command_ack(uart_num)) {
-        return;
-    }
-    send_command_received_status(uart_num, "CICLE");
-    if (wait_for_serial_message(uart_num)) {
-        return;
-    }
-    enviar_datos_pc(uart_num, "#STATUS,CYCLING,PROCESS_ACTIVE\n");
-    if (wait_for_serial_message(uart_num)) {
+    send_ack_response(uart_num, "#ACK,CICLE\n");
+    if (wait_after_operation_ack(uart_num)) {
         return;
     }
 
     xEventGroupSetBits(control_events, WORK_BIT);
-    send_cycle_status(uart_num, mode, cycle_count);
-    if (wait_for_serial_message(uart_num)) {
-        return;
-    }
     int completed = battery_controller(uart_num, 0, 100, mode == 0 ? -1 : cycle_count,
                                        battery_profile.vmax, battery_profile.vmin,
                                        battery_profile.amax);
     xEventGroupClearBits(control_events, WORK_BIT | STOP_BIT | STOP_ACK_BIT);
-
-    if (completed) {
-        enviar_datos_pc(uart_num, "#STATUS,FINISHED,CYCLE_COMPLETE\n");
-    }
+    (void)completed;
 }
 
 void stop_function(uart_port_t uart_num)
@@ -361,6 +294,22 @@ void stop_function(uart_port_t uart_num)
     if (!(bits & WORK_BIT)) {
         xEventGroupClearBits(control_events, STOP_BIT | STOP_ACK_BIT);
     }
+}
+
+void disconect_function(uart_port_t uart_num)
+{
+    xEventGroupSetBits(control_events, STOP_BIT | STOP_ACK_BIT | DISCONECT_BIT);
+    xEventGroupClearBits(control_events, WORK_BIT);
+    send_ack_response(uart_num, "#ACK,DISCONECT\n");
+    memset(&battery_profile, 0, sizeof(battery_profile));
+}
+
+static void disconect_function_with_ack(uart_port_t uart_num, const char *command)
+{
+    xEventGroupSetBits(control_events, STOP_BIT | STOP_ACK_BIT | DISCONECT_BIT);
+    xEventGroupClearBits(control_events, WORK_BIT);
+    send_disconect_response(uart_num, command);
+    memset(&battery_profile, 0, sizeof(battery_profile));
 }
 
 void process_protocol_command(uart_port_t uart_num, char *datos[], int count)
@@ -383,6 +332,12 @@ void process_protocol_command(uart_port_t uart_num, char *datos[], int count)
             stop_function(uart_num);
         } else {
             send_invalid_value(uart_num, "STOP no acepta parametros");
+        }
+    } else if (strcmp(datos[0], "#DISCONECT") == 0 || strcmp(datos[0], "#DISCONNECT") == 0) {
+        if (count == 1) {
+            disconect_function_with_ack(uart_num, datos[0]);
+        } else {
+            send_invalid_value(uart_num, "DISCONNECT no acepta parametros");
         }
     } else {
         enviar_datos_pc(uart_num, "#ERROR,INVALID_COMMAND,Comando no reconocido\n");
