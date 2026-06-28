@@ -1,4 +1,4 @@
-## Presupuesto de Componentes
+## Lista de Componentes
 
 | Componente | Datasheet / Datos |
 |------------|-------------------|
