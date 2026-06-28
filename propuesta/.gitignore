@@ -1,16 +1,13 @@
-```gitignore
 # OS
 .DS_Store
 Thumbs.db
 Desktop.ini
-
 # Editors / IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
 # Build directories
 build/
 build-*/
@@ -19,7 +16,6 @@ out/
 dist/
 bin/
 lib/
-
 # CMake
 CMakeCache.txt
 CMakeFiles/
@@ -32,13 +28,11 @@ install_manifest.txt
 build.ninja
 .ninja_deps
 .ninja_log
-
 # Autotools / generic native builds
 autom4te.cache/
 aclocal.m4
 m4/
 libtool
-
 # Object / binary files
 *.o
 *.obj
@@ -53,28 +47,23 @@ libtool
 *.exe
 *.out
 *.app
-
 # Debug symbols / crash artifacts
 *.dSYM/
 *.pdb
 *.idb
-
 # Logs
 *.log
-
 # Temp / backup files
 *.tmp
 *.temp
 *.bak
 *.orig
-
 # Coverage
 *.gcda
 *.gcno
 *.gcov
 coverage/
 coverage-*/
-
 # Python
 __pycache__/
 *.pyc
@@ -84,23 +73,24 @@ __pycache__/
 venv/
 env/
 batView/python/runtime/
-
 # Jupyter
 .ipynb_checkpoints/
-
 # PlatformIO
 .pio/
 .piolibdeps/
-
 # Arduino
 *.ino.cpp
 *.ino.elf
 *.ino.bin
 *.hex
-
+# Exported measurement / plot data
+*.csv
+*.mat
+*.xlsx
+# Optional generated images
+*.png
+*.svg
 # Local environment / secrets
 .env
 .env.*
 local.properties
-```
-
