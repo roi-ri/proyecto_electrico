@@ -1,12 +1,9 @@
 // Se incluyen los header files de las otras funciones realizadas:
 #include "battery_controller.h"
-#include "monitoring_load.h"
-#include "monitoring_unload.h"
 #include "PI_controller.h"
 #include "comm_with_pc.h"
 #include "main_functions.h"
 #include "receive.h"
-#include "stop_load.h"
 
 // Se incluyen los archivos necesarios del ESP32:
 #include "driver/dac_oneshot.h"
@@ -28,6 +25,14 @@ static const char *TAG = "BATTERY_CONTROLLER";
 #define CHARGE_CURRENT_CHANNEL ADC_CHANNEL_0
 #define VOLTAGE_CHANNEL ADC_CHANNEL_3
 #define DISCHARGE_CURRENT_CHANNEL ADC_CHANNEL_6
+#define CHARGE_DAC_CHANNEL DAC_CHAN_0
+#define DISCHARGE_DAC_CHANNEL DAC_CHAN_1
+#define ADC_PIN_MAX_VOLTAGE 3.3f
+#define BYPASS_PI_FOR_DAC_TEST 1
+#define DAC_TEST_OUTPUT 255
+
+_Static_assert(CHARGE_DAC_CHANNEL != DISCHARGE_DAC_CHANNEL,
+               "Carga y descarga deben usar DAC distintos");
 
 // Estructura para los modos:
 typedef enum {
@@ -38,7 +43,7 @@ typedef enum {
 } mode_t;
 
 // Se implementa la función:
-static float read_adc_voltage(adc_channel_t channel)
+static float read_adc_pin_voltage(adc_channel_t channel)
 {
     float value = 0.0f;
     adc_oneshot_unit_handle_t handle;
@@ -51,11 +56,127 @@ static float read_adc_voltage(adc_channel_t channel)
     return value;
 }
 
-static void send_telemetry(uart_port_t uart_num, adc_channel_t current_channel, int state, int completed_cycles)
+static float read_battery_voltage(adc_channel_t channel, float battery_min_voltage,
+                                  float battery_max_voltage)
+{
+    float pin_voltage = read_adc_pin_voltage(channel);
+    float normalized_voltage = pin_voltage / ADC_PIN_MAX_VOLTAGE;
+
+    (void)battery_min_voltage;
+
+    if(normalized_voltage < 0.0f) {
+        normalized_voltage = 0.0f;
+    } else if(normalized_voltage > 1.0f) {
+        normalized_voltage = 1.0f;
+    }
+
+    return normalized_voltage * battery_max_voltage;
+}
+
+static float scale_adc_to_current(adc_channel_t channel, float maximum_current)
+{
+    float pin_voltage = read_adc_pin_voltage(channel);
+    float normalized_current = pin_voltage / ADC_PIN_MAX_VOLTAGE;
+
+    if(normalized_current < 0.0f) {
+        normalized_current = 0.0f;
+    } else if(normalized_current > 1.0f) {
+        normalized_current = 1.0f;
+    }
+
+    return normalized_current * maximum_current;
+}
+
+static float read_charge_current(float maximum_current)
+{
+    return scale_adc_to_current(CHARGE_CURRENT_CHANNEL, maximum_current);
+}
+
+static float read_discharge_current(float maximum_current)
+{
+    return scale_adc_to_current(DISCHARGE_CURRENT_CHANNEL, maximum_current);
+}
+
+static void activate_charge(dac_oneshot_handle_t charge_dac_handle,
+                            dac_oneshot_handle_t discharge_dac_handle,
+                            float reference_current)
+{
+    (void)reference_current;
+
+    dac_oneshot_output_voltage(discharge_dac_handle, 0);
+#if BYPASS_PI_FOR_DAC_TEST
+    dac_oneshot_output_voltage(charge_dac_handle, DAC_TEST_OUTPUT);
+#else
+    PI_controller(charge_dac_handle, CHARGE_CURRENT_CHANNEL, reference_current);
+#endif
+    dac_oneshot_output_voltage(discharge_dac_handle, 0);
+}
+
+static void activate_discharge(dac_oneshot_handle_t charge_dac_handle,
+                               dac_oneshot_handle_t discharge_dac_handle,
+                               float reference_current)
+{
+    (void)reference_current;
+
+    dac_oneshot_output_voltage(charge_dac_handle, 0);
+#if BYPASS_PI_FOR_DAC_TEST
+    dac_oneshot_output_voltage(discharge_dac_handle, DAC_TEST_OUTPUT);
+#else
+    PI_controller(discharge_dac_handle, DISCHARGE_CURRENT_CHANNEL, reference_current);
+#endif
+    dac_oneshot_output_voltage(charge_dac_handle, 0);
+}
+
+static void stop_outputs(dac_oneshot_handle_t charge_dac_handle,
+                         dac_oneshot_handle_t discharge_dac_handle)
+{
+    if(charge_dac_handle != NULL) {
+        dac_oneshot_output_voltage(charge_dac_handle, 0);
+    }
+
+    if(discharge_dac_handle != NULL) {
+        dac_oneshot_output_voltage(discharge_dac_handle, 0);
+    }
+}
+
+static void stop_charge_output(dac_oneshot_handle_t charge_dac_handle,
+                               dac_oneshot_handle_t discharge_dac_handle)
+{
+    if(charge_dac_handle != NULL) {
+        dac_oneshot_output_voltage(charge_dac_handle, 0);
+    }
+
+    if(discharge_dac_handle != NULL) {
+        dac_oneshot_output_voltage(discharge_dac_handle, 0);
+    }
+
+    PI_controller_reset_channel(CHARGE_CURRENT_CHANNEL);
+}
+
+static void stop_discharge_output(dac_oneshot_handle_t charge_dac_handle,
+                                  dac_oneshot_handle_t discharge_dac_handle)
+{
+    if(discharge_dac_handle != NULL) {
+        dac_oneshot_output_voltage(discharge_dac_handle, 0);
+    }
+
+    if(charge_dac_handle != NULL) {
+        dac_oneshot_output_voltage(charge_dac_handle, 0);
+    }
+
+    PI_controller_reset_channel(DISCHARGE_CURRENT_CHANNEL);
+}
+
+static void send_telemetry(uart_port_t uart_num, adc_channel_t current_channel, int state,
+                           int completed_cycles, float battery_min_voltage,
+                           float battery_max_voltage, float maximum_current)
 {
     char message[96];
-    float voltage = read_adc_voltage(VOLTAGE_CHANNEL);
-    float current = read_adc_voltage(current_channel);
+    float current = current_channel == CHARGE_CURRENT_CHANNEL ?
+                    read_charge_current(maximum_current) :
+                    read_discharge_current(maximum_current);
+    float voltage = read_battery_voltage(VOLTAGE_CHANNEL, battery_min_voltage,
+                                         battery_max_voltage);
     int64_t timestamp_ms = esp_timer_get_time() / 1000;
 
     snprintf(message, sizeof(message), "#DATA,%.2f,%.2f,%lld,%d,%d\n",
@@ -75,17 +196,23 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
 
     // Corriente de referencia para carga:
     float charge_current = amax;
+    float discharge_current = amax;
 
     // Variable de modo:
     mode_t mode = INVALIDO;
 
-    // Referencia para el DAC:
-    dac_oneshot_handle_t dac_handle = NULL;
-    bool dac_initialized = false;
+    // Referencias para los DAC:
+    dac_oneshot_handle_t charge_dac_handle = NULL;
+    dac_oneshot_handle_t discharge_dac_handle = NULL;
+    bool charge_dac_initialized = false;
+    bool discharge_dac_initialized = false;
 
-    // Configuración inicial del DAC:
-    dac_oneshot_config_t dac_config = {
-        .chan_id = DAC_CHAN_1
+    // Configuración inicial de los DAC:
+    dac_oneshot_config_t charge_dac_config = {
+        .chan_id = CHARGE_DAC_CHANNEL
+    };
+    dac_oneshot_config_t discharge_dac_config = {
+        .chan_id = DISCHARGE_DAC_CHANNEL
     };
 
     // Revisión del modo:
@@ -118,9 +245,12 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
     ESP_LOGI(TAG, "Voltaje máximo: %.2f V", maximum_voltage);
     ESP_LOGI(TAG, "Voltaje mínimo: %.2f V", minimum_voltage);
 
-    if(mode == DESCARGA || mode == CICLADO) {
-        dac_oneshot_new_channel(&dac_config, &dac_handle);
-        dac_initialized = true;
+    if(mode != INVALIDO) {
+        dac_oneshot_new_channel(&charge_dac_config, &charge_dac_handle);
+        charge_dac_initialized = true;
+        dac_oneshot_new_channel(&discharge_dac_config, &discharge_dac_handle);
+        discharge_dac_initialized = true;
+        stop_outputs(charge_dac_handle, discharge_dac_handle);
     }
 
     // Casos:
@@ -128,37 +258,40 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
         case CARGA:
             // Log para indicar que se está cargando la batería:
             ESP_LOGI(TAG, "Cargando batería.");
+            PI_controller_reset();
 
             // Bucle principal de carga:
             while(1) {
                 if(check_stop_requested(uart_num)) {
-                    stop_load();
+                    stop_charge_output(charge_dac_handle, discharge_dac_handle);
                     completed = 0;
                     break;
                 }
 
-                PI_controller(charge_current);
+                activate_charge(charge_dac_handle, discharge_dac_handle, charge_current);
 
-                send_telemetry(uart_num, CHARGE_CURRENT_CHANNEL, 1, 0);
+                send_telemetry(uart_num, CHARGE_CURRENT_CHANNEL, 1, 0, vmin, vmax, amax);
 
                 if(check_stop_requested(uart_num)) {
-                    stop_load();
+                    stop_charge_output(charge_dac_handle, discharge_dac_handle);
                     completed = 0;
                     break;
                 }
 
                 vTaskDelay(pdMS_TO_TICKS(100));
 
+#if !BYPASS_PI_FOR_DAC_TEST
                 // Monitoreo de la tensión de la batería:
-                if(monitoring_load(maximum_voltage, VOLTAGE_CHANNEL)) {
+                if(read_battery_voltage(VOLTAGE_CHANNEL, vmin, vmax) >= maximum_voltage) {
 
                     ESP_LOGI(TAG, "Voltaje máximo alcanzado.");
 
                     // Apaga completamente la etapa de carga:
-                    stop_load();
+                    stop_charge_output(charge_dac_handle, discharge_dac_handle);
 
                     break;
                 }
+#endif
             }
         break;
 
@@ -167,36 +300,39 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
 
             // Log para indicar que se está descargando la batería:
             ESP_LOGI(TAG, "Descargando batería.");
-
-            dac_oneshot_output_voltage(dac_handle, 255);
+            PI_controller_reset_channel(DISCHARGE_CURRENT_CHANNEL);
 
             // Bucle principal de descarga:
             while(1) {
                 if(check_stop_requested(uart_num)) {
-                    dac_oneshot_output_voltage(dac_handle, 0);
+                    stop_discharge_output(charge_dac_handle, discharge_dac_handle);
                     completed = 0;
                     break;
                 }
 
-                send_telemetry(uart_num, DISCHARGE_CURRENT_CHANNEL, 0, 0);
+                activate_discharge(charge_dac_handle, discharge_dac_handle, discharge_current);
+
+                send_telemetry(uart_num, DISCHARGE_CURRENT_CHANNEL, 0, 0, vmin, vmax, amax);
 
                 if(check_stop_requested(uart_num)) {
-                    dac_oneshot_output_voltage(dac_handle, 0);
+                    stop_discharge_output(charge_dac_handle, discharge_dac_handle);
                     completed = 0;
                     break;
                 }
 
                 vTaskDelay(pdMS_TO_TICKS(100));
 
+#if !BYPASS_PI_FOR_DAC_TEST
                 // Monitoreo de la tensión de la batería:
-                if(monitoring_unload(minimum_voltage, VOLTAGE_CHANNEL)) {
+                if(read_battery_voltage(VOLTAGE_CHANNEL, vmin, vmax) <= minimum_voltage) {
 
                     ESP_LOGI(TAG, "Voltaje mínimo alcanzado.");
 
-                    dac_oneshot_output_voltage(dac_handle, 0);
+                    stop_discharge_output(charge_dac_handle, discharge_dac_handle);
 
                     break;
                 }
+#endif
             }
         break;
 
@@ -206,7 +342,7 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
             // Log para indicar que se está en ciclado:
             ESP_LOGI(TAG, "Ciclando batería.");
 
-            // Bucle principal de ciclado:
+            // Bucle principal de ciclado. cycles < 0 indica ciclado infinito.
             for(int i = 0; cycles < 0 || i < cycles; i++) {
 
                 ESP_LOGI(TAG, "Ciclo: %d", i + 1);
@@ -215,34 +351,35 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
                 //         ETAPA DE CARGA
                 // ==============================
                 ESP_LOGI(TAG, "Estado de carga (ciclado).");
+                PI_controller_reset();
 
                 while(1) {
                     if(check_stop_requested(uart_num)) {
-                        stop_load();
-                        if(dac_initialized) {
-                            dac_oneshot_del_channel(dac_handle);
-                        }
+                        stop_charge_output(charge_dac_handle, discharge_dac_handle);
+                        dac_oneshot_del_channel(charge_dac_handle);
+                        dac_oneshot_del_channel(discharge_dac_handle);
                         return 0;
                     }
 
-                    PI_controller(charge_current);
+                    activate_charge(charge_dac_handle, discharge_dac_handle, charge_current);
 
-                    send_telemetry(uart_num, CHARGE_CURRENT_CHANNEL, 1, i);
+                    send_telemetry(uart_num, CHARGE_CURRENT_CHANNEL, 1, i, vmin, vmax, amax);
 
                     if(check_stop_requested(uart_num)) {
-                        stop_load();
-                        dac_oneshot_del_channel(dac_handle);
+                        stop_charge_output(charge_dac_handle, discharge_dac_handle);
+                        dac_oneshot_del_channel(charge_dac_handle);
+                        dac_oneshot_del_channel(discharge_dac_handle);
                         return 0;
                     }
 
                     vTaskDelay(pdMS_TO_TICKS(100));
 
-                    if(monitoring_load(maximum_voltage, VOLTAGE_CHANNEL)) {
+                    if(read_battery_voltage(VOLTAGE_CHANNEL, vmin, vmax) >= maximum_voltage) {
 
                         ESP_LOGI(TAG, "Voltaje máximo alcanzado.");
 
                         // Apaga completamente la etapa de carga:
-                        stop_load();
+                        stop_charge_output(charge_dac_handle, discharge_dac_handle);
 
                         break;
                     }
@@ -252,35 +389,34 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
                 //      ETAPA DE DESCARGA
                 // ==============================
                 ESP_LOGI(TAG, "Estado de descarga (ciclado).");
-
-                dac_oneshot_output_voltage(dac_handle, 255);
+                PI_controller_reset_channel(DISCHARGE_CURRENT_CHANNEL);
 
                 while(1) {
                     if(check_stop_requested(uart_num)) {
-                        dac_oneshot_output_voltage(dac_handle, 0);
-                        if(dac_initialized) {
-                            dac_oneshot_del_channel(dac_handle);
-                        }
+                        stop_discharge_output(charge_dac_handle, discharge_dac_handle);
+                        dac_oneshot_del_channel(charge_dac_handle);
+                        dac_oneshot_del_channel(discharge_dac_handle);
                         return 0;
                     }
 
-                    send_telemetry(uart_num, DISCHARGE_CURRENT_CHANNEL, 0, i);
+                    activate_discharge(charge_dac_handle, discharge_dac_handle, discharge_current);
+
+                    send_telemetry(uart_num, DISCHARGE_CURRENT_CHANNEL, 0, i, vmin, vmax, amax);
 
                     if(check_stop_requested(uart_num)) {
-                        dac_oneshot_output_voltage(dac_handle, 0);
-                        if(dac_initialized) {
-                            dac_oneshot_del_channel(dac_handle);
-                        }
+                        stop_discharge_output(charge_dac_handle, discharge_dac_handle);
+                        dac_oneshot_del_channel(charge_dac_handle);
+                        dac_oneshot_del_channel(discharge_dac_handle);
                         return 0;
                     }
 
                     vTaskDelay(pdMS_TO_TICKS(100));
 
-                    if(monitoring_unload(minimum_voltage, VOLTAGE_CHANNEL)) {
+                    if(read_battery_voltage(VOLTAGE_CHANNEL, vmin, vmax) <= minimum_voltage) {
 
                         ESP_LOGI(TAG, "Voltaje mínimo alcanzado.");
 
-                        dac_oneshot_output_voltage(dac_handle, 0);
+                        stop_discharge_output(charge_dac_handle, discharge_dac_handle);
 
                         break;
                     }
@@ -296,8 +432,14 @@ int battery_controller(uart_port_t uart_num, int gpio_num, int gpio_value, int c
     }
 
     // Libera el DAC:
-    if(dac_initialized) {
-        dac_oneshot_del_channel(dac_handle);
+    stop_outputs(charge_dac_handle, discharge_dac_handle);
+
+    if(charge_dac_initialized) {
+        dac_oneshot_del_channel(charge_dac_handle);
+    }
+
+    if(discharge_dac_initialized) {
+        dac_oneshot_del_channel(discharge_dac_handle);
     }
     return completed;
 }
