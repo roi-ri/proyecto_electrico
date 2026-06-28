@@ -63,17 +63,12 @@ La arquitectura propuesta estará formada por tres elementos principales:
    comportamiento del transistor, el inductor, las resistencias y los demás
    componentes de la etapa de potencia.
 
-2. **C2000 encargado del modelo de la batería:** ejecutará el modelo dinámico de
-   la batería y calculará su respuesta ante la corriente de carga o descarga
-   recibida desde el modelo del circuito.
-
-3. **ESP32 encargado del sistema de control:** ejecutará el algoritmo de control
+2. **ESP32 encargado del sistema de control:** ejecutará el algoritmo de control
    diseñado por el equipo de programación. El ESP32 recibirá las variables
    medidas del sistema, calculará la acción de control y enviará la señal
    correspondiente al modelo del circuito ciclador.
 
-De esta manera, el primer C2000 simulará el comportamiento de la PCB, el segundo
-C2000 simulará el comportamiento de la batería y el ESP32 realizará el control
+De esta manera, el C2000 simulará el circuito de la PCB y el ESP32 realizará el control
 de corriente.
 
 ```mermaid
@@ -82,13 +77,10 @@ flowchart TD
 
     ESP32["ESP32<br/>Sistema de control"]
     CICLO["C2000 N.° 1<br/>Modelo del circuito ciclador<br/>Carga y descarga"]
-    BAT["C2000 N.° 2<br/>Modelo dinámico de la batería"]
 
     ESP32 -->|"Señal de control"| CICLO
-    CICLO -->|"Corriente de carga o descarga"| BAT
-    BAT -->|"Tensión de la batería"| CICLO
     CICLO -->|"Señales simuladas de los sensores"| ESP32
-    BAT -->|"Estado y variables de la batería"| ESP32
+
 ```
 
 La simulación HIL permitirá evaluar el controlador utilizando señales y
@@ -139,38 +131,13 @@ señales simuladas de sensores salen desde el C2000 hacia el ESP32.
 | Pin 70 | C2000 → ESP32 | Señal simulada del sensor de corriente de descarga. |
 | Pin 32 | C2000 → ESP32 | Señal simulada de tensión de la batería. |
 
-El flujo de señales utilizado en la prueba HIL es el siguiente:
-
-```mermaid
-flowchart LR
-    ESP32["ESP32<br/>Sistema de control"]
-    C2000["C2000<br/>Modelo del circuito ciclador"]
-
-    ESP32 -->|"Pin 66<br/>Control de carga"| C2000
-    ESP32 -->|"Pin 65<br/>Control de descarga"| C2000
-
-    C2000 -->|"Pin 30<br/>Corriente de carga simulada"| ESP32
-    C2000 -->|"Pin 70<br/>Corriente de descarga simulada"| ESP32
-    C2000 -->|"Pin 32<br/>Tensión de batería simulada"| ESP32
-```
-
-*Figura 4. Conexión de señales entre el ESP32 y el C2000 para la prueba Hardware-in-the-Loop.*
-
 Es importante que todas las tierras del sistema estén conectadas entre sí. La
 referencia `GND` del ESP32 debe estar conectada a la referencia `GND` del
 C2000. Si las tierras no se conectan correctamente, las señales analógicas no
 tendrán la misma referencia y las mediciones recibidas por el ESP32 pueden ser
 incorrectas.
 
-La conexión mínima de referencia debe ser:
 
-```mermaid
-flowchart LR
-    GND1["GND ESP32"] --- GND2["GND C2000"]
-    GND2 --- GND3["GND del modelo<br/>o circuito simulado"]
-```
-
-*Figura 5. Referencia común de tierra para la prueba HIL.*
 
 Antes de realizar la prueba se debe verificar que las señales analógicas estén
 dentro del rango permitido por cada dispositivo. En particular, las señales que
