@@ -15,8 +15,8 @@ bool monitoring_load(float voltage, adc_channel_t channel) {
     // Configuración:
     configurar_entrada(handle, channel);
 
-    // Lectura del voltaje proveniente del sensor:
-    leer_datos(handle, channel, &measured_voltage);
+    // Lectura del voltaje de batería escalado: 3.3 V en el pin equivale a 12 V.
+    leer_datos_12v(handle, channel, &measured_voltage);
 
     // Liberación del ADC:
     adc_oneshot_del_unit(handle);
