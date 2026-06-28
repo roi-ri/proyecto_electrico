@@ -10,6 +10,9 @@
 #include <stdint.h>
 #include <string.h>
 
+static uint8_t pending_line[128];
+static size_t pending_line_len = 0;
+
 // función para inicializar el puerto uart
 void inicializar_uart(uart_port_t uart_num, QueueHandle_t *uart_queue){
     
@@ -41,11 +44,15 @@ void enviar_datos_pc(uart_port_t uart_num, const char *message) {
     uart_wait_tx_done(uart_num, pdMS_TO_TICKS(1000));
 }
 
+void limpiar_uart_pc(uart_port_t uart_num)
+{
+    pending_line_len = 0;
+    memset(pending_line, 0, sizeof(pending_line));
+    uart_flush_input(uart_num);
+}
+
 int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, uint32_t timeout_ms)
 {
-    static uint8_t pending[128];
-    static size_t pending_len = 0;
-
     if (buffer == NULL || buffer_size == 0) {
         return -1;
     }
@@ -64,15 +71,15 @@ int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, 
         last_activity = xTaskGetTickCount();
 
         if (byte == '\n') {
-            size_t copy_len = pending_len;
+            size_t copy_len = pending_line_len;
 
             if (copy_len >= buffer_size) {
                 copy_len = buffer_size - 1;
             }
 
-            memcpy(buffer, pending, copy_len);
+            memcpy(buffer, pending_line, copy_len);
             buffer[copy_len] = '\0';
-            pending_len = 0;
+            pending_line_len = 0;
             return (int)copy_len;
         }
 
@@ -80,39 +87,39 @@ int recibir_linea_pc(uart_port_t uart_num, uint8_t *buffer, size_t buffer_size, 
             continue;
         }
 
-        if (byte == '#' && pending_len > 0) {
-            size_t copy_len = pending_len;
+        if (byte == '#' && pending_line_len > 0) {
+            size_t copy_len = pending_line_len;
 
             if (copy_len >= buffer_size) {
                 copy_len = buffer_size - 1;
             }
 
-            memcpy(buffer, pending, copy_len);
+            memcpy(buffer, pending_line, copy_len);
             buffer[copy_len] = '\0';
-            pending[0] = byte;
-            pending_len = 1;
+            pending_line[0] = byte;
+            pending_line_len = 1;
             return (int)copy_len;
         }
 
-        if (pending_len < sizeof(pending) - 1) {
-            pending[pending_len++] = byte;
+        if (pending_line_len < sizeof(pending_line) - 1) {
+            pending_line[pending_line_len++] = byte;
         } else {
-            pending_len = 0;
+            pending_line_len = 0;
             buffer[0] = '\0';
             return -1;
         }
     }
 
-    if (pending_len > 0) {
-        size_t copy_len = pending_len;
+    if (pending_line_len > 0) {
+        size_t copy_len = pending_line_len;
 
         if (copy_len >= buffer_size) {
             copy_len = buffer_size - 1;
         }
 
-        memcpy(buffer, pending, copy_len);
+        memcpy(buffer, pending_line, copy_len);
         buffer[copy_len] = '\0';
-        pending_len = 0;
+        pending_line_len = 0;
         return (int)copy_len;
     }
 
@@ -149,6 +156,8 @@ int connection_ready(uart_port_t uart_num, uint8_t data_receiv[128]) {
     if (length > 0) {
         if (strcmp((char *)data_receiv, "#CONNECTION") == 0) {
             if (!connection_ack_sent) {
+                enviar_datos_pc(uart_num, "#ACK,CONNECTION\n");
+                vTaskDelay(pdMS_TO_TICKS(30));
                 enviar_datos_pc(uart_num, "#ACK,CONNECTION\n");
                 connection_ack_sent = 1;
             }
