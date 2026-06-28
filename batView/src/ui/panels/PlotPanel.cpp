@@ -14,6 +14,7 @@
 #include <wx/splitter.h>
 #include <wx/statbmp.h>
 #include <wx/stattext.h>
+#include <wx/textctrl.h>
 #include <wx/window.h>
 
 #include <algorithm>
@@ -31,7 +32,6 @@ constexpr int kRefreshIntervalMs = 700;
 constexpr double kMinZoomScale = 0.125;
 constexpr double kMaxZoomScale = 64.0;
 constexpr double kZoomStep = 1.5;
-constexpr int kExpectedBatteryLifeCycles = 500;
 constexpr auto kPanRefreshInterval = std::chrono::milliseconds(60);
 
 std::array<batview::core::services::PlotAxis, 5> kAxes = {
@@ -157,18 +157,50 @@ wxString FormatStateTick(int code) {
     return wxString::Format("%s (%d)", info.label, code);
 }
 
-int MaxCompletedCycles(const std::vector<batview::core::models::Measurement>& measurements) {
-    int maxCycles = 0;
-    for (const auto& measurement : measurements) {
-        maxCycles = std::max(maxCycles, measurement.completedCycles);
-    }
-    return maxCycles;
+bool HasExplicitDischargeState(const std::vector<batview::core::models::Measurement>& measurements) {
+    return std::any_of(measurements.begin(), measurements.end(), [](const auto& measurement) {
+        return measurement.state == 0;
+    });
 }
 
-double BatteryHealthPercent(int completedCycles) {
-    const double usedFraction = static_cast<double>(completedCycles) /
-        static_cast<double>(kExpectedBatteryLifeCycles);
-    return std::clamp(100.0 * (1.0 - usedFraction), 0.0, 100.0);
+bool IsDischargeSample(const batview::core::models::Measurement& measurement, bool hasExplicitDischargeState) {
+    if (hasExplicitDischargeState) {
+        return measurement.state == 0;
+    }
+    return true;
+}
+
+double ComputeMeasuredCapacityMah(const std::vector<batview::core::models::Measurement>& measurements,
+                                  std::size_t endIndex) {
+    if (measurements.size() < 2 || endIndex == 0) {
+        return 0.0;
+    }
+
+    endIndex = std::min(endIndex, measurements.size() - 1);
+    const bool hasExplicitDischargeState = HasExplicitDischargeState(measurements);
+    double capacityMah = 0.0;
+    for (std::size_t index = 1; index <= endIndex; ++index) {
+        const auto& previous = measurements[index - 1];
+        const auto& current = measurements[index];
+        if (!IsDischargeSample(previous, hasExplicitDischargeState) &&
+            !IsDischargeSample(current, hasExplicitDischargeState)) {
+            continue;
+        }
+
+        const double deltaHours = std::abs(static_cast<double>(current.timestampMs) -
+                                           static_cast<double>(previous.timestampMs)) /
+            3600000.0;
+        const double averageCurrentA = (std::abs(previous.current) + std::abs(current.current)) / 2.0;
+        capacityMah += averageCurrentA * deltaHours * 1000.0;
+    }
+    return capacityMah;
+}
+
+double BatteryHealthPercent(double measuredCapacityMah, double factoryCapacityMah) {
+    if (factoryCapacityMah <= 0.0) {
+        return 0.0;
+    }
+    return std::clamp((measuredCapacityMah / factoryCapacityMah) * 100.0, 0.0, 100.0);
 }
 
 wxColour BatteryHealthColor(double healthPercent) {
@@ -185,7 +217,11 @@ wxColour BatteryHealthColor(double healthPercent) {
 
 struct PlotPanel::PlotWidgets {
     wxChoice* modeChoice = nullptr;
+    wxStaticText* factoryCapacityLabel = nullptr;
+    wxTextCtrl* factoryCapacityCtrl = nullptr;
+    wxStaticText* xAxisLabel = nullptr;
     wxChoice* xAxisChoice = nullptr;
+    wxStaticText* yAxisLabel = nullptr;
     wxChoice* yAxisChoice = nullptr;
     wxStaticBitmap* bitmap = nullptr;
     wxStaticText* status = nullptr;
@@ -258,11 +294,16 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
 
     widgets->xAxisChoice = new wxChoice(card, wxID_ANY);
     widgets->yAxisChoice = new wxChoice(card, wxID_ANY);
+    widgets->xAxisLabel = new wxStaticText(card, wxID_ANY, "X");
+    widgets->yAxisLabel = new wxStaticText(card, wxID_ANY, "Y");
     if (index == 1) {
         widgets->modeChoice = new wxChoice(card, wxID_ANY);
         widgets->modeChoice->Append("Graficacion");
         widgets->modeChoice->Append("Vida util");
         widgets->modeChoice->SetSelection(0);
+        widgets->factoryCapacityLabel = new wxStaticText(card, wxID_ANY, "Capacidad fabrica (mAh)");
+        widgets->factoryCapacityCtrl = new wxTextCtrl(card, wxID_ANY, "2000");
+        widgets->factoryCapacityCtrl->SetMinSize(wxSize(90, -1));
     }
     for (const auto axis : kAxes) {
         widgets->xAxisChoice->Append(ToWx(batview::core::services::PlotService::AxisLabel(axis)));
@@ -296,6 +337,11 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
             if (currentWidgets) {
                 UpdatePlotModeControls(*currentWidgets);
             }
+            RefreshPlot(index);
+        });
+    }
+    if (widgets->factoryCapacityCtrl) {
+        widgets->factoryCapacityCtrl->Bind(wxEVT_TEXT, [this, index](wxCommandEvent&) {
             RefreshPlot(index);
         });
     }
@@ -357,10 +403,12 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
     if (widgets->modeChoice) {
         controlsSizer->Add(new wxStaticText(card, wxID_ANY, "Modo"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
         controlsSizer->Add(widgets->modeChoice, 0, wxRIGHT, 12);
+        controlsSizer->Add(widgets->factoryCapacityLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+        controlsSizer->Add(widgets->factoryCapacityCtrl, 0, wxRIGHT, 12);
     }
-    controlsSizer->Add(new wxStaticText(card, wxID_ANY, "X"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+    controlsSizer->Add(widgets->xAxisLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
     controlsSizer->Add(widgets->xAxisChoice, 1, wxRIGHT, 12);
-    controlsSizer->Add(new wxStaticText(card, wxID_ANY, "Y"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+    controlsSizer->Add(widgets->yAxisLabel, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
     controlsSizer->Add(widgets->yAxisChoice, 1, wxRIGHT, 12);
     controlsSizer->Add(widgets->exportButton, 0);
 
@@ -556,6 +604,7 @@ wxBitmap PlotPanel::RenderPlotBitmap(const std::vector<batview::core::models::Me
 wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     const std::vector<batview::core::models::Measurement>& measurements,
     const wxSize& requestedSize,
+    double factoryCapacityMah,
     std::string& outError,
     std::size_t& outPointCount) const {
     outError.clear();
@@ -563,6 +612,10 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
 
     if (measurements.empty()) {
         outError = "Sin datos para calcular vida util.";
+        return wxBitmap();
+    }
+    if (factoryCapacityMah <= 0.0) {
+        outError = "Ingrese una capacidad de fabrica valida en mAh.";
         return wxBitmap();
     }
 
@@ -575,9 +628,8 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     dc.Clear();
     dc.SetFont(GetFont());
 
-    const int completedCycles = MaxCompletedCycles(measurements);
-    const double healthPercent = BatteryHealthPercent(completedCycles);
-    const int remainingCycles = std::max(kExpectedBatteryLifeCycles - completedCycles, 0);
+    const double measuredCapacityMah = ComputeMeasuredCapacityMah(measurements, measurements.size() - 1);
+    const double healthPercent = BatteryHealthPercent(measuredCapacityMah, factoryCapacityMah);
     const wxColour healthColor = BatteryHealthColor(healthPercent);
 
     dc.SetPen(wxPen(wxColour(55, 64, 78), 1));
@@ -585,9 +637,9 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     dc.DrawRectangle(0, 0, width, height);
 
     dc.SetTextForeground(wxColour(229, 236, 246));
-    dc.DrawText("Vida util de bateria", 24, 20);
+    dc.DrawText("Estado de Salud (SOH)", 24, 20);
     dc.SetTextForeground(wxColour(194, 202, 215));
-    dc.DrawText("Estimacion por ciclos completados", 24, 46);
+    dc.DrawText("Capacidad actual / capacidad de fabrica x 100", 24, 46);
 
     wxFont percentFont = GetFont();
     percentFont.SetPointSize(percentFont.GetPointSize() + 20);
@@ -598,8 +650,8 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
 
     dc.SetFont(GetFont());
     dc.SetTextForeground(wxColour(194, 202, 215));
-    dc.DrawText(wxString::Format("Ciclos usados: %d / %d", completedCycles, kExpectedBatteryLifeCycles), 28, 150);
-    dc.DrawText(wxString::Format("Ciclos restantes estimados: %d", remainingCycles), 28, 174);
+    dc.DrawText(wxString::Format("Capacidad actual: %.1f mAh", measuredCapacityMah), 28, 150);
+    dc.DrawText(wxString::Format("Capacidad de fabrica: %.1f mAh", factoryCapacityMah), 28, 174);
 
     const int barLeft = 28;
     const int barTop = 214;
@@ -626,9 +678,11 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     const double firstTimestamp = static_cast<double>(measurements.front().timestampMs);
     const double lastTimestamp = static_cast<double>(measurements.back().timestampMs);
     const double totalSeconds = std::max((lastTimestamp - firstTimestamp) / 1000.0, 1.0);
-    for (const auto& measurement : measurements) {
+    for (std::size_t index = 0; index < measurements.size(); ++index) {
+        const auto& measurement = measurements[index];
         const double seconds = (static_cast<double>(measurement.timestampMs) - firstTimestamp) / 1000.0;
-        const double sampleHealth = BatteryHealthPercent(measurement.completedCycles);
+        const double sampleCapacityMah = ComputeMeasuredCapacityMah(measurements, index);
+        const double sampleHealth = BatteryHealthPercent(sampleCapacityMah, factoryCapacityMah);
         const int x = ProjectValue(seconds, {0.0, totalSeconds}, plotLeft, plotLeft + plotWidth);
         const int y = ProjectValue(sampleHealth, {0.0, 100.0}, plotTop + plotHeight, plotTop);
         points.emplace_back(x, y);
@@ -664,7 +718,15 @@ void PlotPanel::RefreshPlot(int index) {
     std::size_t pointCount = 0;
     wxBitmap bitmap;
     if (IsBatteryHealthMode(*widgets)) {
-        bitmap = RenderBatteryHealthBitmap(measurements, widgets->bitmap->GetSize(), error, pointCount);
+        double factoryCapacityMah = 0.0;
+        if (widgets->factoryCapacityCtrl) {
+            widgets->factoryCapacityCtrl->GetValue().ToDouble(&factoryCapacityMah);
+        }
+        bitmap = RenderBatteryHealthBitmap(measurements,
+                                           widgets->bitmap->GetSize(),
+                                           factoryCapacityMah,
+                                           error,
+                                           pointCount);
     } else {
         const auto xAxis = kAxes[static_cast<std::size_t>(widgets->xAxisChoice->GetSelection())];
         const auto yAxis = kAxes[static_cast<std::size_t>(widgets->yAxisChoice->GetSelection())];
@@ -693,11 +755,15 @@ void PlotPanel::RefreshPlot(int index) {
                                                   widgets->zoomScaleX * 100.0,
                                                   widgets->zoomScaleY * 100.0));
     if (IsBatteryHealthMode(*widgets)) {
-        const int completedCycles = MaxCompletedCycles(measurements);
-        widgets->status->SetLabel(wxString::Format("Salud estimada: %.1f%% | Ciclos: %d / %d",
-                                                   BatteryHealthPercent(completedCycles),
-                                                   completedCycles,
-                                                   kExpectedBatteryLifeCycles));
+        double factoryCapacityMah = 0.0;
+        if (widgets->factoryCapacityCtrl) {
+            widgets->factoryCapacityCtrl->GetValue().ToDouble(&factoryCapacityMah);
+        }
+        const double measuredCapacityMah = ComputeMeasuredCapacityMah(measurements, measurements.size() - 1);
+        widgets->status->SetLabel(wxString::Format("SOH: %.1f%% | Capacidad actual: %.1f mAh | Fabrica: %.1f mAh",
+                                                   BatteryHealthPercent(measuredCapacityMah, factoryCapacityMah),
+                                                   measuredCapacityMah,
+                                                   factoryCapacityMah));
         return;
     }
 
@@ -715,10 +781,18 @@ bool PlotPanel::IsBatteryHealthMode(const PlotWidgets& widgets) const {
 
 void PlotPanel::UpdatePlotModeControls(PlotWidgets& widgets) {
     const bool graphMode = !IsBatteryHealthMode(widgets);
+    if (widgets.xAxisLabel) {
+        widgets.xAxisLabel->Show(graphMode);
+    }
     if (widgets.xAxisChoice) {
+        widgets.xAxisChoice->Show(graphMode);
         widgets.xAxisChoice->Enable(graphMode);
     }
+    if (widgets.yAxisLabel) {
+        widgets.yAxisLabel->Show(graphMode);
+    }
     if (widgets.yAxisChoice) {
+        widgets.yAxisChoice->Show(graphMode);
         widgets.yAxisChoice->Enable(graphMode);
     }
     if (widgets.zoomXOutButton) {
@@ -735,6 +809,15 @@ void PlotPanel::UpdatePlotModeControls(PlotWidgets& widgets) {
     }
     if (widgets.autoFitButton) {
         widgets.autoFitButton->Enable(graphMode);
+    }
+    if (widgets.factoryCapacityLabel) {
+        widgets.factoryCapacityLabel->Show(!graphMode);
+    }
+    if (widgets.factoryCapacityCtrl) {
+        widgets.factoryCapacityCtrl->Show(!graphMode);
+    }
+    if (widgets.factoryCapacityCtrl && widgets.factoryCapacityCtrl->GetParent()) {
+        widgets.factoryCapacityCtrl->GetParent()->Layout();
     }
 }
 
@@ -858,8 +941,13 @@ bool PlotPanel::ExportPlotImage(const std::string& filePath, int index, std::str
 
     if (IsBatteryHealthMode(*widgets)) {
         std::size_t pointCount = 0;
+        double factoryCapacityMah = 0.0;
+        if (widgets->factoryCapacityCtrl) {
+            widgets->factoryCapacityCtrl->GetValue().ToDouble(&factoryCapacityMah);
+        }
         wxBitmap bitmap = RenderBatteryHealthBitmap(viewModel_->GetMeasurements(),
                                                     widgets->bitmap->GetSize(),
+                                                    factoryCapacityMah,
                                                     outError,
                                                     pointCount);
         if (!bitmap.IsOk()) {

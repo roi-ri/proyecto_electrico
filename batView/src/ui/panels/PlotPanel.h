@@ -16,6 +16,7 @@
 #include "ui/viewmodels/MainViewModel.h"
 
 class wxSplitterWindow;
+class wxTextCtrl;
 
 namespace batview::ui::panels {
 
@@ -41,6 +42,7 @@ private:
                               std::size_t& outPointCount) const;
     wxBitmap RenderBatteryHealthBitmap(const std::vector<batview::core::models::Measurement>& measurements,
                                        const wxSize& size,
+                                       double factoryCapacityMah,
                                        std::string& outError,
                                        std::size_t& outPointCount) const;
     wxPanel* BuildPlotCard(wxWindow* parent,
