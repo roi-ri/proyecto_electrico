@@ -188,18 +188,18 @@ bool PlotService::ExportPlotXlsx(const std::string& filePath,
 std::string PlotService::AxisLabel(PlotAxis axis) {
     switch (axis) {
     case PlotAxis::TimestampMs:
-        return "TimeS";
+        return "Tiempo (s)";
     case PlotAxis::Voltage:
-        return "Tensión";
+        return "Tension (V)";
     case PlotAxis::Current:
-        return "Current";
+        return "Corriente (A)";
     case PlotAxis::State:
-        return "State";
+        return "Estado";
     case PlotAxis::CompletedCycles:
-        return "CompletedCycles";
+        return "Ciclos completados";
     }
 
-    return "Unknown";
+    return "Desconocido";
 }
 
 } // namespace batview::core::services

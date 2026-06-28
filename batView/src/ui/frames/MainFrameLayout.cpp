@@ -125,7 +125,7 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
 
     batteryPanel_ = new wxPanel(flowPanel_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
     detail::PrepareFlatPanel(batteryPanel_);
-    auto* batteryTitle = new wxStaticText(batteryPanel_, wxID_ANY, "Battery profiles");
+    auto* batteryTitle = new wxStaticText(batteryPanel_, wxID_ANY, "Perfiles de bateria");
     wxFont batteryTitleFont = batteryTitle->GetFont();
     batteryTitleFont.SetWeight(wxFONTWEIGHT_BOLD);
     batteryTitle->SetFont(batteryTitleFont);
@@ -134,26 +134,31 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     batteryProfileChoice_->SetSelection(wxNOT_FOUND);
 
     batteryNameCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryNameCtrl_->SetHint("Profile name");
+    batteryNameCtrl_->SetHint("Nombre del perfil");
     batteryVoltageMaxCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryVoltageMaxCtrl_->SetHint("Tensión en carga máxima");
+    batteryVoltageMaxCtrl_->SetHint("Tension maxima (V)");
     batteryVoltageMinCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryVoltageMinCtrl_->SetHint("Tensión en carga mínima");
+    batteryVoltageMinCtrl_->SetHint("Tension minima (V)");
     batteryMaxCurrentCtrl_ = new wxTextCtrl(batteryPanel_, wxID_ANY);
-    batteryMaxCurrentCtrl_->SetHint("Max current");
-    saveBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Add / update profile");
-    chooseBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Choose battery");
-    clearBatteryProfilesButton_ = new wxButton(batteryPanel_, wxID_ANY, "Clear profiles");
+    batteryMaxCurrentCtrl_->SetHint("Corriente maxima (A)");
+    batteryNameCtrl_->SetMinSize(wxSize(210, -1));
+    batteryVoltageMinCtrl_->SetMinSize(wxSize(210, -1));
+    batteryVoltageMaxCtrl_->SetMinSize(wxSize(210, -1));
+    batteryMaxCurrentCtrl_->SetMinSize(wxSize(210, -1));
+    batteryProfileChoice_->SetMinSize(wxSize(210, -1));
+    saveBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Guardar perfil");
+    chooseBatteryProfileButton_ = new wxButton(batteryPanel_, wxID_ANY, "Elegir bateria");
+    clearBatteryProfilesButton_ = new wxButton(batteryPanel_, wxID_ANY, "Limpiar perfiles");
 
     auto* batteryGrid = new wxFlexGridSizer(2, 8, 8);
     batteryGrid->AddGrowableCol(1, 1);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Profile name"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Nombre del perfil"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryNameCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Tensión en carga mínima"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Tension minima (V)"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryVoltageMinCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Tensión en carga máxima"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Tension maxima (V)"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryVoltageMaxCtrl_, 1, wxEXPAND);
-    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Max current"), 0, wxALIGN_CENTER_VERTICAL);
+    batteryGrid->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Corriente maxima (A)"), 0, wxALIGN_CENTER_VERTICAL);
     batteryGrid->Add(batteryMaxCurrentCtrl_, 1, wxEXPAND);
 
     auto* batteryActions = new wxBoxSizer(wxHORIZONTAL);
@@ -164,10 +169,11 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
     auto* batterySizer = new wxBoxSizer(wxVERTICAL);
     batterySizer->Add(batteryTitle, 0, wxBOTTOM, 6);
     batterySizer->Add(batteryGrid, 0, wxEXPAND | wxBOTTOM, 8);
-    batterySizer->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Saved profile"), 0, wxBOTTOM, 4);
+    batterySizer->Add(new wxStaticText(batteryPanel_, wxID_ANY, "Perfil guardado"), 0, wxBOTTOM, 4);
     batterySizer->Add(batteryProfileChoice_, 0, wxEXPAND | wxBOTTOM, 8);
     batterySizer->Add(batteryActions, 0);
     batteryPanel_->SetSizer(batterySizer);
+    batteryPanel_->SetMinSize(wxSize(440, -1));
 
     functionPanel_ = new wxPanel(flowPanel_, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_SIMPLE);
     detail::PrepareFlatPanel(functionPanel_);
@@ -208,7 +214,7 @@ void MainFrame::BuildWorkflowPage(wxWindow* parent) {
 
     startButton_ = new wxButton(optionsPanel_, wxID_ANY, "Iniciar");
     stopButton_ = new wxButton(optionsPanel_, wxID_ANY, "Detener");
-    exportButton_ = new wxButton(optionsPanel_, wxID_ANY, "Exportar Datos");
+    exportButton_ = new wxButton(optionsPanel_, wxID_ANY, "Exportar datos");
 
     auto* optionsSizer = new wxBoxSizer(wxVERTICAL);
     optionsSizer->Add(cycleModeLabel_, 0, wxTOP | wxBOTTOM, 4);

@@ -97,7 +97,7 @@ bool ConnectionService::Connect(const std::string& portName, int baudRate) {
     }
 
     if (trafficObserver_) {
-        trafficObserver_(true, "Waiting up to 45 seconds for ACK_connection...");
+        trafficObserver_(true, "Esperando hasta 6 segundos por #ACK,CONNECTION...");
     }
 
     while (std::chrono::steady_clock::now() - started < timeout) {
@@ -119,13 +119,13 @@ bool ConnectionService::Connect(const std::string& portName, int baudRate) {
 
         if (IsConnectionAck(line)) {
             lastError_.clear();
-            logger_.Info("Serial connection established on " + portName);
+            logger_.Info("Conexion serial establecida en " + portName);
             return true;
         }
 
         if (IsReadyStatus(line) && !readyObserved) {
             readyObserved = true;
-            logger_.Info("ESP32 reported ready state while waiting for ACK_connection; retrying handshake.");
+            logger_.Info("El ESP32 reporto estado listo mientras se esperaba #ACK,CONNECTION; reintentando handshake.");
             if (!sendHandshake()) {
                 return false;
             }
@@ -147,7 +147,7 @@ bool ConnectionService::Connect(const std::string& portName, int baudRate) {
 
 void ConnectionService::Disconnect() {
     serialPort_.Close();
-    logger_.Info("Serial connection closed.");
+    logger_.Info("Conexion serial cerrada.");
 }
 
 void ConnectionService::SetTrafficObserver(TrafficObserver observer) {

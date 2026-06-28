@@ -70,8 +70,8 @@ std::string TextProtocolCodec::BuildBatteryProfileCommand(const BatteryProfile& 
     if (profile.voltageAtMax <= 0.0) {
         throw std::invalid_argument("tension maxima must be > 0");
     }
-    if (profile.voltageAtMin <= 0.0) {
-        throw std::invalid_argument("tension minima must be > 0");
+    if (profile.voltageAtMin < 0.0) {
+        throw std::invalid_argument("tension minima must be >= 0");
     }
     if (profile.voltageAtMin >= profile.voltageAtMax) {
         throw std::invalid_argument("tension minima must be lower than tension maxima");

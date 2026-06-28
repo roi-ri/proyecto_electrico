@@ -17,7 +17,7 @@ bool CsvExporter::Export(const std::string& filePath, const std::vector<batview:
         return false;
     }
 
-    file << "TimestampMs,Tensión,Current,State,CompletedCycles\n";
+    file << "Tiempo (ms),Tension (V),Corriente (A),Estado,Ciclos completados\n";
     for (const auto& measurement : data) {
         file << measurement.timestampMs << ","
              << measurement.voltage << ","

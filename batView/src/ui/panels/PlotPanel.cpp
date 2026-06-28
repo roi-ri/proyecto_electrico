@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <map>
 #include <set>
@@ -27,9 +28,11 @@ namespace batview::ui::panels {
 namespace {
 
 constexpr int kRefreshIntervalMs = 700;
-constexpr double kMinZoomScale = 0.5;
-constexpr double kMaxZoomScale = 8.0;
-constexpr double kZoomStep = 1.25;
+constexpr double kMinZoomScale = 0.125;
+constexpr double kMaxZoomScale = 64.0;
+constexpr double kZoomStep = 1.5;
+constexpr int kExpectedBatteryLifeCycles = 500;
+constexpr auto kPanRefreshInterval = std::chrono::milliseconds(60);
 
 std::array<batview::core::services::PlotAxis, 5> kAxes = {
     batview::core::services::PlotAxis::TimestampMs,
@@ -46,8 +49,8 @@ wxString ToWx(const std::string& value) {
 std::string FormatPointSummary(const batview::core::models::Measurement& measurement) {
     return "Ultimo punto | t="
         + std::to_string(measurement.timestampMs)
-        + " ms, T=" + std::to_string(measurement.voltage)
-        + ", I=" + std::to_string(measurement.current);
+        + " ms, Tension (V)=" + std::to_string(measurement.voltage)
+        + ", Corriente (A)=" + std::to_string(measurement.current);
 }
 
 double ExtractAxisValue(const batview::core::models::Measurement& measurement,
@@ -154,25 +157,54 @@ wxString FormatStateTick(int code) {
     return wxString::Format("%s (%d)", info.label, code);
 }
 
+int MaxCompletedCycles(const std::vector<batview::core::models::Measurement>& measurements) {
+    int maxCycles = 0;
+    for (const auto& measurement : measurements) {
+        maxCycles = std::max(maxCycles, measurement.completedCycles);
+    }
+    return maxCycles;
+}
+
+double BatteryHealthPercent(int completedCycles) {
+    const double usedFraction = static_cast<double>(completedCycles) /
+        static_cast<double>(kExpectedBatteryLifeCycles);
+    return std::clamp(100.0 * (1.0 - usedFraction), 0.0, 100.0);
+}
+
+wxColour BatteryHealthColor(double healthPercent) {
+    if (healthPercent >= 70.0) {
+        return wxColour(90, 255, 180);
+    }
+    if (healthPercent >= 40.0) {
+        return wxColour(255, 190, 112);
+    }
+    return wxColour(255, 105, 105);
+}
+
 } // namespace
 
 struct PlotPanel::PlotWidgets {
+    wxChoice* modeChoice = nullptr;
     wxChoice* xAxisChoice = nullptr;
     wxChoice* yAxisChoice = nullptr;
     wxStaticBitmap* bitmap = nullptr;
     wxStaticText* status = nullptr;
     wxButton* exportButton = nullptr;
-    wxButton* zoomInButton = nullptr;
-    wxButton* zoomOutButton = nullptr;
+    wxButton* zoomXInButton = nullptr;
+    wxButton* zoomXOutButton = nullptr;
+    wxButton* zoomYInButton = nullptr;
+    wxButton* zoomYOutButton = nullptr;
     wxButton* autoFitButton = nullptr;
     wxStaticText* zoomLabel = nullptr;
     std::string title;
     std::size_t lastPointCount = 0;
-    double zoomScale = 1.0;
+    double zoomScaleX = 1.0;
+    double zoomScaleY = 1.0;
     double panX = 0.0;
     double panY = 0.0;
     bool isPanning = false;
     wxPoint lastPanPosition;
+    std::chrono::steady_clock::time_point lastPanRefresh = std::chrono::steady_clock::now();
 };
 
 PlotPanel::PlotPanel(wxWindow* parent)
@@ -189,8 +221,7 @@ PlotPanel::PlotPanel(wxWindow* parent)
     headerSizer->Add(clearPlotsButton_, 0, wxALL, 8);
     mainSizer->Add(headerSizer, 0, wxEXPAND);
 
-    plotsSplitter_ = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
-                                          wxSP_LIVE_UPDATE | wxSP_NO_XP_THEME);
+    plotsSplitter_ = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_NO_XP_THEME);
     plotsSplitter_->SetMinimumPaneSize(180);
     auto* firstPlotCard = BuildPlotCard(plotsSplitter_, "Grafico 1", 0);
     auto* secondPlotCard = BuildPlotCard(plotsSplitter_, "Grafico 2", 1);
@@ -227,6 +258,12 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
 
     widgets->xAxisChoice = new wxChoice(card, wxID_ANY);
     widgets->yAxisChoice = new wxChoice(card, wxID_ANY);
+    if (index == 1) {
+        widgets->modeChoice = new wxChoice(card, wxID_ANY);
+        widgets->modeChoice->Append("Graficacion");
+        widgets->modeChoice->Append("Vida util");
+        widgets->modeChoice->SetSelection(0);
+    }
     for (const auto axis : kAxes) {
         widgets->xAxisChoice->Append(ToWx(batview::core::services::PlotService::AxisLabel(axis)));
         widgets->yAxisChoice->Append(ToWx(batview::core::services::PlotService::AxisLabel(axis)));
@@ -238,32 +275,57 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
     widgets->bitmap = new wxStaticBitmap(card, wxID_ANY, wxBitmap(720, 300));
     widgets->bitmap->SetMinSize(wxSize(480, 300));
     widgets->status = new wxStaticText(card, wxID_ANY, "Esperando datos...");
-    widgets->zoomLabel = new wxStaticText(card, wxID_ANY, "100%");
-    widgets->zoomOutButton = new wxButton(card, wxID_ANY, "-");
-    widgets->zoomInButton = new wxButton(card, wxID_ANY, "+");
+    widgets->zoomLabel = new wxStaticText(card, wxID_ANY, "X 100% | Y 100%");
+    widgets->zoomXOutButton = new wxButton(card, wxID_ANY, "X -");
+    widgets->zoomXInButton = new wxButton(card, wxID_ANY, "X +");
+    widgets->zoomYOutButton = new wxButton(card, wxID_ANY, "Y -");
+    widgets->zoomYInButton = new wxButton(card, wxID_ANY, "Y +");
     widgets->autoFitButton = new wxButton(card, wxID_ANY, "Auto");
     widgets->exportButton = new wxButton(card, wxID_ANY, "Exportar grafico");
-    widgets->zoomOutButton->SetToolTip("Alejar grafico");
-    widgets->zoomInButton->SetToolTip("Acercar grafico");
+    widgets->zoomXOutButton->SetToolTip("Alejar eje X");
+    widgets->zoomXInButton->SetToolTip("Acercar eje X");
+    widgets->zoomYOutButton->SetToolTip("Alejar eje Y");
+    widgets->zoomYInButton->SetToolTip("Acercar eje Y");
     widgets->autoFitButton->SetToolTip("Auto ajustar el rango del grafico");
-    widgets->bitmap->SetToolTip("Arrastre dentro del grafico para navegar.");
+    widgets->bitmap->SetToolTip("Arrastre dentro del grafico para navegar. Use la rueda para acercar o alejar ambos ejes.");
 
     auto refreshHandler = [this](wxCommandEvent&) { RefreshPlots(); };
+    if (widgets->modeChoice) {
+        widgets->modeChoice->Bind(wxEVT_CHOICE, [this, index](wxCommandEvent&) {
+            auto* currentWidgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
+            if (currentWidgets) {
+                UpdatePlotModeControls(*currentWidgets);
+            }
+            RefreshPlot(index);
+        });
+    }
     widgets->xAxisChoice->Bind(wxEVT_CHOICE, refreshHandler);
     widgets->yAxisChoice->Bind(wxEVT_CHOICE, refreshHandler);
     widgets->exportButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
         ExportPlot(index);
     });
-    widgets->zoomOutButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
+    widgets->zoomXOutButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
         auto* currentWidgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
         if (currentWidgets) {
-            SetPlotZoom(index, currentWidgets->zoomScale / kZoomStep);
+            SetPlotZoom(index, currentWidgets->zoomScaleX / kZoomStep, currentWidgets->zoomScaleY);
         }
     });
-    widgets->zoomInButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
+    widgets->zoomXInButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
         auto* currentWidgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
         if (currentWidgets) {
-            SetPlotZoom(index, currentWidgets->zoomScale * kZoomStep);
+            SetPlotZoom(index, currentWidgets->zoomScaleX * kZoomStep, currentWidgets->zoomScaleY);
+        }
+    });
+    widgets->zoomYOutButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
+        auto* currentWidgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
+        if (currentWidgets) {
+            SetPlotZoom(index, currentWidgets->zoomScaleX, currentWidgets->zoomScaleY / kZoomStep);
+        }
+    });
+    widgets->zoomYInButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
+        auto* currentWidgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
+        if (currentWidgets) {
+            SetPlotZoom(index, currentWidgets->zoomScaleX, currentWidgets->zoomScaleY * kZoomStep);
         }
     });
     widgets->autoFitButton->Bind(wxEVT_BUTTON, [this, index](wxCommandEvent&) {
@@ -285,13 +347,17 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
     });
     widgets->bitmap->Bind(wxEVT_MOUSEWHEEL, [this, index](wxMouseEvent& event) {
         auto* currentWidgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
-        if (currentWidgets) {
+        if (currentWidgets && !IsBatteryHealthMode(*currentWidgets)) {
             const double factor = event.GetWheelRotation() > 0 ? kZoomStep : 1.0 / kZoomStep;
-            SetPlotZoom(index, currentWidgets->zoomScale * factor);
+            SetPlotZoom(index, currentWidgets->zoomScaleX * factor, currentWidgets->zoomScaleY * factor);
         }
     });
 
     auto* controlsSizer = new wxBoxSizer(wxHORIZONTAL);
+    if (widgets->modeChoice) {
+        controlsSizer->Add(new wxStaticText(card, wxID_ANY, "Modo"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
+        controlsSizer->Add(widgets->modeChoice, 0, wxRIGHT, 12);
+    }
     controlsSizer->Add(new wxStaticText(card, wxID_ANY, "X"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
     controlsSizer->Add(widgets->xAxisChoice, 1, wxRIGHT, 12);
     controlsSizer->Add(new wxStaticText(card, wxID_ANY, "Y"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 6);
@@ -300,8 +366,10 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
 
     auto* zoomSizer = new wxBoxSizer(wxHORIZONTAL);
     zoomSizer->Add(new wxStaticText(card, wxID_ANY, "Zoom"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
-    zoomSizer->Add(widgets->zoomOutButton, 0, wxRIGHT, 6);
-    zoomSizer->Add(widgets->zoomInButton, 0, wxRIGHT, 6);
+    zoomSizer->Add(widgets->zoomXOutButton, 0, wxRIGHT, 6);
+    zoomSizer->Add(widgets->zoomXInButton, 0, wxRIGHT, 10);
+    zoomSizer->Add(widgets->zoomYOutButton, 0, wxRIGHT, 6);
+    zoomSizer->Add(widgets->zoomYInButton, 0, wxRIGHT, 10);
     zoomSizer->Add(widgets->autoFitButton, 0, wxRIGHT, 8);
     zoomSizer->Add(widgets->zoomLabel, 0, wxALIGN_CENTER_VERTICAL);
 
@@ -312,6 +380,7 @@ wxPanel* PlotPanel::BuildPlotCard(wxWindow* parent,
     cardSizer->Add(widgets->bitmap, 1, wxEXPAND | wxALL, 10);
     cardSizer->Add(widgets->status, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
     card->SetSizer(cardSizer);
+    UpdatePlotModeControls(*widgets);
 
     if (index == 0) {
         primaryPlot_ = std::move(widgets);
@@ -331,7 +400,8 @@ wxBitmap PlotPanel::RenderPlotBitmap(const std::vector<batview::core::models::Me
                                      batview::core::services::PlotAxis xAxis,
                                      batview::core::services::PlotAxis yAxis,
                                      const wxSize& requestedSize,
-                                     double zoomScale,
+                                     double zoomScaleX,
+                                     double zoomScaleY,
                                      double panX,
                                      double panY,
                                      const std::string& title,
@@ -377,10 +447,10 @@ wxBitmap PlotPanel::RenderPlotBitmap(const std::vector<batview::core::models::Me
     }
 
     const bool categoricalStatePlot = yAxis == batview::core::services::PlotAxis::State;
-    const AxisRange xRange = ApplyPan(ApplyZoom(ComputeAxisRange(xValues), zoomScale), panX);
+    const AxisRange xRange = ApplyPan(ApplyZoom(ComputeAxisRange(xValues), zoomScaleX), panX);
     const AxisRange yRange = categoricalStatePlot
         ? AxisRange {-0.5, 4.5}
-        : ApplyPan(ApplyZoom(ComputeAxisRange(yValues), zoomScale), panY);
+        : ApplyPan(ApplyZoom(ComputeAxisRange(yValues), zoomScaleY), panY);
 
     dc.SetFont(GetFont());
     dc.SetTextForeground(wxColour(194, 202, 215));
@@ -483,6 +553,106 @@ wxBitmap PlotPanel::RenderPlotBitmap(const std::vector<batview::core::models::Me
     return bitmap;
 }
 
+wxBitmap PlotPanel::RenderBatteryHealthBitmap(
+    const std::vector<batview::core::models::Measurement>& measurements,
+    const wxSize& requestedSize,
+    std::string& outError,
+    std::size_t& outPointCount) const {
+    outError.clear();
+    outPointCount = measurements.size();
+
+    if (measurements.empty()) {
+        outError = "Sin datos para calcular vida util.";
+        return wxBitmap();
+    }
+
+    const int width = std::max(requestedSize.GetWidth(), 480);
+    const int height = std::max(requestedSize.GetHeight(), 300);
+    wxBitmap bitmap(width, height, 32);
+    wxMemoryDC dc(bitmap);
+
+    dc.SetBackground(wxBrush(wxColour(13, 18, 24)));
+    dc.Clear();
+    dc.SetFont(GetFont());
+
+    const int completedCycles = MaxCompletedCycles(measurements);
+    const double healthPercent = BatteryHealthPercent(completedCycles);
+    const int remainingCycles = std::max(kExpectedBatteryLifeCycles - completedCycles, 0);
+    const wxColour healthColor = BatteryHealthColor(healthPercent);
+
+    dc.SetPen(wxPen(wxColour(55, 64, 78), 1));
+    dc.SetBrush(*wxTRANSPARENT_BRUSH);
+    dc.DrawRectangle(0, 0, width, height);
+
+    dc.SetTextForeground(wxColour(229, 236, 246));
+    dc.DrawText("Vida util de bateria", 24, 20);
+    dc.SetTextForeground(wxColour(194, 202, 215));
+    dc.DrawText("Estimacion por ciclos completados", 24, 46);
+
+    wxFont percentFont = GetFont();
+    percentFont.SetPointSize(percentFont.GetPointSize() + 20);
+    percentFont.SetWeight(wxFONTWEIGHT_BOLD);
+    dc.SetFont(percentFont);
+    dc.SetTextForeground(healthColor);
+    dc.DrawText(wxString::Format("%.1f%%", healthPercent), 24, 82);
+
+    dc.SetFont(GetFont());
+    dc.SetTextForeground(wxColour(194, 202, 215));
+    dc.DrawText(wxString::Format("Ciclos usados: %d / %d", completedCycles, kExpectedBatteryLifeCycles), 28, 150);
+    dc.DrawText(wxString::Format("Ciclos restantes estimados: %d", remainingCycles), 28, 174);
+
+    const int barLeft = 28;
+    const int barTop = 214;
+    const int barWidth = std::max(width - 56, 80);
+    const int barHeight = 32;
+    const int fillWidth = static_cast<int>(std::lround(barWidth * healthPercent / 100.0));
+    dc.SetPen(wxPen(wxColour(70, 82, 98), 1));
+    dc.SetBrush(wxBrush(wxColour(31, 39, 49)));
+    dc.DrawRoundedRectangle(barLeft, barTop, barWidth, barHeight, 6);
+    dc.SetPen(wxPen(healthColor, 1));
+    dc.SetBrush(wxBrush(healthColor));
+    dc.DrawRoundedRectangle(barLeft, barTop, std::max(fillWidth, 2), barHeight, 6);
+
+    const int plotLeft = 28;
+    const int plotTop = std::min(barTop + 64, height - 72);
+    const int plotWidth = std::max(width - 56, 80);
+    const int plotHeight = std::max(height - plotTop - 28, 40);
+    dc.SetPen(wxPen(wxColour(55, 64, 78), 1));
+    dc.SetBrush(*wxTRANSPARENT_BRUSH);
+    dc.DrawRectangle(plotLeft, plotTop, plotWidth, plotHeight);
+
+    std::vector<wxPoint> points;
+    points.reserve(measurements.size());
+    const double firstTimestamp = static_cast<double>(measurements.front().timestampMs);
+    const double lastTimestamp = static_cast<double>(measurements.back().timestampMs);
+    const double totalSeconds = std::max((lastTimestamp - firstTimestamp) / 1000.0, 1.0);
+    for (const auto& measurement : measurements) {
+        const double seconds = (static_cast<double>(measurement.timestampMs) - firstTimestamp) / 1000.0;
+        const double sampleHealth = BatteryHealthPercent(measurement.completedCycles);
+        const int x = ProjectValue(seconds, {0.0, totalSeconds}, plotLeft, plotLeft + plotWidth);
+        const int y = ProjectValue(sampleHealth, {0.0, 100.0}, plotTop + plotHeight, plotTop);
+        points.emplace_back(x, y);
+    }
+
+    dc.SetClippingRegion(wxRect(plotLeft, plotTop, plotWidth, plotHeight));
+    dc.SetPen(wxPen(healthColor, 2));
+    if (points.size() == 1) {
+        dc.SetBrush(wxBrush(healthColor));
+        dc.DrawCircle(points.front(), 3);
+    } else {
+        dc.DrawLines(static_cast<int>(points.size()), points.data());
+    }
+    dc.DestroyClippingRegion();
+
+    dc.SetTextForeground(wxColour(146, 200, 255));
+    dc.DrawText("Tiempo", plotLeft, plotTop + plotHeight + 6);
+    dc.SetTextForeground(wxColour(255, 190, 112));
+    dc.DrawText("Salud (%)", plotLeft + 6, plotTop + 6);
+
+    dc.SelectObject(wxNullBitmap);
+    return bitmap;
+}
+
 void PlotPanel::RefreshPlot(int index) {
     auto* widgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
     if (widgets == nullptr || viewModel_ == nullptr) {
@@ -490,20 +660,26 @@ void PlotPanel::RefreshPlot(int index) {
     }
 
     const auto measurements = viewModel_->GetMeasurements();
-    const auto xAxis = kAxes[static_cast<std::size_t>(widgets->xAxisChoice->GetSelection())];
-    const auto yAxis = kAxes[static_cast<std::size_t>(widgets->yAxisChoice->GetSelection())];
     std::string error;
     std::size_t pointCount = 0;
-    wxBitmap bitmap = RenderPlotBitmap(measurements,
-                                       xAxis,
-                                       yAxis,
-                                       widgets->bitmap->GetSize(),
-                                       widgets->zoomScale,
-                                       widgets->panX,
-                                       widgets->panY,
-                                       widgets->title,
-                                       error,
-                                       pointCount);
+    wxBitmap bitmap;
+    if (IsBatteryHealthMode(*widgets)) {
+        bitmap = RenderBatteryHealthBitmap(measurements, widgets->bitmap->GetSize(), error, pointCount);
+    } else {
+        const auto xAxis = kAxes[static_cast<std::size_t>(widgets->xAxisChoice->GetSelection())];
+        const auto yAxis = kAxes[static_cast<std::size_t>(widgets->yAxisChoice->GetSelection())];
+        bitmap = RenderPlotBitmap(measurements,
+                                  xAxis,
+                                  yAxis,
+                                  widgets->bitmap->GetSize(),
+                                  widgets->zoomScaleX,
+                                  widgets->zoomScaleY,
+                                  widgets->panX,
+                                  widgets->panY,
+                                  widgets->title,
+                                  error,
+                                  pointCount);
+    }
 
     if (!bitmap.IsOk()) {
         ResetPlotCard(*widgets);
@@ -513,8 +689,17 @@ void PlotPanel::RefreshPlot(int index) {
 
     widgets->bitmap->SetBitmap(bitmap);
     widgets->lastPointCount = pointCount;
-    widgets->zoomLabel->SetLabel(wxString::Format("%.0f%%", widgets->zoomScale * 100.0));
-    widgets->status->SetLabel("Puntos graficados: " + std::to_string(pointCount));
+    widgets->zoomLabel->SetLabel(wxString::Format("X %.0f%% | Y %.0f%%",
+                                                  widgets->zoomScaleX * 100.0,
+                                                  widgets->zoomScaleY * 100.0));
+    if (IsBatteryHealthMode(*widgets)) {
+        const int completedCycles = MaxCompletedCycles(measurements);
+        widgets->status->SetLabel(wxString::Format("Salud estimada: %.1f%% | Ciclos: %d / %d",
+                                                   BatteryHealthPercent(completedCycles),
+                                                   completedCycles,
+                                                   kExpectedBatteryLifeCycles));
+        return;
+    }
 
     if (!measurements.empty()) {
         widgets->status->SetLabel("Puntos graficados: "
@@ -524,13 +709,43 @@ void PlotPanel::RefreshPlot(int index) {
     }
 }
 
-void PlotPanel::SetPlotZoom(int index, double zoomScale) {
+bool PlotPanel::IsBatteryHealthMode(const PlotWidgets& widgets) const {
+    return widgets.modeChoice != nullptr && widgets.modeChoice->GetSelection() == 1;
+}
+
+void PlotPanel::UpdatePlotModeControls(PlotWidgets& widgets) {
+    const bool graphMode = !IsBatteryHealthMode(widgets);
+    if (widgets.xAxisChoice) {
+        widgets.xAxisChoice->Enable(graphMode);
+    }
+    if (widgets.yAxisChoice) {
+        widgets.yAxisChoice->Enable(graphMode);
+    }
+    if (widgets.zoomXOutButton) {
+        widgets.zoomXOutButton->Enable(graphMode);
+    }
+    if (widgets.zoomXInButton) {
+        widgets.zoomXInButton->Enable(graphMode);
+    }
+    if (widgets.zoomYOutButton) {
+        widgets.zoomYOutButton->Enable(graphMode);
+    }
+    if (widgets.zoomYInButton) {
+        widgets.zoomYInButton->Enable(graphMode);
+    }
+    if (widgets.autoFitButton) {
+        widgets.autoFitButton->Enable(graphMode);
+    }
+}
+
+void PlotPanel::SetPlotZoom(int index, double zoomScaleX, double zoomScaleY) {
     auto* widgets = index == 0 ? primaryPlot_.get() : secondaryPlot_.get();
     if (!widgets) {
         return;
     }
 
-    widgets->zoomScale = std::clamp(zoomScale, kMinZoomScale, kMaxZoomScale);
+    widgets->zoomScaleX = std::clamp(zoomScaleX, kMinZoomScale, kMaxZoomScale);
+    widgets->zoomScaleY = std::clamp(zoomScaleY, kMinZoomScale, kMaxZoomScale);
     RefreshPlot(index);
 }
 
@@ -540,7 +755,8 @@ void PlotPanel::ResetPlotView(int index) {
         return;
     }
 
-    widgets->zoomScale = 1.0;
+    widgets->zoomScaleX = 1.0;
+    widgets->zoomScaleY = 1.0;
     widgets->panX = 0.0;
     widgets->panY = 0.0;
     widgets->isPanning = false;
@@ -552,10 +768,16 @@ void PlotPanel::BeginPlotPan(int index, const wxPoint& position) {
     if (!widgets) {
         return;
     }
+    if (IsBatteryHealthMode(*widgets)) {
+        return;
+    }
 
     widgets->isPanning = true;
     widgets->lastPanPosition = position;
-    widgets->bitmap->CaptureMouse();
+    widgets->lastPanRefresh = std::chrono::steady_clock::now();
+    if (!widgets->bitmap->HasCapture()) {
+        widgets->bitmap->CaptureMouse();
+    }
     widgets->bitmap->SetCursor(wxCursor(wxCURSOR_HAND));
 }
 
@@ -574,7 +796,12 @@ void PlotPanel::ContinuePlotPan(int index, const wxPoint& position) {
     widgets->panX -= static_cast<double>(dx) / static_cast<double>(width);
     widgets->panY += static_cast<double>(dy) / static_cast<double>(height);
     widgets->lastPanPosition = position;
-    RefreshPlot(index);
+
+    const auto now = std::chrono::steady_clock::now();
+    if (now - widgets->lastPanRefresh >= kPanRefreshInterval) {
+        widgets->lastPanRefresh = now;
+        RefreshPlot(index);
+    }
 }
 
 void PlotPanel::EndPlotPan(int index) {
@@ -588,6 +815,7 @@ void PlotPanel::EndPlotPan(int index) {
         widgets->bitmap->ReleaseMouse();
     }
     widgets->bitmap->SetCursor(wxNullCursor);
+    RefreshPlot(index);
 }
 
 void PlotPanel::ClearPlots() {
@@ -606,14 +834,19 @@ void PlotPanel::ClearPlots() {
 void PlotPanel::ResetPlotCard(PlotWidgets& widgets) {
     widgets.bitmap->SetBitmap(wxBitmap(720, 300));
     widgets.lastPointCount = 0;
-    widgets.zoomScale = 1.0;
+    widgets.zoomScaleX = 1.0;
+    widgets.zoomScaleY = 1.0;
     widgets.panX = 0.0;
     widgets.panY = 0.0;
     widgets.isPanning = false;
     if (widgets.zoomLabel) {
-        widgets.zoomLabel->SetLabel("100%");
+        widgets.zoomLabel->SetLabel("X 100% | Y 100%");
     }
     widgets.status->SetLabel("Sin datos para graficar.");
+}
+
+bool PlotPanel::HasActivePan() const {
+    return (primaryPlot_ && primaryPlot_->isPanning) || (secondaryPlot_ && secondaryPlot_->isPanning);
 }
 
 bool PlotPanel::ExportPlotImage(const std::string& filePath, int index, std::string& outError) const {
@@ -623,6 +856,30 @@ bool PlotPanel::ExportPlotImage(const std::string& filePath, int index, std::str
         return false;
     }
 
+    if (IsBatteryHealthMode(*widgets)) {
+        std::size_t pointCount = 0;
+        wxBitmap bitmap = RenderBatteryHealthBitmap(viewModel_->GetMeasurements(),
+                                                    widgets->bitmap->GetSize(),
+                                                    outError,
+                                                    pointCount);
+        if (!bitmap.IsOk()) {
+            return false;
+        }
+
+        wxImage image = bitmap.ConvertToImage();
+        if (!image.IsOk()) {
+            outError = "La imagen generada de vida util no es valida.";
+            return false;
+        }
+
+        if (!image.SaveFile(filePath, wxBITMAP_TYPE_PNG)) {
+            outError = "No se pudo guardar la imagen PNG de vida util.";
+            return false;
+        }
+
+        return true;
+    }
+
     const auto xAxis = kAxes[static_cast<std::size_t>(widgets->xAxisChoice->GetSelection())];
     const auto yAxis = kAxes[static_cast<std::size_t>(widgets->yAxisChoice->GetSelection())];
     std::size_t pointCount = 0;
@@ -630,7 +887,8 @@ bool PlotPanel::ExportPlotImage(const std::string& filePath, int index, std::str
                                        xAxis,
                                        yAxis,
                                        widgets->bitmap->GetSize(),
-                                       widgets->zoomScale,
+                                       widgets->zoomScaleX,
+                                       widgets->zoomScaleY,
                                        widgets->panX,
                                        widgets->panY,
                                        widgets->title,
@@ -709,6 +967,9 @@ void PlotPanel::ExportPlot(int index) {
 
 void PlotPanel::OnRefreshTimer(wxTimerEvent& event) {
     (void)event;
+    if (HasActivePan()) {
+        return;
+    }
     RefreshPlots();
 }
 

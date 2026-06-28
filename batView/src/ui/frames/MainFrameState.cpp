@@ -183,7 +183,7 @@ void MainFrame::LoadStoredBatteryProfiles() {
 
         if (!profile.nameId.empty() &&
             profile.voltageAtMax > 0.0 &&
-            profile.voltageAtMin > 0.0 &&
+            profile.voltageAtMin >= 0.0 &&
             profile.voltageAtMin < profile.voltageAtMax &&
             profile.maxCurrent > 0.0) {
             batteryProfiles_.push_back(profile);
@@ -215,17 +215,17 @@ void MainFrame::SaveStoredBatteryProfiles() const {
 bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& outProfile,
                                        wxString& outError) const {
     if (!batteryNameCtrl_ || !batteryVoltageMaxCtrl_ || !batteryVoltageMinCtrl_ || !batteryMaxCurrentCtrl_) {
-        outError = "The battery profile form is not ready.";
+        outError = "El formulario del perfil de bateria no esta listo.";
         return false;
     }
 
     outProfile.nameId = detail::TrimmedUtf8(batteryNameCtrl_->GetValue());
     if (outProfile.nameId.empty()) {
-        outError = "Enter a profile name.";
+        outError = "Ingrese un nombre para el perfil.";
         return false;
     }
     if (outProfile.nameId.find(',') != std::string::npos) {
-        outError = "Profile name cannot contain commas.";
+        outError = "El nombre del perfil no puede contener comas.";
         return false;
     }
 
@@ -238,11 +238,15 @@ bool MainFrame::ReadBatteryProfileForm(batview::core::protocol::BatteryProfile& 
         return false;
     }
     if (!batteryMaxCurrentCtrl_->GetValue().ToDouble(&outProfile.maxCurrent)) {
-        outError = "Enter a numeric Max current.";
+        outError = "Ingrese una corriente maxima numerica.";
         return false;
     }
-    if (outProfile.voltageAtMax <= 0.0 || outProfile.voltageAtMin <= 0.0 || outProfile.maxCurrent <= 0.0) {
-        outError = "La tensión en carga máxima, la tensión en carga mínima y la corriente máxima deben ser mayores que cero.";
+    if (outProfile.voltageAtMax <= 0.0 || outProfile.maxCurrent <= 0.0) {
+        outError = "La tensión en carga máxima y la corriente máxima deben ser mayores que cero.";
+        return false;
+    }
+    if (outProfile.voltageAtMin < 0.0) {
+        outError = "La tensión en carga mínima no puede ser negativa.";
         return false;
     }
     if (outProfile.voltageAtMin >= outProfile.voltageAtMax) {

@@ -248,7 +248,7 @@ void MainFrame::OnClearBatteryProfiles(wxCommandEvent& event) {
 
     wizardStep_ = isConnected_ ? 1 : 0;
     ResetWorkflowState();
-    AppendTraffic(true, "Battery profiles cleared.");
+    AppendTraffic(true, "Perfiles de bateria eliminados.");
     UpdateFlowVisibility();
     UpdateFunctionOptions();
 }

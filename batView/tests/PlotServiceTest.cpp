@@ -38,7 +38,7 @@ TEST(PlotServiceTest, ExportPlotCsvUsesSelectedAxes) {
 
     std::string header;
     std::getline(file, header);
-    EXPECT_EQ(header, "TimeS,Tensión");
+    EXPECT_EQ(header, "Tiempo (s),Tension (V)");
 
     std::string row;
     std::getline(file, row);
@@ -66,8 +66,8 @@ TEST(PlotServiceTest, ExportPlotMatWritesData) {
 }
 
 TEST(PlotServiceTest, AxisLabelsRemainStable) {
-    EXPECT_EQ(PlotService::AxisLabel(PlotAxis::TimestampMs), "TimeS");
-    EXPECT_EQ(PlotService::AxisLabel(PlotAxis::CompletedCycles), "CompletedCycles");
+    EXPECT_EQ(PlotService::AxisLabel(PlotAxis::TimestampMs), "Tiempo (s)");
+    EXPECT_EQ(PlotService::AxisLabel(PlotAxis::CompletedCycles), "Ciclos completados");
 }
 
 } // namespace batview::core::services

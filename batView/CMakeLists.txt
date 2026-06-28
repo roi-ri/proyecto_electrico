@@ -298,6 +298,7 @@ if(BATVIEW_BUILD_TESTS)
         tests/AcquisitionServiceTest.cpp
         tests/ExportServiceTest.cpp
         tests/PlotServiceTest.cpp
+        tests/TextProtocolCodecTest.cpp
         ${BATVIEW_CORE_SOURCES}
     )
 

@@ -95,7 +95,7 @@ TEST(ConnectionServiceTest, ConnectSuccess) {
     EXPECT_EQ(serialPort.lastBaudRate, 115200);
     EXPECT_EQ(serialPort.lastWrittenLine, "#CONNECTION");
     EXPECT_GE(serialPort.writeCount, 1);
-    EXPECT_EQ(logger.lastInfo, "Serial connection established on /dev/ttyUSB0");
+    EXPECT_EQ(logger.lastInfo, "Conexion serial establecida en /dev/ttyUSB0");
     EXPECT_TRUE(connectionService.GetLastError().empty());
 }
 

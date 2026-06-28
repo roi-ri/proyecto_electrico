@@ -84,8 +84,9 @@ void SetAppIcon(wxFrame& frame) {
 
 wxString FormatProfileLabel(const batview::core::protocol::BatteryProfile& profile) {
     std::ostringstream label;
-    label << profile.nameId << "  |  Vmax " << profile.voltageAtMax
-          << " V  |  Vmin " << profile.voltageAtMin << " V  |  Amax " << profile.maxCurrent << " A";
+    label << profile.nameId << "  |  Tension max (V) " << profile.voltageAtMax
+          << "  |  Tension min (V) " << profile.voltageAtMin
+          << "  |  Corriente max (A) " << profile.maxCurrent;
     return wxString::FromUTF8(label.str().c_str());
 }
 

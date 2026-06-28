@@ -19,13 +19,13 @@ void AcquisitionService::StartAcquisition() {
     }
 
     if (!serialPort_.IsOpen()) {
-        logger_.Error("Cannot start acquisition: serial port is not open.");
+        logger_.Error("No se puede iniciar la adquisicion: el puerto serial no esta abierto.");
         return;
     }
 
     isAcquiring_ = true;
     acquisitionThread_ = std::thread(&AcquisitionService::AcquisitionLoop, this);
-    logger_.Info("Acquisition loop started.");
+    logger_.Info("Bucle de adquisicion iniciado.");
 }
 
 void AcquisitionService::StopAcquisition() {
@@ -37,7 +37,7 @@ void AcquisitionService::StopAcquisition() {
     if (acquisitionThread_.joinable()) {
         acquisitionThread_.join();
     }
-    logger_.Info("Acquisition loop stopped.");
+    logger_.Info("Bucle de adquisicion detenido.");
 }
 
 bool AcquisitionService::IsAcquiring() const {
@@ -52,7 +52,7 @@ std::vector<core::models::Measurement> AcquisitionService::GetMeasurements() con
 void AcquisitionService::ClearMeasurements() {
     std::lock_guard<std::mutex> lock(measurementsMutex_);
     measurements_.clear();
-    logger_.Info("Cleared stored telemetry measurements.");
+    logger_.Info("Mediciones de telemetria almacenadas eliminadas.");
 }
 
 void AcquisitionService::AcquisitionLoop() {
@@ -78,7 +78,7 @@ void AcquisitionService::ProcessData(const std::string& line) {
         return;
     }
 
-    logger_.Warning("Dropped invalid telemetry frame: " + line);
+    logger_.Warning("Trama de telemetria invalida descartada: " + line);
 }
 
 } // namespace batview::core::services

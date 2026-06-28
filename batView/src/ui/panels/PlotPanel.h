@@ -7,6 +7,7 @@
 #include <wx/panel.h>
 #include <wx/timer.h>
 
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
@@ -31,18 +32,25 @@ private:
                               batview::core::services::PlotAxis xAxis,
                               batview::core::services::PlotAxis yAxis,
                               const wxSize& size,
-                              double zoomScale,
+                              double zoomScaleX,
+                              double zoomScaleY,
                               double panX,
                               double panY,
                               const std::string& title,
                               std::string& outError,
                               std::size_t& outPointCount) const;
+    wxBitmap RenderBatteryHealthBitmap(const std::vector<batview::core::models::Measurement>& measurements,
+                                       const wxSize& size,
+                                       std::string& outError,
+                                       std::size_t& outPointCount) const;
     wxPanel* BuildPlotCard(wxWindow* parent,
                            const std::string& title,
                            int index);
     void RefreshPlots();
     void RefreshPlot(int index);
-    void SetPlotZoom(int index, double zoomScale);
+    bool IsBatteryHealthMode(const PlotWidgets& widgets) const;
+    void UpdatePlotModeControls(PlotWidgets& widgets);
+    void SetPlotZoom(int index, double zoomScaleX, double zoomScaleY);
     void ResetPlotView(int index);
     void BeginPlotPan(int index, const wxPoint& position);
     void ContinuePlotPan(int index, const wxPoint& position);
@@ -51,6 +59,7 @@ private:
     bool ExportPlotImage(const std::string& filePath, int index, std::string& outError) const;
     void ClearPlots();
     void ResetPlotCard(PlotWidgets& widgets);
+    bool HasActivePan() const;
     void OnRefreshTimer(wxTimerEvent& event);
 
     std::shared_ptr<batview::ui::viewmodels::MainViewModel> viewModel_;

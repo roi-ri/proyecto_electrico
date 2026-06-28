@@ -40,7 +40,7 @@ TEST(ExportServiceTest, ExportToCsvSuccess) {
 
     std::string header;
     std::getline(file, header);
-    EXPECT_EQ(header, "TimestampMs,Tensión,Current,State,CompletedCycles");
+    EXPECT_EQ(header, "Tiempo (ms),Tension (V),Corriente (A),Estado,Ciclos completados");
 
     std::filesystem::remove(tempFile);
 }
