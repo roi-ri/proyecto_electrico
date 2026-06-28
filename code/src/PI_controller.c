@@ -1,157 +1,107 @@
-// Se agregan los header files necesarios:
 #include "PI_controller.h"
 #include "receive.h"
+
 #include "esp_adc/adc_oneshot.h"
-#include "driver/dac_oneshot.h"
+#include <stdint.h>
 
-// Se implementa la función:
-void PI_controller(float reference_current)
+#define CHARGE_CURRENT_CHANNEL ADC_CHANNEL_0
+#define DISCHARGE_CURRENT_CHANNEL ADC_CHANNEL_6
+#define CONTROL_OUTPUT_MIN 0.0f
+#define CONTROL_OUTPUT_MAX 255.0f
+#define DAC_ACTIVE_MIN 216.0f
+#define DAC_ACTIVE_SPAN 39.0f
+
+static float charge_integral = 0.0f;
+static float discharge_integral = 0.0f;
+
+static float *select_integral(adc_channel_t current_channel)
 {
+    if (current_channel == DISCHARGE_CURRENT_CHANNEL) {
+        return &discharge_integral;
+    }
 
-    /*=================================================
-                    VARIABLES DEL SENSOR
-    =================================================*/
+    return &charge_integral;
+}
 
-    // Corriente medida:
-    float measured_current = 0.0;
+static uint8_t scale_control_to_dac(float control_output)
+{
+    float dac_output = 0.0f;
 
-    // Handle del ADC:
+    if (control_output <= CONTROL_OUTPUT_MIN) {
+        return 0;
+    }
+
+    if (control_output >= CONTROL_OUTPUT_MAX) {
+        return 255;
+    }
+
+    dac_output = DAC_ACTIVE_MIN + ((DAC_ACTIVE_SPAN / CONTROL_OUTPUT_MAX) * control_output);
+
+    if (dac_output >= 255.0f) {
+        return 255;
+    }
+
+    return (uint8_t)dac_output;
+}
+
+void PI_controller_reset(void)
+{
+    charge_integral = 0.0f;
+    discharge_integral = 0.0f;
+}
+
+void PI_controller_reset_channel(adc_channel_t current_channel)
+{
+    *select_integral(current_channel) = 0.0f;
+}
+
+void PI_controller(dac_oneshot_handle_t dac_handle,
+                   adc_channel_t current_channel,
+                   float reference_current)
+{
     adc_oneshot_unit_handle_t handle;
+    float measured_pin_voltage = 0.0f;
+    float measured_current = 0.0f;
+    float *integral = select_integral(current_channel);
+    float error = 0.0f;
+    float unsaturated_output = 0.0f;
+    float saturated_output = 0.0f;
+    float saturation_error = 0.0f;
+    const float kp = 2.326e-05f;
+    const float ki = 1.0000e-01f;
+    const float kb = 1.0f;
+    const float sample_time_s = 0.1f;
+    const float sensor_gain = 10.0f;
+    const float sensor_offset = 2.5f;
 
-    // Canal correspondiente al pin VP (GPIO36):
-    adc_channel_t current_channel = ADC_CHANNEL_0;
-
-
-
-    /*=================================================
-        PARÁMETROS Y VARIABLES DEL CONTROLADOR PI
-    =================================================*/
-
-    // Ganancia proporcional:
-    float Kp = 2.3;
-
-    // Ganancia integral:
-    float Ki = 1.0;
-
-    // Ganancia del anti-windup:
-    float Kb = 1.0;
-
-    // Tiempo de muestreo:
-    float Ts = 0.1;
-
-    // Error actual:
-    float error = 0.0;
-
-    // Integral acumulada:
-    static float integral = 0.0;
-
-    // Salida del controlador sin saturación:
-    float Vload_unsat = 0.0;
-
-    // Salida del controlador saturada:
-    float Vload_sat = 0.0;
-
-    // Error de saturación para el anti-windup:
-    float saturation_error = 0.0;
-
-    // Salida final del controlador:
-    float Vload = 0.0;
-
-    // Ganancia de la entrada:
-    float ganancia_sensor = 10.0;
-
-    // Constante de la entrada:
-    float offset_sensor = -2.5;
-
-    // Señal medida modificada:
-    float measured_current_modified = 0.0;
-
-    // Valor final a enviar al DAC:
-    float dac_output = 0.0;
-
-
-    /*=================================================
-                    CONFIGURACIÓN DEL ADC
-    =================================================*/
+    if (dac_handle == NULL) {
+        return;
+    }
 
     inicializar_entradas(&handle);
-
     configurar_entrada(handle, current_channel);
-
-    leer_datos(handle, current_channel, &measured_current);
-
+    leer_datos(handle, current_channel, &measured_pin_voltage);
     adc_oneshot_del_unit(handle);
 
-
-
-    /*=================================================
-                    CONTROLADOR PI
-    =================================================*/
-
-    // Calcula la corriente medida modificada:
-    measured_current_modified = (measured_current + offset_sensor) * ganancia_sensor;
-
-    // Cálculo del error:
-    error = reference_current - measured_current_modified;
-
-    // Acumulación de la integral:
-    integral = integral + (error * Ts);
-
-    // Salida del PI sin saturación:
-    Vload_unsat = (Kp * error) + (Ki * integral);
-
-    // Inicialización de la salida saturada:
-    Vload_sat = Vload_unsat;
-
-    // Revisa la saturación superior del DAC:
-    if(Vload_sat > 255.0) {
-        Vload_sat = 255.0;
+    measured_current = (measured_pin_voltage - sensor_offset) * sensor_gain;
+    if (measured_current < 0.0f) {
+        measured_current = 0.0f;
     }
 
-    // Revisa la saturación inferior del DAC:
-    if(Vload_sat < 0.0) {
-        Vload_sat = 0.0;
+    error = reference_current - measured_current;
+    *integral += error * sample_time_s;
+
+    unsaturated_output = (kp * error) + (ki * (*integral));
+    saturated_output = unsaturated_output;
+
+    if (saturated_output > CONTROL_OUTPUT_MAX) {
+        saturated_output = CONTROL_OUTPUT_MAX;
+    } else if (saturated_output < CONTROL_OUTPUT_MIN) {
+        saturated_output = CONTROL_OUTPUT_MIN;
     }
 
-    // Diferencia entre la salida saturada y la no saturada:
-    saturation_error = Vload_sat - Vload_unsat;
+    saturation_error = saturated_output - unsaturated_output;
+    *integral += kb * saturation_error * sample_time_s;
 
-    // Corrección del integrador mediante anti-windup:
-    integral = integral + (Kb * saturation_error * Ts);
-
-    // Salida final del controlador:
-    Vload = Vload_sat;
-
-
-
-    /*=================================================
-                ESCALAMIENTO PARA EL TRANSISTOR
-    =================================================*/
-
-    // Si el controlador solicita corriente nula, el transistor se apaga completamente:
-    if(Vload <= 0.0) {
-        dac_output = 0.0;
-    }
-
-    // Si el controlador solicita corriente, se utiliza únicamente el rango útil del transistor (2.8 V a 3.3 V):
-    else {
-        dac_output = 216.0 + ((39.0 / 255.0) * Vload);
-    }
-
-
-
-    /*=================================================
-                    ETAPA DE SALIDA
-    =================================================*/
-
-    // Configuración del DAC (GPIO25, pin de carga):
-    dac_oneshot_handle_t dac_handle;
-    dac_oneshot_config_t dac_config = {.chan_id = DAC_CHAN_0};
-    dac_oneshot_new_channel(&dac_config, &dac_handle);
-
-    // Actualización de la salida:
-    dac_oneshot_output_voltage(dac_handle, (uint8_t)dac_output);
-
-    // Libera el DAC:
-    dac_oneshot_del_channel(dac_handle);
+    dac_oneshot_output_voltage(dac_handle, scale_control_to_dac(saturated_output));
 }
