@@ -196,6 +196,49 @@ double ComputeMeasuredCapacityMah(const std::vector<batview::core::models::Measu
     return capacityMah;
 }
 
+int CountMeasuredDischarges(const std::vector<batview::core::models::Measurement>& measurements,
+                            std::size_t endIndex) {
+    if (measurements.empty()) {
+        return 0;
+    }
+
+    endIndex = std::min(endIndex, measurements.size() - 1);
+
+    int maxCompletedCycles = 0;
+    int dischargeSegments = 0;
+    bool wasInDischarge = false;
+    const bool hasExplicitDischargeState = HasExplicitDischargeState(measurements);
+
+    for (std::size_t index = 0; index <= endIndex; ++index) {
+        const auto& measurement = measurements[index];
+        maxCompletedCycles = std::max(maxCompletedCycles, measurement.completedCycles);
+
+        if (!hasExplicitDischargeState) {
+            continue;
+        }
+
+        const bool isInDischarge = IsDischargeSample(measurement, hasExplicitDischargeState);
+        if (isInDischarge && !wasInDischarge) {
+            ++dischargeSegments;
+        }
+        wasInDischarge = isInDischarge;
+    }
+
+    return std::max({maxCompletedCycles, dischargeSegments, 1});
+}
+
+double ComputeAverageDischargeCapacityMah(
+    const std::vector<batview::core::models::Measurement>& measurements,
+    std::size_t endIndex,
+    int& outDischargeCount) {
+    const double accumulatedCapacityMah = ComputeMeasuredCapacityMah(measurements, endIndex);
+    outDischargeCount = CountMeasuredDischarges(measurements, endIndex);
+    if (outDischargeCount <= 0) {
+        return 0.0;
+    }
+    return accumulatedCapacityMah / static_cast<double>(outDischargeCount);
+}
+
 double BatteryHealthPercent(double measuredCapacityMah, double factoryCapacityMah) {
     if (factoryCapacityMah <= 0.0) {
         return 0.0;
@@ -628,7 +671,12 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     dc.Clear();
     dc.SetFont(GetFont());
 
-    const double measuredCapacityMah = ComputeMeasuredCapacityMah(measurements, measurements.size() - 1);
+    int measuredDischarges = 0;
+    const double accumulatedCapacityMah = ComputeMeasuredCapacityMah(measurements, measurements.size() - 1);
+    const double measuredCapacityMah = ComputeAverageDischargeCapacityMah(
+        measurements,
+        measurements.size() - 1,
+        measuredDischarges);
     const double healthPercent = BatteryHealthPercent(measuredCapacityMah, factoryCapacityMah);
     const wxColour healthColor = BatteryHealthColor(healthPercent);
 
@@ -639,7 +687,7 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     dc.SetTextForeground(wxColour(229, 236, 246));
     dc.DrawText("Estado de Salud (SOH)", 24, 20);
     dc.SetTextForeground(wxColour(194, 202, 215));
-    dc.DrawText("Capacidad actual / capacidad de fabrica x 100", 24, 46);
+    dc.DrawText("Capacidad promedio por descarga / capacidad de fabrica x 100", 24, 46);
 
     wxFont percentFont = GetFont();
     percentFont.SetPointSize(percentFont.GetPointSize() + 20);
@@ -650,11 +698,16 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
 
     dc.SetFont(GetFont());
     dc.SetTextForeground(wxColour(194, 202, 215));
-    dc.DrawText(wxString::Format("Capacidad actual: %.1f mAh", measuredCapacityMah), 28, 150);
-    dc.DrawText(wxString::Format("Capacidad de fabrica: %.1f mAh", factoryCapacityMah), 28, 174);
+    dc.DrawText(wxString::Format("Capacidad promedio por descarga: %.1f mAh", measuredCapacityMah), 28, 150);
+    dc.DrawText(wxString::Format("Capacidad acumulada: %.1f mAh", accumulatedCapacityMah), 28, 174);
+    dc.DrawText(wxString::Format("Descargas medidas: %d | Fabrica: %.1f mAh",
+                                 measuredDischarges,
+                                 factoryCapacityMah),
+                28,
+                198);
 
     const int barLeft = 28;
-    const int barTop = 214;
+    const int barTop = 238;
     const int barWidth = std::max(width - 56, 80);
     const int barHeight = 32;
     const int fillWidth = static_cast<int>(std::lround(barWidth * healthPercent / 100.0));
@@ -681,7 +734,8 @@ wxBitmap PlotPanel::RenderBatteryHealthBitmap(
     for (std::size_t index = 0; index < measurements.size(); ++index) {
         const auto& measurement = measurements[index];
         const double seconds = (static_cast<double>(measurement.timestampMs) - firstTimestamp) / 1000.0;
-        const double sampleCapacityMah = ComputeMeasuredCapacityMah(measurements, index);
+        int sampleDischarges = 0;
+        const double sampleCapacityMah = ComputeAverageDischargeCapacityMah(measurements, index, sampleDischarges);
         const double sampleHealth = BatteryHealthPercent(sampleCapacityMah, factoryCapacityMah);
         const int x = ProjectValue(seconds, {0.0, totalSeconds}, plotLeft, plotLeft + plotWidth);
         const int y = ProjectValue(sampleHealth, {0.0, 100.0}, plotTop + plotHeight, plotTop);
@@ -759,10 +813,17 @@ void PlotPanel::RefreshPlot(int index) {
         if (widgets->factoryCapacityCtrl) {
             widgets->factoryCapacityCtrl->GetValue().ToDouble(&factoryCapacityMah);
         }
-        const double measuredCapacityMah = ComputeMeasuredCapacityMah(measurements, measurements.size() - 1);
-        widgets->status->SetLabel(wxString::Format("SOH: %.1f%% | Capacidad actual: %.1f mAh | Fabrica: %.1f mAh",
+        int measuredDischarges = 0;
+        const double accumulatedCapacityMah = ComputeMeasuredCapacityMah(measurements, measurements.size() - 1);
+        const double measuredCapacityMah = ComputeAverageDischargeCapacityMah(
+            measurements,
+            measurements.size() - 1,
+            measuredDischarges);
+        widgets->status->SetLabel(wxString::Format("SOH: %.1f%% | Promedio/descarga: %.1f mAh | Acumulada: %.1f mAh | Descargas: %d | Fabrica: %.1f mAh",
                                                    BatteryHealthPercent(measuredCapacityMah, factoryCapacityMah),
                                                    measuredCapacityMah,
+                                                   accumulatedCapacityMah,
+                                                   measuredDischarges,
                                                    factoryCapacityMah));
         return;
     }
